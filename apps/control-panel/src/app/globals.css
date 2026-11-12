@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+/**
+ * Design tokens.
+ *
+ * Neutral near-black surfaces (no blue cast), very low-contrast borders, and a
+ * small pastel palette reserved for data cards. Radii are generous: cards 16px,
+ * controls fully rounded.
+ */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #131313;
+  --color-card: #1a1a1a;
+  --color-card-hover: #212121;
+  --color-line: #262626;
+  --color-line-strong: #333333;
+
+  --color-text: #fafafa;
+  --color-muted: #8f8f8f;
+  --color-dim: #6b6b6b;
+
+  /* Pastels — data cards and status accents only, never chrome. */
+  --color-periwinkle: #c9d4f2;
+  --color-pink: #f2c9e0;
+  --color-sand: #e3d8cf;
+  --color-sky: #c2d9f5;
+  --color-mint: #c9e8d4;
+
+  --radius-card: 16px;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures everywhere a number is compared down a column. */
+.nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Large display numbers, as on the reference's stat cards. */
+.display {
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+::selection {
+  background: var(--color-periwinkle);
+  color: #0a0a0a;
+}
+
+/* Scrollbars that do not fight the dark surface. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
