@@ -1,15 +1,46 @@
 /**
  * Helpers shared by model definitions.
  *
- * Providers disagree about how they hand back a generated file: some return a
- * URL, some base64 in JSON, some raw bytes. `collectAssets` absorbs all three so
- * an individual model file stays a declaration rather than a parser.
+ * Providers disagree about how they hand back a generated file: a URL, base64
+ * in JSON, or raw bytes — and they disagree about how deeply they nest it.
+ * `collectAssets` absorbs all of that so an individual model file stays a
+ * declaration rather than a parser.
  */
 import type { Asset, RunContext } from '@forge/core';
 import type { RunResult } from '@forge/core';
 
-/** Where in a JSON result to look for the payload, in priority order. */
+/** Where in a payload to look for the media, in priority order. */
 const DEFAULT_KEYS = ['video', 'image', 'audio', 'url', 'b64_json', 'data'];
+
+/**
+ * Partner models answer through AI Gateway with the payload nested twice and a
+ * `state` alongside it:
+ *
+ *   { result: { state: 'Completed', result: { video: 'https://…' } } }
+ *
+ * The published example shows it flat, so unwrap defensively rather than
+ * indexing a fixed depth.
+ */
+function unwrap(json: Record<string, unknown> | undefined): {
+  payload: Record<string, unknown> | undefined;
+  state?: string;
+} {
+  let node = json;
+  let state: string | undefined;
+
+  for (let depth = 0; depth < 4; depth++) {
+    if (!node || typeof node !== 'object') break;
+    if (typeof node.state === 'string') state = node.state;
+
+    const inner = node.result;
+    if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+      node = inner as Record<string, unknown>;
+      continue;
+    }
+    break;
+  }
+  return { payload: node, state };
+}
 
 function base64ToArrayBuffer(b64: string): ArrayBuffer {
   const clean = b64.includes(',') ? b64.slice(b64.indexOf(',') + 1) : b64;
@@ -23,6 +54,37 @@ function isUrl(value: string): boolean {
   return /^https?:\/\//i.test(value);
 }
 
+/**
+ * Provider URLs are often presigned and short-lived — Cloudflare hands back an
+ * R2 link that expires in 24 hours. A task row that outlives its own result is
+ * worse than useless, so copy those into our own storage.
+ */
+function isExpiring(url: string): boolean {
+  return /[?&](X-Amz-Signature|X-Amz-Expires|Expires|token|sig)=/i.test(url);
+}
+
+async function assetFromUrl(
+  url: string,
+  ctx: RunContext,
+  options: CollectOptions,
+): Promise<Asset> {
+  if (!isExpiring(url)) return { url, mime: options.mime };
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${res.status}`);
+    const bytes = await res.arrayBuffer();
+    return await ctx.storeAsset({
+      bytes,
+      mime: res.headers.get('content-type')?.split(';')[0] || options.mime,
+      ext: options.ext,
+    });
+  } catch {
+    // Re-hosting is best-effort: a link that works now beats no link at all.
+    return { url, mime: options.mime };
+  }
+}
+
 export interface CollectOptions {
   mime: string;
   ext: string;
@@ -30,13 +92,6 @@ export interface CollectOptions {
   keys?: string[];
 }
 
-/**
- * Turn a provider response into assets.
- *
- * A URL is passed through as-is — re-hosting someone else's CDN link would cost
- * bandwidth for nothing. Bytes and base64 are persisted through `ctx.storeAsset`
- * so the caller always ends up with something fetchable.
- */
 export async function collectAssets(
   result: RunResult,
   ctx: RunContext,
@@ -44,25 +99,36 @@ export async function collectAssets(
 ): Promise<Asset[]> {
   if (result.bytes) {
     return [
-      await ctx.storeAsset({ bytes: result.bytes, mime: result.mime ?? options.mime, ext: options.ext }),
+      await ctx.storeAsset({
+        bytes: result.bytes,
+        mime: result.mime ?? options.mime,
+        ext: options.ext,
+      }),
     ];
   }
 
-  const payload = (result.json?.result ?? result.json) as Record<string, unknown> | undefined;
+  const { payload, state } = unwrap(result.json);
   if (!payload) return [];
+
+  // A provider that is still working has not failed — say so plainly rather
+  // than returning an empty list that reads as success.
+  if (state && state.toLowerCase() !== 'completed') {
+    throw new Error(`Provider reported state "${state}" rather than Completed.`);
+  }
 
   const keys = [...(options.keys ?? []), ...DEFAULT_KEYS];
   for (const key of keys) {
     const value = payload[key];
 
     if (typeof value === 'string' && value.length > 0) {
-      if (isUrl(value)) return [{ url: value, mime: options.mime }];
       return [
-        await ctx.storeAsset({
-          bytes: base64ToArrayBuffer(value),
-          mime: options.mime,
-          ext: options.ext,
-        }),
+        isUrl(value)
+          ? await assetFromUrl(value, ctx, options)
+          : await ctx.storeAsset({
+              bytes: base64ToArrayBuffer(value),
+              mime: options.mime,
+              ext: options.ext,
+            }),
       ];
     }
 
@@ -77,7 +143,7 @@ export async function collectAssets(
         if (typeof raw !== 'string' || raw.length === 0) continue;
         assets.push(
           isUrl(raw)
-            ? { url: raw, mime: options.mime }
+            ? await assetFromUrl(raw, ctx, options)
             : await ctx.storeAsset({
                 bytes: base64ToArrayBuffer(raw),
                 mime: options.mime,
@@ -89,7 +155,30 @@ export async function collectAssets(
     }
   }
 
-  return [];
+  // Known keys missed. Shapes move, so walk the payload for any http(s) URL
+  // rather than giving up — a silent empty result is the worst outcome.
+  const found = findUrl(payload, 0);
+  return found ? [await assetFromUrl(found, ctx, options)] : [];
+}
+
+/** Depth-bounded search for the first http(s) URL anywhere in the payload. */
+function findUrl(node: unknown, depth: number): string | null {
+  if (depth > 6 || node == null) return null;
+  if (typeof node === 'string') return isUrl(node) ? node : null;
+  if (Array.isArray(node)) {
+    for (const entry of node) {
+      const hit = findUrl(entry, depth + 1);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (typeof node === 'object') {
+    for (const value of Object.values(node as Record<string, unknown>)) {
+      const hit = findUrl(value, depth + 1);
+      if (hit) return hit;
+    }
+  }
+  return null;
 }
 
 /** Cloudflare publishes schemas at two different paths depending on the runtime. */

@@ -47,6 +47,7 @@ export const aura1 = createAudioModel({
     return {
       kind: 'audio',
       assets: await collectAssets(result, ctx, { mime: `audio/${ext}`, ext }),
+      raw: result.json ?? null,
     };
   },
 });

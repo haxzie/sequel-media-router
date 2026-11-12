@@ -64,6 +64,7 @@ export const gptImage25Flare = createImageModel({
         ext: input.output_format,
         keys: ['images'],
       }),
+      raw: result.json ?? null,
     };
   },
 });

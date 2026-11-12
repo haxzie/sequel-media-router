@@ -60,6 +60,7 @@ export const nova3 = createAudioModel({
         ? [{ url: audio_url, mime: 'text/plain', text: transcript }]
         : [],
       transcript,
+      raw: result.json ?? null,
     };
   },
 });

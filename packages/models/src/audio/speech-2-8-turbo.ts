@@ -56,6 +56,7 @@ export const minimaxSpeech = createAudioModel({
         mime: ext === 'mp3' ? 'audio/mpeg' : `audio/${ext}`,
         ext,
       }),
+      raw: result.json ?? null,
     };
   },
 });

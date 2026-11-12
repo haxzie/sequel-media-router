@@ -239,10 +239,26 @@ export class Forge {
       };
       const output = await model.run(input, ctx);
       const first = output.assets[0];
+
+      // A run that produced no asset has not succeeded, whatever the provider
+      // said. Reporting `completed` with an empty result sends the caller off
+      // to fetch nothing, and hides the real failure.
+      if (!first) {
+        const patched = await this.opts.store.patchTask(taskId, {
+          status: 'failed',
+          error:
+            'Provider returned no media. The response did not contain a recognisable asset — see `raw` on this task for the payload.',
+          raw: output.raw ?? null,
+          completedAt: new Date().toISOString(),
+        });
+        return patched ?? (await this.opts.store.getTask(taskId))!;
+      }
+
       const patched = await this.opts.store.patchTask(taskId, {
         status: 'completed',
         assets: output.assets,
-        resultUrl: first?.url,
+        resultUrl: first.url,
+        raw: output.raw ?? null,
         completedAt: new Date().toISOString(),
       });
       return patched ?? (await this.opts.store.getTask(taskId))!;
@@ -267,7 +283,17 @@ export class Forge {
   }
 
   // ---------------------------------------------------------------- tool 5
-  async listTasks(params: { task_ids?: string[]; status?: TaskStatus[]; limit?: number }) {
+  /**
+   * `include_raw` is opt-in: provider payloads are verbose and an agent polling
+   * a task list does not want them, but they are the only way to work out why a
+   * run produced nothing.
+   */
+  async listTasks(params: {
+    task_ids?: string[];
+    status?: TaskStatus[];
+    limit?: number;
+    include_raw?: boolean;
+  }) {
     const tasks = await this.opts.store.listTasks({
       ids: params.task_ids,
       status: params.status,
@@ -286,6 +312,7 @@ export class Forge {
         error: t.error,
         created_at: t.createdAt,
         completed_at: t.completedAt,
+        ...(params.include_raw ? { raw: t.raw } : {}),
       })),
     };
   }
@@ -342,5 +369,9 @@ export const toolSchemas = {
     task_ids: z.array(z.string()).optional(),
     status: z.array(z.enum(['queued', 'in_progress', 'completed', 'failed'])).optional(),
     limit: z.number().int().min(1).max(200).optional(),
+    include_raw: z
+      .boolean()
+      .optional()
+      .describe('Include the untouched provider payload. Verbose; use when debugging a result.'),
   }),
 };

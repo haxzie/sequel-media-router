@@ -56,6 +56,7 @@ export const grokImagineVideo = createVideoModel({
     return {
       kind: 'video',
       assets: await collectAssets(result, ctx, { mime: 'video/mp4', ext: 'mp4' }),
+      raw: result.json ?? null,
     };
   },
 });

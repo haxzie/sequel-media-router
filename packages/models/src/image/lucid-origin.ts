@@ -45,6 +45,7 @@ export const lucidOrigin = createImageModel({
     return {
       kind: 'image',
       assets: await collectAssets(result, ctx, { mime: 'image/jpeg', ext: 'jpg' }),
+      raw: result.json ?? null,
     };
   },
 });

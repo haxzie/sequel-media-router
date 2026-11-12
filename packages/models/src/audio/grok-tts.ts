@@ -47,6 +47,7 @@ export const grokTts = createAudioModel({
     return {
       kind: 'audio',
       assets: await collectAssets(result, ctx, { mime: 'audio/mpeg', ext: 'mp3' }),
+      raw: result.json ?? null,
     };
   },
 });

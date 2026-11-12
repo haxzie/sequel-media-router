@@ -80,17 +80,23 @@ export interface Asset {
   text?: string;
 }
 
-export interface ImageOutput {
+/**
+ * Every output carries the untouched provider payload. It is what makes a
+ * surprising result diagnosable without re-running (and re-paying for) the job.
+ */
+interface BaseOutput {
+  assets: Asset[];
+  raw?: unknown;
+}
+
+export interface ImageOutput extends BaseOutput {
   kind: 'image';
-  assets: Asset[];
 }
-export interface VideoOutput {
+export interface VideoOutput extends BaseOutput {
   kind: 'video';
-  assets: Asset[];
 }
-export interface AudioOutput {
+export interface AudioOutput extends BaseOutput {
   kind: 'audio';
-  assets: Asset[];
   /** Present for speech-to-text. */
   transcript?: string;
 }
