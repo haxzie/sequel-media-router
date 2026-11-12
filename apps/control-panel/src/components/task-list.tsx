@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { formatUsd } from '@forge/core/pricing';
 import { TaskPanel, type TaskSummary } from './task-panel';
 import { Card, PageHeader, Segmented, StatusDot } from './ui';
 
@@ -28,13 +29,6 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: 'completed', label: 'Completed' },
   { value: 'failed', label: 'Failed' },
 ];
-
-function usd(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '$0.00';
-  if (n === 0) return '$0.00';
-  return n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`;
-}
 
 function when(iso: string): string {
   const mins = Math.floor((Date.now() - Date.parse(iso)) / 60_000);
@@ -91,7 +85,7 @@ export function TaskList() {
         title="Tasks"
         meta={
           <>
-            {tasks.length} run{tasks.length === 1 ? '' : 's'} · {usd(String(spend))} estimated ·
+            {tasks.length} run{tasks.length === 1 ? '' : 's'} · {formatUsd(spend)} estimated ·
             running rows refresh automatically
           </>
         }
@@ -168,7 +162,7 @@ export function TaskList() {
                   </td>
 
                   <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                    <span className="nums text-[13px]">{usd(task.cost.usd)}</span>
+                    <span className="nums text-[13px]">{formatUsd(task.cost.usd)}</span>
                     {task.cost.estimated && (
                       <span className="ml-1.5 text-[11px] text-[var(--color-dim)]">est</span>
                     )}

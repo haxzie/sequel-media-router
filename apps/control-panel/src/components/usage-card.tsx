@@ -1,5 +1,6 @@
 'use client';
 
+import { formatUsd } from '@forge/core/pricing';
 import { useEffect, useState } from 'react';
 import { Eyebrow } from './ui';
 
@@ -8,13 +9,6 @@ interface Usage {
   taskCount: number;
   windowDays: number;
   byModality: Record<string, { usd: string; count: number }>;
-}
-
-function usd(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '$0.00';
-  if (n === 0) return '$0.00';
-  return n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`;
 }
 
 const BAR_TONE: Record<string, string> = {
@@ -48,7 +42,7 @@ export function UsageCard() {
       </div>
 
       <div className="display nums mt-2 text-[28px] leading-none">
-        {usage ? usd(usage.totalUsd) : '—'}
+        {usage ? formatUsd(usage.totalUsd) : '—'}
       </div>
       <div className="mt-1 text-[12px] text-[var(--color-dim)]">
         {usage ? `${usage.taskCount} run${usage.taskCount === 1 ? '' : 's'}` : 'loading'}
@@ -63,7 +57,7 @@ export function UsageCard() {
               <div
                 key={modality}
                 style={{ width: `${share}%`, background: BAR_TONE[modality] }}
-                title={`${modality}: ${usd(bucket.usd)}`}
+                title={`${modality}: ${formatUsd(bucket.usd)}`}
               />
             );
           })}
@@ -81,7 +75,7 @@ export function UsageCard() {
                 />
                 {modality}
               </span>
-              <span className="nums text-[var(--color-dim)]">{usd(bucket.usd)}</span>
+              <span className="nums text-[var(--color-dim)]">{formatUsd(bucket.usd)}</span>
             </div>
           ))}
       </div>

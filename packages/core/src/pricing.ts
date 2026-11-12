@@ -154,9 +154,21 @@ export function addMoney(a: string, b: string): string {
   return money(Number(a) + Number(b));
 }
 
-export function formatUsd(value: string): string {
+/**
+ * Money for display, at full stored precision.
+ *
+ * Costs are carried as fixed 6-decimal strings, and rounding them for display
+ * hid real spend: a $0.0059 run read as $0.01, and a whole page of sub-cent
+ * audio runs read as $0.00 each. So show every digit that is actually there,
+ * trimming only trailing zeros and never dropping below two decimals.
+ *
+ * toFixed(6) first also launders float noise out of summed totals
+ * (3.9600000000000004 -> "3.960000" -> $3.96).
+ */
+export function formatUsd(value: string | number): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return '$0.00';
-  if (n > 0 && n < 0.01) return `$${n.toFixed(4)}`;
-  return `$${n.toFixed(2)}`;
+  const [whole, frac = '000000'] = n.toFixed(6).split('.');
+  const trimmed = frac.replace(/0+$/, '');
+  return `$${whole}.${trimmed.length < 2 ? frac.slice(0, 2) : trimmed}`;
 }

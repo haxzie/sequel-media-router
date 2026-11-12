@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { formatUsd } from '@forge/core/pricing';
 import { CloseIcon, DownloadIcon, ExternalIcon } from './icons';
 import { StatusDot } from './ui';
 
@@ -35,12 +36,6 @@ const STATUS_LABEL: Record<TaskSummary['status'], string> = {
   completed: 'Completed',
   failed: 'Failed',
 };
-
-function usd(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n === 0) return '$0.00';
-  return n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`;
-}
 
 function size(bytes?: number): string | null {
   if (!bytes) return null;
@@ -225,7 +220,7 @@ export function TaskPanel({ task, onClose }: { task: TaskSummary; onClose: () =>
               <span className="capitalize text-[var(--color-muted)]">{detail.modality}</span>
             </Row>
             <Row label="Cost">
-              <span className="nums">{usd(detail.cost.usd)}</span>
+              <span className="nums">{formatUsd(detail.cost.usd)}</span>
               {detail.cost.estimated && (
                 <span className="ml-1.5 text-[11px] text-[var(--color-dim)]">est</span>
               )}
