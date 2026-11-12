@@ -129,6 +129,15 @@ export function estimateCost(model: AnyModel, input: Record<string, unknown>): C
         basis: `${tiles} tile(s) @ $${rate.usd}${stepRate ? ` + ${steps} steps @ $${stepRate.usd}` : ''}`,
       };
     }
+    case 'track':
+    case 'clip': {
+      const n = typeof input.n === 'number' ? input.n : 1;
+      return {
+        usd: money(unitPrice * n),
+        estimated: true,
+        basis: `${n} × $${rate.usd}/${rate.unit}${qualifier}`,
+      };
+    }
     case '1m_tokens':
       // Token-billed image models cannot be priced before the call returns usage.
       return {

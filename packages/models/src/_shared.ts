@@ -55,21 +55,18 @@ function isUrl(value: string): boolean {
 }
 
 /**
- * Provider URLs are often presigned and short-lived — Cloudflare hands back an
- * R2 link that expires in 24 hours. A task row that outlives its own result is
- * worse than useless, so copy those into our own storage.
+ * Copy a provider's output into our own storage.
+ *
+ * Always, not just for obviously-expiring links. Cloudflare's presigned R2 URLs
+ * die in 24 hours and a provider CDN link (MiniMax hands one back) is outside
+ * our control and ~115 characters. Re-hosting makes every result durable, short
+ * and consistent, at the cost of one transfer.
  */
-function isExpiring(url: string): boolean {
-  return /[?&](X-Amz-Signature|X-Amz-Expires|Expires|token|sig)=/i.test(url);
-}
-
 async function assetFromUrl(
   url: string,
   ctx: RunContext,
   options: CollectOptions,
 ): Promise<Asset> {
-  if (!isExpiring(url)) return { url, mime: options.mime };
-
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status}`);
@@ -80,7 +77,7 @@ async function assetFromUrl(
       ext: options.ext,
     });
   } catch {
-    // Re-hosting is best-effort: a link that works now beats no link at all.
+    // Best-effort: a provider link that works now beats no link at all.
     return { url, mime: options.mime };
   }
 }

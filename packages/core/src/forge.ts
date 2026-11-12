@@ -48,6 +48,8 @@ export interface ModelSummary {
   etaSeconds: number;
   async: boolean;
   enabled: boolean;
+  /** Needs a caller-supplied provider key; not runnable on unified billing. */
+  requiresByok: boolean;
   /** Only present on search results. */
   score?: number;
 }
@@ -126,6 +128,7 @@ export class Forge {
       rates: model.rates,
       etaSeconds: model.etaSeconds,
       async: model.async ?? false,
+      requiresByok: model.requiresByok ?? false,
       enabled,
       ...(score === undefined ? {} : { score: Number(score.toFixed(4)) }),
     };
@@ -218,6 +221,13 @@ export class Forge {
     const enabled = await this.enabledIds();
     if (!enabled.has(model.id)) {
       throw new Error(`Model "${model.id}" is disabled in the control panel.`);
+    }
+
+    // Refuse before the round trip rather than after the provider rejects it.
+    if (model.requiresByok) {
+      throw new Error(
+        `Model "${model.id}" is not available on Cloudflare's unified billing and needs your own provider key (BYOK). Forge does not carry per-provider keys yet — pick another model from search_models.`,
+      );
     }
 
     // Validate before spending anything.

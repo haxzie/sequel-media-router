@@ -131,6 +131,10 @@ export const wan30 = createVideoModel({
 });
 ```
 
+Set `requiresByok: true` when Cloudflare will not bill a model through unified
+billing — Forge then lists it but refuses the run up front rather than paying for
+a round trip that the provider rejects.
+
 Add the export to `packages/models/src/index.ts` and it appears in the panel,
 the MCP tool surface and the search index on next boot. There is no second
 registry to update.

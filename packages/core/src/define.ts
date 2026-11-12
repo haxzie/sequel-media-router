@@ -55,6 +55,12 @@ export interface ModelDefinition<S extends z.ZodType, O extends ModelOutput> {
   etaSeconds: number;
   /** Where Cloudflare publishes this model's own JSON Schema, when it does. */
   schemaUrl?: string | null;
+  /**
+   * True when Cloudflare will not bill this model through unified billing and
+   * the caller must supply their own provider key. Such a model is listed but
+   * refused up front, rather than failing at the provider after a round trip.
+   */
+  requiresByok?: boolean;
   /** The input contract. Everything validates against this before any spend. */
   input: S;
   /**

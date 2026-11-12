@@ -36,7 +36,11 @@ export type Capability =
   | 'multilingual'
   | 'speech-to-text'
   | 'diarization'
-  | 'word-timestamps';
+  | 'word-timestamps'
+  // music
+  | 'text-to-music'
+  | 'lyrics'
+  | 'instrumental';
 
 /** Non-functional descriptors. Used for ranking and display, never for filtering correctness. */
 export type Tag = 'fast' | 'cheap' | 'high-fidelity' | 'preview' | 'open-weights';
@@ -52,7 +56,10 @@ export type PriceUnit =
   | 'minute'
   | 'call'
   | 'megapixel'
-  | '1m_tokens';
+  | '1m_tokens'
+  /** A whole generated item priced flat, regardless of length. */
+  | 'track'
+  | 'clip';
 
 export interface Rate {
   unit: PriceUnit;
