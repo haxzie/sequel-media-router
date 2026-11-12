@@ -1,6 +1,6 @@
 import { createVideoModel } from '@forge/core';
 import { z } from 'zod/v4';
-import { collectAssets, partnerSchemaUrl } from '../_shared';
+import { collectAssets, partnerSchemaUrl, toBase64 } from '../_shared';
 
 /**
  * Google Veo 3.1 — the quality tier, and the price anchor for the whole market.
@@ -39,20 +39,32 @@ export const veo31 = createVideoModel({
   schemaUrl: partnerSchemaUrl('google', 'veo-3.1'),
   input: z.object({
     prompt: z.string().min(1).describe('Text prompt describing the video to generate.'),
-    image_input: z
+    /**
+     * Upstream calls this `image_input` and wants base64. Exposed as a URL so
+     * it composes with get_upload_url; `run` fetches and encodes it. Base64 or
+     * a data: URI is still accepted and passed straight through.
+     */
+    image_url: z
       .string()
       .optional()
-      .describe('Base64-encoded reference image, for image-to-video.'),
+      .describe('Reference image for image-to-video: an https URL, or base64 / a data: URI.'),
     duration: z.enum(['4s', '6s', '8s']).default('6s'),
-    aspect_ratio: z.enum(['16:9', '9:16', '1:1']).default('16:9'),
+    // The published schema also lists 1:1, but the provider rejects it with
+    // "Invalid aspect ratio: 1:1". Left out rather than letting a caller buy a
+    // failure.
+    aspect_ratio: z.enum(['16:9', '9:16']).default('16:9'),
     resolution: z.enum(['720p', '1080p']).default('720p'),
     generate_audio: z.boolean().default(true).describe('Doubles the per-second rate.'),
   }),
   run: async (input, ctx) => {
+    const { image_url, ...rest } = input;
     const result = await ctx.ai.run({
       model: 'google/veo-3.1',
       runtime: 'ai-gateway',
-      input,
+      input: {
+        ...rest,
+        ...(image_url ? { image_input: await toBase64(image_url) } : {}),
+      },
     });
     return {
       kind: 'video',

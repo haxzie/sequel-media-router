@@ -49,7 +49,9 @@ export const grokImagineVideo = createVideoModel({
       runtime: 'ai-gateway',
       input: {
         ...rest,
-        _operation: image_url ? 'edit' : 'generate',
+        // `edit` operates on an existing video and requires a `video` field;
+        // animating a still is still a `generate`.
+        _operation: 'generate',
         ...(image_url ? { image: { url: image_url } } : {}),
       },
     });

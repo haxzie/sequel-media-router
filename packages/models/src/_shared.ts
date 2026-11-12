@@ -181,6 +181,32 @@ function findUrl(node: unknown, depth: number): string | null {
   return null;
 }
 
+/**
+ * Some models take a media reference as a URL, others demand base64 inline.
+ * Callers should not have to care: `get_upload_url` hands back a URL, so when a
+ * model wants bytes we fetch and encode on their behalf.
+ */
+export async function toBase64(urlOrBase64: string): Promise<string> {
+  if (!/^https?:\/\//i.test(urlOrBase64)) {
+    // Already base64, with or without a data: prefix.
+    return urlOrBase64.includes(',') ? urlOrBase64.slice(urlOrBase64.indexOf(',') + 1) : urlOrBase64;
+  }
+
+  const res = await fetch(urlOrBase64);
+  if (!res.ok) {
+    throw new Error(
+      `Could not fetch the reference image (${res.status}). It must be reachable by Cloudflare — use get_upload_url to host it.`,
+    );
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  let binary = '';
+  // Chunked so a large image does not blow the argument limit on String.fromCharCode.
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
 /** Cloudflare publishes schemas at two different paths depending on the runtime. */
 export function partnerSchemaUrl(provider: string, slug: string): string {
   return `https://developers.cloudflare.com/ai/models/${provider}/${slug}/schema-input.json`;
