@@ -37,8 +37,10 @@ export const grokTts = createAudioModel({
       .min(1)
       .max(15_000)
       .describe('Supports inline tags: [pause], [laugh], <whisper>…</whisper>.'),
-    voice: z.enum(['eve', 'ara', 'rex', 'sal', 'leo']).default('eve'),
-    language: z.string().default('auto').describe('BCP-47 code, or "auto" to detect.'),
+    // Upstream calls this voice_id, not voice. Passing `voice` is rejected.
+    voice_id: z.enum(['eve', 'ara', 'rex', 'sal', 'leo']).default('eve'),
+    language: z.string().default('auto').describe('BCP-47 code, or "auto" to detect. Required.'),
+    speed: z.number().min(0.7).max(1.5).default(1).describe('Speech speed multiplier.'),
   }),
   run: async (input, ctx) => {
     const result = await ctx.ai.run({ model: 'xai/grok-tts', runtime: 'ai-gateway', input });

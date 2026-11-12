@@ -26,8 +26,12 @@ export interface StorageConfig {
   bucket: string;
   accessKeyId: string;
   secretAccessKey: string;
-  /** Public base URL for reads: an r2.dev domain or a custom domain. */
-  publicBaseUrl: string;
+  /**
+   * Public base URL for reads — an r2.dev domain or a custom domain. Optional:
+   * left unset, reads are handed out as presigned GET URLs so the bucket can
+   * stay private and a provider can still fetch an input we uploaded.
+   */
+  publicBaseUrl?: string;
 }
 
 export interface Uploads {
@@ -35,6 +39,9 @@ export interface Uploads {
   /** Persist bytes we produced ourselves (a model returned binary, not a link). */
   put(opts: { bytes: ArrayBuffer; mime: string; ext: string }): Promise<Asset>;
 }
+
+/** SigV4 caps presigned URL lifetime at 7 days. */
+const READ_URL_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 function randomKey(ext: string): string {
   const id = crypto.randomUUID().replace(/-/g, '');
@@ -64,8 +71,25 @@ export class R2Uploads implements Uploads {
       R2_SECRET_ACCESS_KEY: secretAccessKey,
       R2_PUBLIC_BASE_URL: publicBaseUrl,
     } = env;
-    if (!accountId || !bucket || !accessKeyId || !secretAccessKey || !publicBaseUrl) return null;
+    // publicBaseUrl is optional — see StorageConfig.
+    if (!accountId || !bucket || !accessKeyId || !secretAccessKey) return null;
     return new R2Uploads({ accountId, bucket, accessKeyId, secretAccessKey, publicBaseUrl });
+  }
+
+  /**
+   * A URL the object can be read from. Uses the public domain when one is
+   * configured; otherwise a presigned GET, valid for 7 days (SigV4's maximum).
+   */
+  private async readUrl(key: string): Promise<string> {
+    if (this.config.publicBaseUrl) {
+      return `${this.config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+    }
+    const url = new URL(`${this.endpoint}/${key}`);
+    url.searchParams.set('X-Amz-Expires', String(READ_URL_TTL_SECONDS));
+    const signed = await this.client.sign(new Request(url, { method: 'GET' }), {
+      aws: { signQuery: true },
+    });
+    return signed.url;
   }
 
   async createUploadUrl(opts: { contentType: string; extension?: string }): Promise<UploadTarget> {
@@ -82,7 +106,7 @@ export class R2Uploads implements Uploads {
     return {
       key,
       uploadUrl: signed.url,
-      fileUrl: `${this.config.publicBaseUrl.replace(/\/$/, '')}/${key}`,
+      fileUrl: await this.readUrl(key),
       expiresInSeconds,
       driver: 'r2',
     };
@@ -93,11 +117,16 @@ export class R2Uploads implements Uploads {
     const res = await this.client.fetch(`${this.endpoint}/${key}`, {
       method: 'PUT',
       body: opts.bytes,
-      headers: { 'content-type': opts.mime },
+      headers: {
+        'content-type': opts.mime,
+        // R2 rejects a streamed PUT with 411 MissingContentLength. fetch does
+        // not always derive it from an ArrayBuffer, so set it explicitly.
+        'content-length': String(opts.bytes.byteLength),
+      },
     });
     if (!res.ok) throw new Error(`R2 PUT failed: ${res.status} ${await res.text()}`);
     return {
-      url: `${this.config.publicBaseUrl.replace(/\/$/, '')}/${key}`,
+      url: await this.readUrl(key),
       mime: opts.mime,
       bytes: opts.bytes.byteLength,
       key,

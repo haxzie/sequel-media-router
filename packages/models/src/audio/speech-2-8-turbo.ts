@@ -36,7 +36,12 @@ export const minimaxSpeech = createAudioModel({
     voice_id: z.string().default('English_expressive_narrator'),
     speed: z.number().min(0.5).max(2).default(1),
     volume: z.number().min(0.1).max(10).default(1),
-    pitch: z.number().min(-12).max(12).default(0),
+    pitch: z.number().int().min(-12).max(12).default(0),
+    emotion: z
+      .enum(['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'calm', 'fluent'])
+      .optional(),
+    // Required upstream; defaulted here so callers need not supply it.
+    format: z.enum(['mp3', 'flac', 'wav']).default('mp3'),
   }),
   run: async (input, ctx) => {
     const result = await ctx.ai.run({
@@ -44,9 +49,13 @@ export const minimaxSpeech = createAudioModel({
       runtime: 'ai-gateway',
       input,
     });
+    const ext = input.format;
     return {
       kind: 'audio',
-      assets: await collectAssets(result, ctx, { mime: 'audio/mpeg', ext: 'mp3' }),
+      assets: await collectAssets(result, ctx, {
+        mime: ext === 'mp3' ? 'audio/mpeg' : `audio/${ext}`,
+        ext,
+      }),
     };
   },
 });

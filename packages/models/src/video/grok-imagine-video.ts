@@ -31,16 +31,27 @@ export const grokImagineVideo = createVideoModel({
   schemaUrl: partnerSchemaUrl('xai', 'grok-imagine-video'),
   input: z.object({
     prompt: z.string().min(1),
+    /**
+     * Friendlier than upstream's nested `image: { url }`, and mapped to it in
+     * `run`. Supplying it switches the operation to image-to-video.
+     */
     image_url: z.string().url().optional().describe('Animate this image instead of text-only.'),
     resolution: z.enum(['480p', '720p']).default('720p'),
     duration: z.number().int().min(1).max(15).default(6),
-    mode: z.enum(['normal', 'fun', 'custom']).default('normal'),
+    aspect_ratio: z
+      .enum(['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3'])
+      .default('16:9'),
   }),
   run: async (input, ctx) => {
+    const { image_url, ...rest } = input;
     const result = await ctx.ai.run({
       model: 'xai/grok-imagine-video',
       runtime: 'ai-gateway',
-      input,
+      input: {
+        ...rest,
+        _operation: image_url ? 'edit' : 'generate',
+        ...(image_url ? { image: { url: image_url } } : {}),
+      },
     });
     return {
       kind: 'video',

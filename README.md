@@ -61,7 +61,10 @@ the run fails regardless of token scope.
 
 **R2 uses different credentials.** The `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`
 pair is an S3-compatible access key from **R2 → Manage R2 API Tokens**, not the
-API token above.
+API token above. `R2_PUBLIC_BASE_URL` is optional — set it only if the bucket
+has public access enabled. Left unset, reads are handed out as presigned GET
+URLs valid for 7 days, so the bucket can stay private and a provider can still
+fetch an input you uploaded.
 
 ## The five tools
 
@@ -160,7 +163,7 @@ which mode produced it.
 | Concern | Default | Production |
 | --- | --- | --- |
 | Tasks, model state, embeddings | `.data/store.json` | D1 — implement `Store` in `packages/core/src/storage.ts` |
-| Uploads and results | `.data/files` via `/api/files` | R2 — set the four `R2_*` variables |
+| Uploads and results | `.data/files` via `/api/files` | R2 — set `R2_BUCKET` and the two key variables |
 
 Both swap behind an interface; no caller changes.
 
