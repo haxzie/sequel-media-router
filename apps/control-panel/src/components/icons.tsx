@@ -95,3 +95,53 @@ export function DownloadIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * Tiny modality glyphs for capability pills. 12px, drawn inside the pill, so
+ * `text › image` reads as a transform rather than as two words.
+ */
+const glyph = 'h-3 w-3 shrink-0';
+
+export function TextGlyph({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" className={`${glyph} ${className}`} aria-hidden>
+      <path d="M2 3h8M2 6h8M2 9h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ImageGlyph({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" className={`${glyph} ${className}`} aria-hidden>
+      <rect x="1.6" y="2.2" width="8.8" height="7.6" rx="1.2" stroke="currentColor" strokeWidth="1.1" />
+      <path d="m2.4 8.4 2.3-2.3 1.7 1.7 1.3-1.3 1.9 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function VideoGlyph({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" className={`${glyph} ${className}`} aria-hidden>
+      <rect x="1" y="3" width="6.6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.1" />
+      <path d="m8.4 5.4 2.2-1.5v4.2L8.4 6.6z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function AudioGlyph({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" className={`${glyph} ${className}`} aria-hidden>
+      <path d="M4.6 8.4V2.8l5-1v5.2" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+      <circle cx="3.3" cy="8.6" r="1.4" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="8.3" cy="7.4" r="1.4" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+export function ArrowGlyph({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 8 12" fill="none" className={`h-3 w-2 shrink-0 ${className}`} aria-hidden>
+      <path d="m2.8 4 2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
