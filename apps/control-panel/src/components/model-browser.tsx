@@ -38,10 +38,26 @@ const TABS: Array<{ value: Modality; label: string }> = [
 ];
 
 /**
- * We have no logo assets, so the provider tile is a tinted monogram. Tints come
- * from the existing accent palette rather than brand colours — guessing at a
- * brand's hex looks worse than not trying.
+ * Brand marks, vendored under public/providers so the page makes no third-party
+ * request at render time. Monochrome marks sit on a white tile the way the
+ * reference does, which is also what makes them legible on a dark page.
+ *
+ * Leonardo has no mark here: its site 404s every icon path and rate-limits the
+ * app subdomain. It falls through to the tinted monogram below, which is the
+ * honest outcome rather than a wrong logo.
  */
+const PROVIDER_LOGO: Record<string, string> = {
+  google: '/providers/google.svg',
+  openai: '/providers/openai.svg',
+  alibaba: '/providers/alibaba.svg',
+  elevenlabs: '/providers/elevenlabs.svg',
+  deepgram: '/providers/deepgram.svg',
+  minimax: '/providers/minimax.svg',
+  'black-forest-labs': '/providers/black-forest-labs.svg',
+  xai: '/providers/xai.png',
+};
+
+/** Fallback tint for a provider we have no mark for. */
 const PROVIDER_TONE: Record<string, string> = {
   google: 'var(--color-sky)',
   openai: 'var(--color-mint)',
@@ -81,6 +97,17 @@ const UNIT_LABEL: Record<string, string> = {
 };
 
 function ProviderTile({ provider }: { provider: string }) {
+  const logo = PROVIDER_LOGO[provider];
+
+  if (logo) {
+    return (
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} alt="" className="h-[18px] w-[18px] object-contain" />
+      </div>
+    );
+  }
+
   const tone = PROVIDER_TONE[provider] ?? 'var(--color-muted)';
   return (
     <div
