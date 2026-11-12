@@ -9,7 +9,7 @@
  * caller — see README for the migration.
  */
 import type { EmbeddingCache, EmbeddingRecord } from './embeddings';
-import type { ModelState, Task, TaskStatus } from './types';
+import type { AssetAlias, ModelState, Task, TaskStatus } from './types';
 
 export interface Store extends EmbeddingCache {
   listTasks(filter?: { ids?: string[]; status?: TaskStatus[]; limit?: number }): Promise<Task[]>;
@@ -19,15 +19,19 @@ export interface Store extends EmbeddingCache {
 
   getModelStates(): Promise<ModelState[]>;
   setModelEnabled(id: string, enabled: boolean): Promise<void>;
+
+  putAlias(alias: AssetAlias): Promise<void>;
+  getAlias(id: string): Promise<AssetAlias | undefined>;
 }
 
 interface Snapshot {
   tasks: Task[];
   modelStates: ModelState[];
   embeddings: EmbeddingRecord[];
+  aliases: AssetAlias[];
 }
 
-const empty = (): Snapshot => ({ tasks: [], modelStates: [], embeddings: [] });
+const empty = (): Snapshot => ({ tasks: [], modelStates: [], embeddings: [], aliases: [] });
 
 /** Shared behaviour; subclasses only supply load/save. */
 abstract class BaseStore implements Store {
@@ -99,6 +103,19 @@ abstract class BaseStore implements Store {
       if (at >= 0) s.modelStates[at] = { id, enabled };
       else s.modelStates.push({ id, enabled });
     });
+  }
+
+  async putAlias(alias: AssetAlias): Promise<void> {
+    await this.mutate((s) => {
+      const at = s.aliases.findIndex((a) => a.id === alias.id);
+      if (at >= 0) s.aliases[at] = alias;
+      else s.aliases.push(alias);
+    });
+  }
+
+  async getAlias(id: string): Promise<AssetAlias | undefined> {
+    const { aliases } = await this.load();
+    return aliases.find((a) => a.id === id);
   }
 
   async read(): Promise<EmbeddingRecord[]> {

@@ -60,6 +60,7 @@ export function getForge(): Forge {
     store: buildStore(),
     uploads: buildUploads(),
     ai: CloudflareAI.fromEnv(),
+    baseUrl: baseUrl(),
     waitUntil: (promise) => {
       void promise.catch((error) => {
         console.error('[forge] background task failed:', error);

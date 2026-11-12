@@ -158,6 +158,22 @@ score is useless without credentials, so lexical always contributes and search
 degrades to keyword matching rather than returning nothing. The response says
 which mode produced it.
 
+## Asset links
+
+`get_upload_url` and `run_models` hand back short links — `/f/<10 chars>`, about
+35 characters — not the underlying presigned URL, which runs to ~400.
+
+Two reasons. An agent relays these between tool calls, and ~100 tokens per URL
+is real cost at volume. And a presigned URL expires, so a task row would
+outlive its own result; the alias re-signs on every fetch, so it keeps working.
+
+`/f/<id>` resolves the handle and 302s to a freshly signed URL. Anything that
+follows redirects — curl, a browser, a provider fetching an input — works
+unchanged.
+
+The upload `PUT` URL stays presigned and direct-to-R2. It is used once,
+immediately, and never relayed, so shortening it would only add a proxy hop.
+
 ## Storage
 
 | Concern | Default | Production |

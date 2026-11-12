@@ -38,6 +38,9 @@ export interface Uploads {
   createUploadUrl(opts: { contentType: string; extension?: string }): Promise<UploadTarget>;
   /** Persist bytes we produced ourselves (a model returned binary, not a link). */
   put(opts: { bytes: ArrayBuffer; mime: string; ext: string }): Promise<Asset>;
+  /** A fresh, directly-fetchable URL for a key. Minted per request, so short
+   *  aliases can outlive any individual signature. */
+  readUrl(key: string): Promise<string>;
 }
 
 /** SigV4 caps presigned URL lifetime at 7 days. */
@@ -80,7 +83,7 @@ export class R2Uploads implements Uploads {
    * A URL the object can be read from. Uses the public domain when one is
    * configured; otherwise a presigned GET, valid for 7 days (SigV4's maximum).
    */
-  private async readUrl(key: string): Promise<string> {
+  async readUrl(key: string): Promise<string> {
     if (this.config.publicBaseUrl) {
       return `${this.config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
     }
@@ -143,6 +146,10 @@ export class LocalUploads implements Uploads {
     private readonly dir: string,
     private readonly baseUrl: string,
   ) {}
+
+  async readUrl(key: string): Promise<string> {
+    return `${this.baseUrl.replace(/\/$/, '')}/api/files/${key}`;
+  }
 
   async createUploadUrl(opts: { contentType: string; extension?: string }): Promise<UploadTarget> {
     const key = randomKey(opts.extension ?? '');

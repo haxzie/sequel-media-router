@@ -139,6 +139,21 @@ export interface UsageSummary {
   windowDays: number;
 }
 
+/**
+ * A short, stable handle for a stored object.
+ *
+ * Presigned URLs run to ~400 characters and expire. An agent relaying one into
+ * the next tool call pays ~100 tokens for it and gets a link that dies in a
+ * week. The alias is ~10 characters, never expires, and resolves to a freshly
+ * signed URL on each fetch.
+ */
+export interface AssetAlias {
+  id: string;
+  key: string;
+  mime: string;
+  createdAt: string;
+}
+
 /** Per-model enablement, controlled from the Models page. */
 export interface ModelState {
   id: string;

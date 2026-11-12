@@ -13,15 +13,24 @@ import { estimateCost, addMoney, type CostEstimate } from './pricing';
 import type { ModelRegistry } from './registry';
 import type { Store } from './storage';
 import type { Uploads } from './uploads';
-import type { Asset, Modality, Task, TaskStatus, UsageSummary } from './types';
+import type { Asset, AssetAlias, Modality, Task, TaskStatus, UsageSummary } from './types';
 
 export interface ForgeOptions {
   registry: ModelRegistry;
   store: Store;
   uploads: Uploads;
   ai: CloudflareAI | null;
+  /** Public origin, used to build short asset links. */
+  baseUrl: string;
   /** Hook for Workers' `ctx.waitUntil`. Defaults to a floating promise. */
   waitUntil?: (promise: Promise<unknown>) => void;
+}
+
+/** ~10 chars of base62. Collision risk is negligible at POC volumes. */
+function shortId(): string {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
 }
 
 /** A model as `search_models` reports it. */
@@ -64,6 +73,32 @@ export class Forge {
   async ready(): Promise<void> {
     this.indexBuilt ??= this.index.build();
     await this.indexBuilt;
+  }
+
+  /**
+   * Register a short handle for a stored object and return its link.
+   *
+   * The presigned alternative is ~400 characters and expires in days. This is
+   * ~35, never expires, and re-signs on each fetch — which matters because an
+   * agent relays these URLs between tool calls and pays tokens for every one.
+   */
+  private async shorten(asset: Asset): Promise<Asset> {
+    if (!asset.key) return asset;
+    const alias: AssetAlias = {
+      id: shortId(),
+      key: asset.key,
+      mime: asset.mime,
+      createdAt: new Date().toISOString(),
+    };
+    await this.opts.store.putAlias(alias);
+    return { ...asset, url: `${this.opts.baseUrl.replace(/\/$/, '')}/f/${alias.id}` };
+  }
+
+  /** Resolve a short handle to a directly-fetchable URL. */
+  async resolveAlias(id: string): Promise<{ url: string; mime: string } | undefined> {
+    const alias = await this.opts.store.getAlias(id);
+    if (!alias) return undefined;
+    return { url: await this.opts.uploads.readUrl(alias.key), mime: alias.mime };
   }
 
   private async enabledIds(): Promise<Set<string>> {
@@ -146,8 +181,13 @@ export class Forge {
       contentType: params.content_type,
       extension: params.extension,
     });
+    const short = await this.shorten({
+      url: target.fileUrl,
+      mime: params.content_type,
+      key: target.key,
+    });
     return {
-      file_url: target.fileUrl,
+      file_url: short.url,
       upload_url: target.uploadUrl,
       key: target.key,
       method: 'PUT' as const,
@@ -235,7 +275,7 @@ export class Forge {
       // in `failed`, not escape and strand it at `in_progress` forever.
       const ctx: RunContext = {
         ai: this.requireAi(),
-        storeAsset: (opts) => this.opts.uploads.put(opts),
+        storeAsset: async (opts) => this.shorten(await this.opts.uploads.put(opts)),
       };
       const output = await model.run(input, ctx);
       const first = output.assets[0];
