@@ -367,6 +367,15 @@ export class Forge {
     };
   }
 
+  /**
+   * One task with everything on it, including the input and the raw provider
+   * payload. Not an MCP tool: this is the control panel's detail view, where
+   * verbosity is the point rather than a cost.
+   */
+  async getTask(id: string): Promise<Task | undefined> {
+    return this.opts.store.getTask(id);
+  }
+
   // ------------------------------------------------------------- dashboard
   async usage(windowDays = 30): Promise<UsageSummary> {
     const since = Date.now() - windowDays * 86_400_000;

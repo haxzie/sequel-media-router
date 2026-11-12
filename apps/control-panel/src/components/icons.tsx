@@ -63,3 +63,35 @@ export function ExternalIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * The Forge mark. Solid rather than stroked, and sized by the caller — it is a
+ * logo, not part of the 16px nav icon set.
+ */
+export function AnvilIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={`shrink-0 ${className}`} aria-hidden>
+      <path
+        fill="currentColor"
+        d="M9 5v5c4.03 2.47-.56 4.97-3 6v3h15v-3c-6.41-2.73-3.53-7 1-8V5zM2 6c.81 2.13 2.42 3.5 5 4V6z"
+      />
+    </svg>
+  );
+}
+
+export function CloseIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function DownloadIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="M8 2v8m0 0 3-3m-3 3L5 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2.75 11.5V13a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1v-1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}

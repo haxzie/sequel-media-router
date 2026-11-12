@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ActivityIcon, HomeIcon, LayersIcon } from './icons';
+import { ActivityIcon, AnvilIcon, HomeIcon, LayersIcon } from './icons';
 import { UsageCard } from './usage-card';
 
 const NAV = [
@@ -19,14 +19,9 @@ export function Sidebar() {
     <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col justify-between bg-[var(--color-surface)] px-4 py-5">
       <div className="min-h-0 overflow-y-auto">
         {/* Workspace header */}
-        <div className="flex items-center gap-3 px-2 pb-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#0a0a0a]">
-            <span className="text-[15px] font-semibold">F</span>
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-[15px] font-semibold tracking-tight">Forge</div>
-            <div className="truncate text-[12px] text-[var(--color-dim)]">Composio Instant</div>
-          </div>
+        <div className="flex items-center gap-2.5 px-2 pb-5">
+          <AnvilIcon className="h-[18px] w-[18px] text-[var(--color-text)]" />
+          <div className="min-w-0 truncate text-[15px] font-semibold tracking-tight">Forge</div>
         </div>
 
         <div className="mb-4 h-px bg-[var(--color-line)]" />

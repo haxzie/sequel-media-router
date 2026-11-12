@@ -1,21 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalIcon } from './icons';
+import { TaskPanel, type TaskSummary } from './task-panel';
 import { Card, PageHeader, Segmented, StatusDot } from './ui';
 
-interface TaskRow {
-  task_id: string;
-  model: string;
-  modality: 'image' | 'video' | 'audio';
-  status: 'queued' | 'in_progress' | 'completed' | 'failed';
-  label: string;
-  result_url?: string;
-  cost: { usd: string; estimated: boolean };
-  error?: string;
-  created_at: string;
-  completed_at?: string;
-}
+type TaskRow = TaskSummary;
 
 const STATUS_COLOR: Record<TaskRow['status'], string> = {
   queued: '#6b6b6b',
@@ -59,6 +48,7 @@ export function TaskList() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
   const [loaded, setLoaded] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = () =>
@@ -77,6 +67,13 @@ export function TaskList() {
   const visible = useMemo(
     () => (filter === 'all' ? tasks : tasks.filter((t) => t.status === filter)),
     [tasks, filter],
+  );
+
+  // Follow the polled copy rather than a snapshot, so a panel left open on a
+  // running video fills in its player the moment the task completes.
+  const open = useMemo(
+    () => tasks.find((t) => t.task_id === openId) ?? null,
+    [tasks, openId],
   );
 
   const spend = useMemo(
@@ -140,8 +137,10 @@ export function TaskList() {
               {visible.map((task, index) => (
                 <tr
                   key={task.task_id}
+                  onClick={() => setOpenId(task.task_id)}
                   className={[
-                    'transition-colors hover:bg-[var(--color-card-hover)]',
+                    'cursor-pointer transition-colors hover:bg-[var(--color-card-hover)]',
+                    task.task_id === openId ? 'bg-[var(--color-card-hover)]' : '',
                     index > 0 ? 'border-t border-[var(--color-line)]' : '',
                   ].join(' ')}
                 >
@@ -180,19 +179,9 @@ export function TaskList() {
                   </td>
 
                   <td className="px-5 py-3.5 text-right">
-                    {task.result_url ? (
-                      <a
-                        href={task.result_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
-                      >
-                        Open
-                        <ExternalIcon className="h-3.5 w-3.5" />
-                      </a>
-                    ) : (
-                      <span className="text-[12px] text-[var(--color-dim)]">—</span>
-                    )}
+                    <span className="text-[12px] text-[var(--color-muted)]">
+                      {task.result_url ? 'View' : '—'}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -200,6 +189,8 @@ export function TaskList() {
           </table>
         </Card>
       )}
+
+      {open && <TaskPanel task={open} onClose={() => setOpenId(null)} />}
     </>
   );
 }
