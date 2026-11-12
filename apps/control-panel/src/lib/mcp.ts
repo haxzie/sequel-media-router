@@ -24,7 +24,7 @@ type ToolName = keyof typeof toolSchemas;
 
 const TOOL_DESCRIPTIONS: Record<ToolName, string> = {
   search_models:
-    'Find media generation models by use case or name. Returns each model with its capabilities, price, latency and a one-line outline. Filter by type: image, video or audio.',
+    'Find media generation models by use case or name, or browse the whole catalog by omitting the query. Returns each model with its capabilities, price, latency and a one-line outline. Filter by type (image, video, audio); raise limit (default 10, max 200) to list everything.',
   get_model_schemas:
     'Return the full JSON Schema for a model’s input, plus its capabilities and published rates. Call this before run_models when you need the exact parameter names.',
   get_upload_url:

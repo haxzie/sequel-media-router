@@ -404,7 +404,13 @@ export const toolSchemas = {
   search_models: z.object({
     type: z.enum(['image', 'video', 'audio']).optional(),
     query: z.string().optional(),
-    limit: z.number().int().min(1).max(50).optional(),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(200)
+      .optional()
+      .describe('Default 10. Raise it to browse the catalog; the cap is 200.'),
   }),
   get_model_schemas: z.object({ model: z.string() }),
   get_upload_url: z.object({

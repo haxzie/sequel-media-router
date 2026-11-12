@@ -182,10 +182,15 @@ export class EmbeddingIndex {
       pool = pool.filter((m) => allow.has(m.id));
     }
 
+    const limit = options.limit ?? 10;
+
     const trimmed = query.trim();
     if (!trimmed) {
+      // No query is a browse, not a search: keep catalog order and apply the
+      // same limit a query would. Silently returning everything made `limit`
+      // a lie on the one call most likely to be made without one.
       return {
-        hits: pool.map((model) => ({ model, score: 0, signals: { lexical: 0 } })),
+        hits: pool.slice(0, limit).map((model) => ({ model, score: 0, signals: { lexical: 0 } })),
         mode: this.ready ? 'hybrid' : 'lexical',
         note: this.note,
       };
@@ -211,7 +216,6 @@ export class EmbeddingIndex {
     });
 
     hits.sort((a, b) => b.score - a.score);
-    const limit = options.limit ?? 10;
     return {
       hits: hits.slice(0, limit),
       mode: queryVector ? 'hybrid' : 'lexical',
