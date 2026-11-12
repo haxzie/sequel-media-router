@@ -32,7 +32,36 @@ The panel boots without credentials — model search falls back to keyword
 matching and every run fails with a clear message. Set the two Cloudflare
 variables and everything works.
 
-**Token scopes:** Workers AI Read/Run and AI Gateway Run.
+### API token permissions
+
+Create the token at **My Profile → API Tokens → Create Token**. The quickest
+route is the dashboard's own **Workers AI** template (Workers AI → Use REST API
+→ Create a Workers AI API Token), which prefills everything.
+
+Rolling your own, grant **Account → Workers AI → Edit** (Edit implies Read, and
+Cloudflare's own guide asks for both).
+
+That single permission covers every model this app runs — `@cf/` Workers AI
+models *and* partner models like Veo, Wan and Grok. Both go through
+`/accounts/{id}/ai/run`, and the docs are explicit:
+
+> All `/accounts/{account_id}/ai/*` endpoints require the Workers AI permission.
+> This applies to third-party models and to Workers AI (`@cf/`) models. A token
+> that holds only an `AI Gateway` permission returns `401` with error code
+> `10000`.
+
+So do **not** reach for the `AI Gateway` permission for inference — it governs
+`/ai-gateway/*` (gateway config, logs, routes) and is only needed if you manage
+gateways through the API. Setting `CLOUDFLARE_AI_GATEWAY` to route through a
+named gateway does not require it.
+
+**Partner models need account credits.** Veo, Wan, Grok Imagine, MiniMax and
+GPT Image bill through unified billing, so load credits before calling them or
+the run fails regardless of token scope.
+
+**R2 uses different credentials.** The `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`
+pair is an S3-compatible access key from **R2 → Manage R2 API Tokens**, not the
+API token above.
 
 ## The five tools
 
