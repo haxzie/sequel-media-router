@@ -2,6 +2,7 @@
 
 import { formatUsd } from '@sequel/core/pricing';
 import { useEffect, useMemo, useState } from 'react';
+import { CapabilityFilter } from './capability-filter';
 import { CapabilityPills } from './capability-pills';
 import { SearchIcon } from '@sequel/ui';
 import { Card, PageHeader, Segmented } from '@sequel/ui';
@@ -147,6 +148,7 @@ function Price({ model }: { model: ModelSummary }) {
 export function ModelBrowser() {
   const [tab, setTab] = useState<Modality>('image');
   const [query, setQuery] = useState('');
+  const [capabilities, setCapabilities] = useState<string[]>([]);
 
   /*
    * The catalog is fetched once and filtered in the browser.
@@ -198,7 +200,31 @@ export function ModelBrowser() {
   // Search is ranked across every modality, so the tab still filters it — that
   // keeps rank order within the tab rather than re-querying per tab.
   const source = results ?? catalog ?? [];
-  const visible = useMemo(() => source.filter((m) => m.modality === tab), [source, tab]);
+  const inTab = useMemo(() => source.filter((m) => m.modality === tab), [source, tab]);
+
+  // Facets come from the tab, not the whole catalog: offering "lyrics" while
+  // looking at image models is a filter that can only ever return nothing.
+  const facets = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const model of inTab) {
+      for (const capability of model.capabilities) {
+        counts.set(capability, (counts.get(capability) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  }, [inTab]);
+
+  // ANDed. Selecting image-to-video and synced-audio should mean both, which
+  // is the whole point — an OR would just re-create the ranked list.
+  const visible = useMemo(
+    () =>
+      capabilities.length === 0
+        ? inTab
+        : inTab.filter((model) => capabilities.every((c) => model.capabilities.includes(c))),
+    [inTab, capabilities],
+  );
   const enabledCount = visible.filter((m) => m.enabled).length;
   const loading = catalog === null;
 
@@ -224,14 +250,22 @@ export function ModelBrowser() {
         title="Models"
         meta={
           <>
-            {visible.length} {tab} models · {enabledCount} enabled · disabled models are hidden
-            from search and refused by runs
+            {visible.length} {tab} model{visible.length === 1 ? '' : 's'}
+            {capabilities.length > 0 && ` of ${inTab.length}`} · {enabledCount} enabled ·
+            disabled models are hidden from search and refused by runs
           </>
         }
       />
 
       <div className="mb-6 flex items-center gap-3">
-        <Segmented value={tab} options={TABS} onChange={setTab} />
+        <Segmented
+          value={tab}
+          options={TABS}
+          onChange={(next) => {
+            setTab(next);
+            setCapabilities([]);
+          }}
+        />
 
         <div className="flex flex-1 items-center gap-2.5 rounded-full bg-[var(--color-card)] px-4 py-2">
           <SearchIcon className="text-[var(--color-dim)]" />
@@ -242,6 +276,12 @@ export function ModelBrowser() {
             className="w-full bg-transparent text-[13px] outline-none placeholder:text-[var(--color-dim)]"
           />
         </div>
+
+        <CapabilityFilter
+          available={facets}
+          selected={capabilities}
+          onChange={setCapabilities}
+        />
       </div>
 
       {query.trim() && (
@@ -259,7 +299,7 @@ export function ModelBrowser() {
         </Card>
       ) : visible.length === 0 ? (
         <Card className="px-5 py-14 text-center text-[13px] text-[var(--color-muted)]">
-          No {tab} models match that search.
+          No {tab} models match{capabilities.length > 0 ? ' those filters' : ' that search'}.
         </Card>
       ) : (
         <Card className="overflow-hidden">

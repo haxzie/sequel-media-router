@@ -47,6 +47,16 @@ const WORD: Record<string, string> = {
   instrumental: 'instrumental',
 };
 
+/**
+ * Human label for a capability slug. Shared with the filter so a facet and the
+ * pill on the row it matches can never read differently.
+ */
+export function capabilityLabel(capability: string): string {
+  const transform = TRANSFORM[capability];
+  if (transform) return `${transform[0]} to ${transform[1]}`;
+  return WORD[capability] ?? capability;
+}
+
 const pill =
   'inline-flex items-center rounded-md border border-[var(--color-line-strong)] text-[var(--color-muted)]';
 
