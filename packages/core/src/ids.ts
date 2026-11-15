@@ -30,6 +30,8 @@ export const ID_PREFIX = {
   webhook: 'whk',
   webhookDelivery: 'whd',
   event: 'evt',
+  chat: 'cht',
+  chatMessage: 'msg',
 } as const;
 
 export type EntityKind = keyof typeof ID_PREFIX;

@@ -18,11 +18,14 @@
     "db:console": "wrangler d1 execute sequel --local --command"
   },
   "dependencies": {
+    "@ai-sdk/mcp": "^2.0.99",
+    "@ai-sdk/react": "^4.0.177",
     "@better-auth/api-key": "^1.7.25",
     "@better-auth/mcp": "^1.7.25",
     "@sequel/core": "workspace:*",
     "@sequel/models": "workspace:*",
     "@sequel/ui": "workspace:*",
+    "ai": "^7.0.173",
     "better-auth": "^1.7.25",
     "kysely": "^0.29.9",
     "kysely-d1": "^0.4.0",
@@ -30,6 +33,8 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "streamdown": "^2.7.1",
+    "workers-ai-provider": "^4.0.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

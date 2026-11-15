@@ -109,6 +109,86 @@ body {
   overscroll-behavior: contain;
 }
 
+/*
+ * Generation placeholder.
+ *
+ * A sweep rather than a spinner: generation takes seconds to minutes, and a
+ * shape that fills the space the image will occupy tells you what is coming
+ * and roughly how big it will be. A spinner tells you only that something is
+ * happening.
+ */
+@keyframes sequel-sheen {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.sheen {
+  background: linear-gradient(
+    100deg,
+    var(--color-card) 30%,
+    var(--color-card-hover) 50%,
+    var(--color-card) 70%
+  );
+  background-size: 200% 100%;
+  animation: sequel-sheen 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen {
+    animation: none;
+    background: var(--color-card-hover);
+  }
+}
+
+/*
+ * Markdown from the assistant. Streamdown ships unstyled on purpose, so the
+ * surrounding type scale has to be stated here rather than inherited.
+ */
+.chat-prose > * + * {
+  margin-top: 0.75em;
+}
+
+.chat-prose ul,
+.chat-prose ol {
+  padding-left: 1.25em;
+  list-style: revert;
+}
+
+.chat-prose code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+  background: var(--color-card);
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+}
+
+.chat-prose pre {
+  background: var(--color-card);
+  border-radius: 12px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+}
+
+.chat-prose pre code {
+  background: none;
+  padding: 0;
+}
+
+.chat-prose a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-prose strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
 /* Tabular figures everywhere a number is compared down a column. */
 .nums {
   font-variant-numeric: tabular-nums;
