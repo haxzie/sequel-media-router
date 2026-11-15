@@ -40,7 +40,7 @@ export function Sidebar({
   // Sticky full-height: the usage card must stay in view however long the page is.
   return (
     <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col justify-between bg-[var(--color-surface)] px-4 py-5">
-      <div className="min-h-0 overflow-y-auto">
+      <div className="scroll-area min-h-0 overflow-y-auto">
         <OrgSwitcher organizations={organizations} activeId={activeOrganizationId} />
 
         <div className="my-4 h-px bg-[var(--color-line)]" />
@@ -54,7 +54,7 @@ export function Sidebar({
                 key={item.href}
                 href={item.href}
                 className={[
-                  'flex items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] transition-colors',
+                  'nav-item flex items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] transition-colors',
                   active
                     ? 'bg-[var(--color-card)] text-[var(--color-text)]'
                     : 'text-[var(--color-muted)] hover:text-[var(--color-text)]',

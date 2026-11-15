@@ -44,6 +44,40 @@ body {
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /*
+   * No rubber-band at the ends of the page. The app is a fixed shell with a
+   * sticky sidebar, so bouncing it exposes the bare viewport behind a surface
+   * that is supposed to be the window.
+   */
+  overscroll-behavior: none;
+}
+
+/*
+ * Navigation: no browser focus ring.
+ *
+ * The blue ring is the one thing on the page that is not ours, and it lands on
+ * a nav item after an ordinary click. Dropping it outright would strand
+ * keyboard users, so focus is still shown — as the same surface change hover
+ * and the active page already use, which is the vocabulary the rest of the app
+ * speaks.
+ */
+.nav-item:focus {
+  outline: none;
+}
+
+.nav-item:focus-visible {
+  background: var(--color-card);
+  color: var(--color-text);
+}
+
+/*
+ * Inner scroll areas keep their own overscroll to themselves. Without this,
+ * reaching the bottom of the sidebar, the task panel or a modal hands the
+ * remaining scroll to the page behind it, which then moves under the pointer.
+ */
+.scroll-area {
+  overscroll-behavior: contain;
 }
 
 /* Tabular figures everywhere a number is compared down a column. */

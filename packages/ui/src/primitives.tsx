@@ -226,7 +226,7 @@ export function Tabs<T extends string>({
             onClick={() => onChange(option.value)}
             aria-current={active ? 'page' : undefined}
             className={[
-              '-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-[14px] transition-colors',
+              'nav-item -mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-[14px] transition-colors',
               active
                 ? 'border-[var(--color-text)] text-[var(--color-text)]'
                 : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]',

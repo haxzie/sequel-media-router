@@ -59,7 +59,7 @@ export function OrgSwitcher({
         type="button"
         onClick={() => setOpen((value) => !value)}
         disabled={busy}
-        className="flex w-full items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors hover:bg-[var(--color-card)]"
+        className="nav-item flex w-full items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors hover:bg-[var(--color-card)]"
       >
         <AnvilIcon className="h-[18px] w-[18px] shrink-0 text-[var(--color-text)]" />
         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight">

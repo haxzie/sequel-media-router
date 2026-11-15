@@ -25,7 +25,7 @@ export function UserMenu({ user }: { user: SidebarUser }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors hover:bg-[var(--color-card)]"
+        className="nav-item flex w-full items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors hover:bg-[var(--color-card)]"
       >
         <Avatar name={user.name} src={user.image} size={28} />
         <div className="min-w-0 flex-1">

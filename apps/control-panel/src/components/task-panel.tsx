@@ -113,7 +113,7 @@ function Preview({ task }: { task: TaskDetail }) {
     <div className="rounded-2xl bg-[var(--color-card)] px-4 py-5">
       <audio src={url} controls className="w-full" preload="metadata" />
       {asset?.text && (
-        <p className="mt-4 max-h-40 overflow-y-auto text-[13px] leading-relaxed text-[var(--color-muted)]">
+        <p className="scroll-area mt-4 max-h-40 overflow-y-auto text-[13px] leading-relaxed text-[var(--color-muted)]">
           {asset.text}
         </p>
       )}
@@ -184,7 +184,7 @@ export function TaskPanel({ task, onClose }: { task: TaskSummary; onClose: () =>
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+        <div className="scroll-area min-h-0 flex-1 overflow-y-auto px-5 pb-6">
           <Preview task={detail} />
 
           {/*

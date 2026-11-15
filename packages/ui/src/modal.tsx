@@ -52,7 +52,7 @@ export function Modal({
   if (!open || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-6 py-[12vh]">
+    <div className="scroll-area fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-6 py-[12vh]">
       <button
         type="button"
         aria-label="Close"
