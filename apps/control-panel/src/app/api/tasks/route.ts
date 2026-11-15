@@ -8,8 +8,22 @@ export async function GET(request: Request) {
   const forge = getForge();
   const url = new URL(request.url);
   const status = url.searchParams.getAll('status') as TaskStatus[];
+
+  /*
+   * Scoped to the caller's organisation, from their credential — never from a
+   * query parameter, which would let anyone read another team's runs.
+   * Without a credential there is no scope, so the list is empty rather than
+   * everything.
+   */
+  const actor = await resolveActor(request);
+  if (!actor?.organizationId) return Response.json({ tasks: [] });
+
   return Response.json(
-    await forge.listTasks({ status: status.length ? status : undefined, limit: 100 }),
+    await forge.listTasks({
+      status: status.length ? status : undefined,
+      limit: 100,
+      organizationId: actor.organizationId,
+    }),
   );
 }
 

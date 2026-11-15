@@ -27,6 +27,14 @@ export async function resolveActor(request: Request): Promise<TaskActor | null> 
     const user = await lookupUser(auth, verified.key.referenceId);
     if (!user) return null;
 
+    /*
+     * A key has no session, so it has no active organisation to borrow. The
+     * owner's first membership is the one it runs under — which is right while
+     * a key belongs to a person. When keys become organisation-owned, this
+     * reads the key's own organisation instead and this lookup goes away.
+     */
+    const organizationId = await firstOrganizationId(auth, user.id);
+
     return {
       userId: user.id,
       name: user.name || user.email,
@@ -34,6 +42,7 @@ export async function resolveActor(request: Request): Promise<TaskActor | null> 
       image: user.image ?? null,
       via: 'api_key',
       apiKeyId: verified.key.id,
+      ...(organizationId ? { organizationId } : {}),
     };
   }
 
@@ -50,6 +59,21 @@ export async function resolveActor(request: Request): Promise<TaskActor | null> 
       ? { organizationId: session.session.activeOrganizationId }
       : {}),
   };
+}
+
+async function firstOrganizationId(
+  auth: Awaited<ReturnType<typeof getAuth>>,
+  userId: string,
+): Promise<string | null> {
+  const ctx = await auth.$context;
+  const rows = (await ctx.adapter
+    .findMany({
+      model: 'member',
+      where: [{ field: 'userId', value: userId }],
+      limit: 1,
+    })
+    .catch(() => [])) as unknown as Array<{ organizationId: string }>;
+  return rows[0]?.organizationId ?? null;
 }
 
 interface UserRow {

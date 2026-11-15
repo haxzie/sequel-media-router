@@ -11,8 +11,19 @@
 import type { EmbeddingCache, EmbeddingRecord } from './embeddings';
 import type { AssetAlias, ModelState, Task, TaskStatus } from './types';
 
+export interface TaskFilter {
+  ids?: string[];
+  status?: TaskStatus[];
+  limit?: number;
+  /**
+   * Scope to one organisation. Omitted means unscoped, which only the
+   * dashboard's own maintenance paths should ever want.
+   */
+  organizationId?: string;
+}
+
 export interface Store extends EmbeddingCache {
-  listTasks(filter?: { ids?: string[]; status?: TaskStatus[]; limit?: number }): Promise<Task[]>;
+  listTasks(filter?: TaskFilter): Promise<Task[]>;
   getTask(id: string): Promise<Task | undefined>;
   putTask(task: Task): Promise<void>;
   patchTask(id: string, patch: Partial<Task>): Promise<Task | undefined>;
@@ -51,13 +62,13 @@ abstract class BaseStore implements Store {
     return next;
   }
 
-  async listTasks(filter?: {
-    ids?: string[];
-    status?: TaskStatus[];
-    limit?: number;
-  }): Promise<Task[]> {
+  async listTasks(filter?: TaskFilter): Promise<Task[]> {
     const { tasks } = await this.load();
     let out = [...tasks].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    if (filter?.organizationId) {
+      // Strict equality, so an unassigned task is not visible to any team.
+      out = out.filter((t) => t.organizationId === filter.organizationId);
+    }
     if (filter?.ids?.length) {
       const want = new Set(filter.ids);
       out = out.filter((t) => want.has(t.id));

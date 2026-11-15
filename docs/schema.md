@@ -174,11 +174,11 @@ indexes, no foreign keys, and no concurrent-write safety. On Workers the
 filesystem is not writable, so it silently degrades to an in-memory store that
 dies with the isolate.
 
-**2. Nothing the application owns is organisation-scoped.** A task records
-`createdBy` but not which organisation it belongs to, so switching teams shows
-the same task list, the same model enablement and the same spend. The Create
-Team dialog says "its own members and invitations" precisely because that is
-all that is true.
+**2. Model enablement is still global.** Tasks and spend are organisation-
+scoped — a task carries `organizationId`, and every read path derives that
+from the caller's credential rather than a parameter — but which models are
+enabled is one list shared by every team. Disabling a model in one team
+disables it everywhere.
 
 **3. `session.activeOrganizationId` has no foreign key.** Better Auth leaves it
 loose because the organization plugin is optional. Deleting an organisation

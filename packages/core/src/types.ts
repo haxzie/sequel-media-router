@@ -160,6 +160,13 @@ export interface Task {
   raw?: unknown;
   /** Absent on runs made before attribution existed, or by an unauthenticated caller. */
   createdBy?: TaskActor;
+  /**
+   * The organisation this run belongs to, and the only thing that scopes it.
+   *
+   * Absent means nobody's: a run made with no credential has no team to file
+   * it under, so it is visible to no organisation rather than to all of them.
+   */
+  organizationId?: string;
 }
 
 export interface UsageSummary {

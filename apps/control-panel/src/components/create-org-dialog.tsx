@@ -5,12 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 /**
- * A new team is a new organization with its own members and invitations.
- *
- * It is NOT yet its own models, tasks or spend: the Forge store has no
- * organization column, so those are still global across every team. The copy
- * here says only what is true — promising an isolated workspace would be a
- * lie a user discovers by switching teams and seeing the same task list.
+ * A new team is a new organization: its own members, invitations, tasks and
+ * spend. Model enablement is still global — that is the one thing the copy
+ * below does not claim.
  */
 export function CreateOrgDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -54,7 +51,7 @@ export function CreateOrgDialog({ open, onClose }: { open: boolean; onClose: () 
       open={open}
       onClose={close}
       title="Create a team"
-      description="A separate team with its own members and invitations."
+      description="A separate team with its own members, runs and spend."
     >
       <form onSubmit={submit} className="space-y-4">
         <Field label="Team name" hint="You can rename it later.">

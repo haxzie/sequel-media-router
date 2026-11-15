@@ -106,8 +106,21 @@ async function callTool(
           }),
         );
       }
-      case 'list_tasks':
-        return toolResult(await forge.listTasks(args));
+      case 'list_tasks': {
+        /*
+         * Scope comes from the credential, not the arguments. An agent cannot
+         * widen it, and an unauthenticated caller sees nothing rather than
+         * every team's runs.
+         */
+        // No organisation means no scope to apply, and an unscoped list would
+        // be every team's runs. Empty is the correct answer, not everything.
+        if (!actor?.organizationId) return toolResult({ tasks: [] });
+
+        const filters = parsed.data as Record<string, unknown>;
+        return toolResult(
+          await forge.listTasks({ ...filters, organizationId: actor.organizationId }),
+        );
+      }
     }
   } catch (error) {
     return toolResult({ error: error instanceof Error ? error.message : String(error) }, true);

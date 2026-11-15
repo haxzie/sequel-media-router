@@ -263,6 +263,9 @@ export class Forge {
       costEstimated: cost.estimated,
       createdAt: new Date().toISOString(),
       ...(params.createdBy ? { createdBy: params.createdBy } : {}),
+      ...(params.createdBy?.organizationId
+        ? { organizationId: params.createdBy.organizationId }
+        : {}),
     };
     await this.opts.store.putTask(task);
 
@@ -357,11 +360,17 @@ export class Forge {
     status?: TaskStatus[];
     limit?: number;
     include_raw?: boolean;
+    /**
+     * Server-supplied, never a tool argument — a caller must not be able to
+     * widen its own scope by passing someone else's organisation id.
+     */
+    organizationId?: string;
   }) {
     const tasks = await this.opts.store.listTasks({
       ids: params.task_ids,
       status: params.status,
       limit: params.limit ?? 50,
+      ...(params.organizationId ? { organizationId: params.organizationId } : {}),
     });
     return {
       tasks: tasks.map((t) => ({
@@ -387,16 +396,20 @@ export class Forge {
    * payload. Not an MCP tool: this is the control panel's detail view, where
    * verbosity is the point rather than a cost.
    */
-  async getTask(id: string): Promise<Task | undefined> {
-    return this.opts.store.getTask(id);
+  async getTask(id: string, organizationId?: string): Promise<Task | undefined> {
+    const task = await this.opts.store.getTask(id);
+    if (!task) return undefined;
+    // A task id in a URL must not read across teams.
+    if (organizationId && task.organizationId !== organizationId) return undefined;
+    return task;
   }
 
   // ------------------------------------------------------------- dashboard
-  async usage(windowDays = 30): Promise<UsageSummary> {
+  async usage(windowDays = 30, organizationId?: string): Promise<UsageSummary> {
     const since = Date.now() - windowDays * 86_400_000;
-    const tasks = (await this.opts.store.listTasks()).filter(
-      (t) => Date.parse(t.createdAt) >= since,
-    );
+    const tasks = (
+      await this.opts.store.listTasks(organizationId ? { organizationId } : undefined)
+    ).filter((t) => Date.parse(t.createdAt) >= since);
     const byModality: UsageSummary['byModality'] = {
       image: { usd: '0.000000', count: 0 },
       video: { usd: '0.000000', count: 0 },
