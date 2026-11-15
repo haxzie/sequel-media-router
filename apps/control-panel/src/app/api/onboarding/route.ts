@@ -1,6 +1,6 @@
-import { randomSuffix } from '@sequel/core/ids';
 import { headers } from 'next/headers';
 import { getAuth } from '@/lib/auth';
+import { uniqueSlug } from '@/lib/org';
 import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -68,24 +68,4 @@ export async function POST(request: Request) {
   });
 
   return Response.json({ ok: true });
-}
-
-/**
- * Slugs are unique across every organization, so two people onboarding from
- * the same company would collide. Suffix rather than reject: the name is theirs
- * to fix later in settings, and failing signup over a slug is absurd.
- */
-async function uniqueSlug(auth: Awaited<ReturnType<typeof getAuth>>, name: string) {
-  const base =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || 'org';
-
-  for (const candidate of [base, `${base}-${randomSuffix(6).toLowerCase()}`]) {
-    const { status } = await auth.api.checkOrganizationSlug({ body: { slug: candidate } });
-    if (status) return candidate;
-  }
-  return `${base}-${randomSuffix(10).toLowerCase()}`;
 }

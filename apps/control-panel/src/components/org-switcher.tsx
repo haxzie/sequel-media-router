@@ -1,9 +1,10 @@
 'use client';
 
-import { AnvilIcon, CheckIcon } from '@sequel/ui';
+import { AnvilIcon, Avatar, CheckIcon, PlusIcon } from '@sequel/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { CreateOrgDialog } from './create-org-dialog';
 import type { SidebarOrg } from './sidebar';
 
 /**
@@ -27,6 +28,7 @@ export function OrgSwitcher({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
@@ -75,14 +77,33 @@ export function OrgSwitcher({
               key={org.id}
               type="button"
               onClick={() => void select(org.id)}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+              className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-[13px] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
             >
-              <span className="truncate">{org.name}</span>
+              <Avatar name={org.name} size={22} />
+              <span className="min-w-0 flex-1 truncate">{org.name}</span>
               {org.id === activeId && <CheckIcon className="h-3.5 w-3.5 shrink-0" />}
             </button>
           ))}
+
+          <div className="my-1 h-px bg-[var(--color-line)]" />
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setCreating(true);
+            }}
+            className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-[13px] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+          >
+            <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
+              <PlusIcon className="h-3.5 w-3.5" />
+            </span>
+            Create team
+          </button>
         </div>
       )}
+
+      <CreateOrgDialog open={creating} onClose={() => setCreating(false)} />
     </div>
   );
 }

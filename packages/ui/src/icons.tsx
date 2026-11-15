@@ -155,3 +155,11 @@ export function UsersIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function PlusIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
