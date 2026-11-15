@@ -65,7 +65,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'codex',
-    tone: '#000000',
+    tone: 'linear-gradient(150deg, #B6A8F8 0%, #7A8BF9 48%, #2F44F5 100%)',
     name: 'Codex',
     method: 'One command',
     logo: '/clients/codex.svg',
