@@ -8,7 +8,8 @@ the marks themselves remain trademarks), retrieved 2026-11-15.
 
 | File | Simple Icons slug |
 | --- | --- |
-| `claude.svg`, `claude-code.svg` | `claude` |
+| `claude.svg` | `claude` |
+| `claude-code.svg` | `claudecode` |
 | `cursor.svg` | `cursor` |
 | `vscode.svg` | `visualstudiocode` |
 | `chatgpt.svg` | `openai` |
@@ -19,8 +20,7 @@ the marks themselves remain trademarks), retrieved 2026-11-15.
 `codex.svg` is LobeHub's Codex mark, supplied directly — Simple Icons has no
 Codex entry, and OpenAI's logo is the wrong mark for it.
 
-Claude Code and Claude share the Claude mark; neither Simple Icons nor anyone
-else ships a separate Claude Code one.
+Claude Code has its own mark now; it was sharing Claude's.
 
 Marks render as a CSS mask filled white over a brand-coloured tile, so each
 file needs to be a single-colour glyph. Brand hexes live in
