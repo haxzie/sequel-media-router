@@ -187,6 +187,18 @@ pnpm --filter @sequel/control-panel db:migrate    # apply to local D1
 at an in-memory SQLite file — the CLI cannot reach D1, and sharing `authOptions`
 is what stops the generated schema drifting from the running one.
 
+## React Grab
+
+Development only. Hover any element, press ⌘C, and the clipboard gets that
+element plus its component stack with source locations — paste it to an agent
+and it goes straight to the file instead of hunting for it.
+
+Installed as a devDependency rather than the documented CDN script tag, so the
+version is pinned in the lockfile, dev works offline, and the browser makes no
+third-party request while someone is signed in. The import sits behind a
+`process.env.NODE_ENV` check, which Next inlines at build time, so it is
+statically unreachable in a production bundle.
+
 ## Shared UI
 
 `packages/ui` holds anything used on more than one page. One rule worth knowing:
