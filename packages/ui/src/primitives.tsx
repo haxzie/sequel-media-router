@@ -199,12 +199,27 @@ export function PageHeader({
 }
 
 /**
- * Tab strip with icons, for a page that holds several settings surfaces.
- *
- * Unlike `Segmented`, which filters one list in place, these switch what the
- * page is about — so they read as navigation: underline on the active tab, no
- * pill, and enough weight to sit under a page title.
+ * Tab styling, shared so a tab strip can be built from links instead of
+ * buttons. Routed tabs need an anchor — middle-click, copy-link and the back
+ * button all depend on it — and the link component belongs to the app, not to
+ * a package that should not know about a router.
  */
+export function tabItemClass(active: boolean): string {
+  return [
+    'nav-item -mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-[14px] transition-colors',
+    active
+      ? 'border-[var(--color-text)] text-[var(--color-text)]'
+      : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]',
+  ].join(' ');
+}
+
+export function TabStrip({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-1 border-b border-[var(--color-line)]">{children}</div>
+  );
+}
+
+/** Tab strip with icons, for state that is not worth a URL. */
 export function Tabs<T extends string>({
   value,
   options,
@@ -215,7 +230,7 @@ export function Tabs<T extends string>({
   onChange: (next: T) => void;
 }) {
   return (
-    <div className="flex items-center gap-1 border-b border-[var(--color-line)]">
+    <TabStrip>
       {options.map((option) => {
         const active = option.value === value;
         const Icon = option.icon;
@@ -225,18 +240,13 @@ export function Tabs<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             aria-current={active ? 'page' : undefined}
-            className={[
-              'nav-item -mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-[14px] transition-colors',
-              active
-                ? 'border-[var(--color-text)] text-[var(--color-text)]'
-                : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]',
-            ].join(' ')}
+            className={tabItemClass(active)}
           >
             {Icon && <Icon />}
             {option.label}
           </button>
         );
       })}
-    </div>
+    </TabStrip>
   );
 }

@@ -47,7 +47,10 @@ export function Sidebar({
 
         <nav className="space-y-0.5">
           {NAV.map((item) => {
-            const active = pathname === item.href;
+            // Settings lives under /settings/<tab>, so an exact match would
+            // unlight the item the moment you land on one.
+            const active =
+              item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link

@@ -1,21 +1,17 @@
-'use client';
-
-import { BuildingIcon, KeyIcon, PageHeader, Tabs, UsersIcon } from '@sequel/ui';
-import { useState } from 'react';
+import { PageHeader } from '@sequel/ui';
 import type { InviteView, MemberView } from '../team/team-manager';
 import { TeamManager } from '../team/team-manager';
 import { ApiKeysPanel, type ApiKeyView } from './api-keys-panel';
 import { OrganisationPanel } from './organisation-panel';
+import { SettingsTabs } from './settings-tabs';
+import { settingsTabLabel, type SettingsTab } from './tabs';
 
-type Tab = 'members' | 'keys' | 'organisation';
-
-const TABS = [
-  { value: 'members' as const, label: 'Members', icon: UsersIcon },
-  { value: 'keys' as const, label: 'API Keys', icon: KeyIcon },
-  { value: 'organisation' as const, label: 'Organisation', icon: BuildingIcon },
-];
-
+/**
+ * A server component now: the active tab comes from the route rather than from
+ * state, so there is nothing here that needs the client.
+ */
 export function SettingsPanels({
+  tab,
   organization,
   viewerRole,
   viewerUserId,
@@ -23,6 +19,7 @@ export function SettingsPanels({
   invitations,
   apiKeys,
 }: {
+  tab: SettingsTab;
   organization: { id: string; name: string; slug: string };
   viewerRole: string;
   viewerUserId: string;
@@ -30,17 +27,15 @@ export function SettingsPanels({
   invitations: InviteView[];
   apiKeys: ApiKeyView[];
 }) {
-  const [tab, setTab] = useState<Tab>('members');
-
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
-        breadcrumb={['Sequel', 'Settings']}
+        breadcrumb={['Sequel', 'Settings', settingsTabLabel(tab)]}
         title="Settings"
         meta={<>{organization.name}</>}
       />
 
-      <Tabs value={tab} options={TABS} onChange={setTab} />
+      <SettingsTabs active={tab} />
 
       <div className="mt-6">
         {tab === 'members' && (
