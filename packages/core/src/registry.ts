@@ -1,7 +1,7 @@
 /**
  * The model registry.
  *
- * Models are registered once at server start from `@forge/models`. Everything
+ * Models are registered once at server start from `@sequel/models`. Everything
  * that needs to know what exists — the MCP tools, the control panel, the
  * embedding index — reads this.
  */

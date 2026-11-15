@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "composio-forge-control-panel",
+  "name": "composio-sequel-control-panel",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -8,8 +8,19 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "observability": { "enabled": true }
-  // Add R2 and D1 bindings here when moving off the local file store:
-  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forge-media" }],
-  // "d1_databases": [{ "binding": "DB", "database_name": "forge", "database_id": "..." }]
+  "observability": { "enabled": true },
+
+  // Auth lives in D1. Locally this is a miniflare-backed SQLite file under
+  // .wrangler/state; `database_id` only matters once a remote database exists.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sequel",
+      "database_id": "local",
+      "migrations_dir": "migrations"
+    }
+  ]
+
+  // Add the R2 binding here when moving media off the local file store:
+  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sequel-media" }]
 }

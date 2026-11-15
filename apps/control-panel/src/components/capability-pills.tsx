@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowGlyph, AudioGlyph, ImageGlyph, TextGlyph, VideoGlyph } from './icons';
+import { ArrowGlyph, AudioGlyph, ImageGlyph, TextGlyph, VideoGlyph } from '@sequel/ui';
 
 type Side = 'text' | 'image' | 'video' | 'audio';
 

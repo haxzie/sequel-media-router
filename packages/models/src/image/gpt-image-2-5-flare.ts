@@ -1,4 +1,4 @@
-import { createImageModel } from '@forge/core';
+import { createImageModel } from '@sequel/core';
 import { z } from 'zod/v4';
 import { collectAssets, partnerSchemaUrl } from '../_shared';
 

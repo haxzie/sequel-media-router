@@ -1,5 +1,5 @@
 import { getForge } from '@/lib/forge';
-import type { TaskStatus } from '@forge/core';
+import type { TaskStatus } from '@sequel/core';
 
 export const dynamic = 'force-dynamic';
 

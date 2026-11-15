@@ -2,13 +2,13 @@
  * The shipped model catalog.
  *
  * Every model is declared in its own file under image/, video/ or audio/ using
- * the factories from `@forge/core`. This file only collects them — adding a
+ * the factories from `@sequel/core`. This file only collects them — adding a
  * model means adding a file and one line here.
  *
  * Prices were read from Cloudflare's published pricing and model pages on
  * 2026-11-10. They move; see README for how to re-check them.
  */
-import type { AnyModel } from '@forge/core';
+import type { AnyModel } from '@sequel/core';
 
 import { fluxSchnell } from './image/flux-1-schnell';
 import { lucidOrigin } from './image/lucid-origin';

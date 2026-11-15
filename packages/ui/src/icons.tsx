@@ -145,3 +145,13 @@ export function ArrowGlyph({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function UsersIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <circle cx="6" cy="5.25" r="2.4" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1.9 13.25a4.1 4.1 0 0 1 8.2 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M10.6 3.2a2.4 2.4 0 0 1 0 4.1M11.8 9.6a4.1 4.1 0 0 1 2.3 3.65" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}

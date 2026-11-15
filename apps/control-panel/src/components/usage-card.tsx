@@ -1,8 +1,8 @@
 'use client';
 
-import { formatUsd } from '@forge/core/pricing';
+import { formatUsd } from '@sequel/core/pricing';
 import { useEffect, useState } from 'react';
-import { Eyebrow } from './ui';
+import { Eyebrow } from '@sequel/ui';
 
 interface Usage {
   totalUsd: string;
@@ -24,7 +24,7 @@ export function UsageCard() {
   useEffect(() => {
     const load = () =>
       fetch('/api/usage')
-        .then((r) => r.json())
+        .then((r) => r.json() as Promise<Usage>)
         .then(setUsage)
         .catch(() => undefined);
     load();

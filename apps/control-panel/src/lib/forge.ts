@@ -15,8 +15,8 @@ import {
   createRegistry,
   type Store,
   type Uploads,
-} from '@forge/core';
-import { allModels } from '@forge/models';
+} from '@sequel/core';
+import { allModels } from '@sequel/models';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -28,7 +28,7 @@ declare global {
 /**
  * Fresh on every evaluation of this module. In production the module evaluates
  * once, so the singleton is reused; under dev hot-reload the token changes and
- * the Forge is rebuilt — otherwise edits to @forge/core would appear to do
+ * the Forge is rebuilt — otherwise edits to @sequel/core would appear to do
  * nothing, because the old instance survives on globalThis.
  */
 const MODULE_TOKEN = Symbol('forge-module');

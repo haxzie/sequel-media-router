@@ -8,7 +8,7 @@
  * Implements: initialize, notifications/initialized, tools/list, tools/call,
  * ping. Anything else gets a proper JSON-RPC "method not found".
  */
-import { toolSchemas, type Forge } from '@forge/core';
+import { toolSchemas, type Forge } from '@sequel/core';
 import { z } from 'zod/v4';
 
 const PROTOCOL_VERSION = '2025-06-18';

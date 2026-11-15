@@ -1,4 +1,4 @@
-import { createAudioModel, type Capability, type Rate, type Tag } from '@forge/core';
+import { createAudioModel, type Capability, type Rate, type Tag } from '@sequel/core';
 import { z } from 'zod/v4';
 import { collectAssets, partnerSchemaUrl } from '../_shared';
 

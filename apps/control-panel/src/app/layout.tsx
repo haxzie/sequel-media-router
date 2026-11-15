@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Sidebar } from '@/components/sidebar';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -17,12 +16,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen font-sans antialiased">
-        <div className="flex min-h-screen items-start">
-          <Sidebar />
-          <main className="min-w-0 flex-1 px-10 py-8">{children}</main>
-        </div>
-      </body>
+      {/* The shell moved into (dashboard): login and onboarding have no nav. */}
+      <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
 }

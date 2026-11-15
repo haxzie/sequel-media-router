@@ -1,30 +1,54 @@
 'use client';
 
+import { ActivityIcon, AnvilIcon, Avatar, HomeIcon, LayersIcon, UsersIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ActivityIcon, AnvilIcon, HomeIcon, LayersIcon } from './icons';
+import { OrgSwitcher } from './org-switcher';
+import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
 
 const NAV = [
   { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
   { href: '/tasks', label: 'Tasks', icon: ActivityIcon },
+  { href: '/team', label: 'Team', icon: UsersIcon },
 ];
 
-export function Sidebar() {
+export interface SidebarUser {
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export interface SidebarOrg {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export function Sidebar({
+  user,
+  organizations,
+  activeOrganizationId,
+}: {
+  user: SidebarUser;
+  organizations: SidebarOrg[];
+  activeOrganizationId: string | null;
+}) {
   const pathname = usePathname();
 
   // Sticky full-height: the usage card must stay in view however long the page is.
   return (
     <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col justify-between bg-[var(--color-surface)] px-4 py-5">
       <div className="min-h-0 overflow-y-auto">
-        {/* Workspace header */}
-        <div className="flex items-center gap-2.5 px-2 pb-5">
+        <div className="flex items-center gap-2.5 px-2 pb-4">
           <AnvilIcon className="h-[18px] w-[18px] text-[var(--color-text)]" />
           <div className="min-w-0 truncate text-[15px] font-semibold tracking-tight">Sequel</div>
         </div>
 
-        <div className="mb-4 h-px bg-[var(--color-line)]" />
+        <OrgSwitcher organizations={organizations} activeId={activeOrganizationId} />
+
+        <div className="my-4 h-px bg-[var(--color-line)]" />
 
         <nav className="space-y-0.5">
           {NAV.map((item) => {
@@ -38,18 +62,23 @@ export function Sidebar() {
                   'flex items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] transition-colors',
                   active
                     ? 'bg-[var(--color-card)] text-[var(--color-text)]'
-                    : 'text-[var(--color-muted)] hover:bg-white/4 hover:text-[var(--color-text)]',
+                    : 'text-[var(--color-muted)] hover:text-[var(--color-text)]',
                 ].join(' ')}
               >
                 <Icon />
-                <span className="font-medium">{item.label}</span>
+                {item.label}
               </Link>
             );
           })}
         </nav>
       </div>
 
-      <UsageCard />
+      <div className="space-y-3">
+        <UsageCard />
+        <UserMenu user={user} />
+      </div>
     </aside>
   );
 }
+
+export { Avatar };

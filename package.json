@@ -1,16 +1,16 @@
 {
-  "name": "composio-forge",
+  "name": "composio-sequel",
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.33.0",
   "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "pnpm --filter @forge/control-panel dev",
+    "dev": "pnpm --filter @sequel/control-panel dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "preview": "pnpm --filter @forge/control-panel preview",
-    "deploy": "pnpm --filter @forge/control-panel deploy"
+    "preview": "pnpm --filter @sequel/control-panel preview",
+    "deploy": "pnpm --filter @sequel/control-panel deploy"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

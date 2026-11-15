@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { formatUsd } from '@forge/core/pricing';
+import { formatUsd } from '@sequel/core/pricing';
 import { TaskPanel, type TaskSummary } from './task-panel';
-import { Card, PageHeader, Segmented, StatusDot } from './ui';
+import { Card, PageHeader, Segmented, StatusDot } from '@sequel/ui';
 
 type TaskRow = TaskSummary;
 
@@ -47,8 +47,8 @@ export function TaskList() {
   useEffect(() => {
     const load = () =>
       fetch('/api/tasks')
-        .then((r) => r.json())
-        .then((data: { tasks: TaskRow[] }) => setTasks(data.tasks ?? []))
+        .then((r) => r.json() as Promise<{ tasks: TaskRow[] }>)
+        .then((data) => setTasks(data.tasks ?? []))
         .catch(() => undefined)
         .finally(() => setLoaded(true));
 

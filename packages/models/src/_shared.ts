@@ -6,8 +6,8 @@
  * `collectAssets` absorbs all of that so an individual model file stays a
  * declaration rather than a parser.
  */
-import type { Asset, RunContext } from '@forge/core';
-import type { RunResult } from '@forge/core';
+import type { Asset, RunContext } from '@sequel/core';
+import type { RunResult } from '@sequel/core';
 
 /** Where in a payload to look for the media, in priority order. */
 const DEFAULT_KEYS = ['video', 'image', 'audio', 'url', 'b64_json', 'data'];

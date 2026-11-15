@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatUsd } from '@forge/core/pricing';
-import { CloseIcon, DownloadIcon, ExternalIcon } from './icons';
-import { StatusDot } from './ui';
+import { formatUsd } from '@sequel/core/pricing';
+import { CloseIcon, DownloadIcon, ExternalIcon } from '@sequel/ui';
+import { StatusDot } from '@sequel/ui';
 
 export interface TaskSummary {
   task_id: string;
@@ -134,8 +134,8 @@ export function TaskPanel({ task, onClose }: { task: TaskSummary; onClose: () =>
     setInput(undefined);
     setPromptOpen(false);
     fetch(`/api/tasks/${task.task_id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { task?: { input?: Record<string, unknown> } } | null) => {
+      .then((r) => (r.ok ? (r.json() as Promise<{ task?: { input?: Record<string, unknown> } }>) : null))
+      .then((data) => {
         if (live) setInput(data?.task?.input);
       })
       .catch(() => undefined);

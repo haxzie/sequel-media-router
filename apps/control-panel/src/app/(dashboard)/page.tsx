@@ -1,6 +1,6 @@
 import { getForge, baseUrl, hasCredentials } from '@/lib/forge';
-import { CopyField } from '@/components/copy-field';
-import { Card, Eyebrow, PageHeader } from '@/components/ui';
+import { CopyField } from '@sequel/ui';
+import { Card, Eyebrow, PageHeader } from '@sequel/ui';
 
 export const dynamic = 'force-dynamic';
 

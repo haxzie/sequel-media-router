@@ -1,10 +1,10 @@
 'use client';
 
-import { formatUsd } from '@forge/core/pricing';
+import { formatUsd } from '@sequel/core/pricing';
 import { useEffect, useMemo, useState } from 'react';
 import { CapabilityPills } from './capability-pills';
-import { SearchIcon } from './icons';
-import { Card, PageHeader, Segmented } from './ui';
+import { SearchIcon } from '@sequel/ui';
+import { Card, PageHeader, Segmented } from '@sequel/ui';
 
 type Modality = 'image' | 'video' | 'audio';
 
@@ -159,8 +159,8 @@ export function ModelBrowser() {
       const params = new URLSearchParams({ type: tab });
       if (query.trim()) params.set('q', query.trim());
       fetch(`/api/models?${params}`)
-        .then((r) => r.json())
-        .then((data: { models: ModelSummary[]; mode: string; note?: string }) => {
+        .then((r) => r.json() as Promise<{ models: ModelSummary[]; mode: string; note?: string }>)
+        .then((data) => {
           setModels(data.models ?? []);
           setMode(data.mode);
           setNote(data.note);

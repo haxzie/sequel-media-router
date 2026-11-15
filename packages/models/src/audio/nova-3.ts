@@ -1,4 +1,4 @@
-import { createAudioModel } from '@forge/core';
+import { createAudioModel } from '@sequel/core';
 import { z } from 'zod/v4';
 import { workersAiSchemaUrl } from '../_shared';
 

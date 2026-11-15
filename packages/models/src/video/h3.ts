@@ -1,4 +1,4 @@
-import { createVideoModel } from '@forge/core';
+import { createVideoModel } from '@sequel/core';
 import { z } from 'zod/v4';
 import { collectAssets, partnerSchemaUrl } from '../_shared';
 

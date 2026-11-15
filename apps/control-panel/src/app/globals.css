@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/*
+ * Tailwind auto-detects sources from this app's root, which stops at the app
+ * boundary. Without this, any utility used only inside the shared package is
+ * never generated — the class lands in the markup and does nothing. That is
+ * how the invite dialog ended up `position: fixed` with no `inset-0`, parked
+ * below the fold.
+ */
+@source '../../../../packages/ui/src';
+
 /**
  * Design tokens.
  *

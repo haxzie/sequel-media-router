@@ -13,8 +13,9 @@ endpoint, which fronts both Workers AI and partner models behind AI Gateway.
 
 ```
 apps/control-panel      Next.js app — dashboard + MCP endpoint + REST API
-packages/core           Model factories, registry, pricing, embeddings, storage
+packages/core           Model factories, registry, pricing, embeddings, storage, ids
 packages/models         One file per model, declared with the core factories
+packages/ui             Shared primitives — cards, forms, modal, icons
 spec/models.types.ts    The wider `composio.models` surface this grows into
 research/               Market and model research behind the design
 ```
@@ -149,6 +150,45 @@ the modality explicitly when you need it.
 asked for with `generate_audio: true` is priced at the audio rate — $0.40/s
 rather than $0.20/s. Qualifiers are matched on the resolution string and the
 word `audio`; keep them in that shape.
+
+## Auth
+
+Better Auth on D1. Two ways in, and no sign-up form behind either: an address we
+have not seen becomes an account, and `/onboarding` collects the rest.
+
+- **Google** — set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The redirect
+  URI is `{BETTER_AUTH_URL}/api/auth/callback/google`. With them unset the login
+  page says so rather than offering a button that 500s.
+- **Magic link** — works with no configuration, but **nothing is sent**. There is
+  no email provider wired up, so `lib/email.ts` prints the link to the server
+  log. Invitations have the same gap and are surfaced as a copyable link on the
+  Team page instead. Both need a real sender before a second person can use this.
+
+Every table gets Stripe-style prefixed ids (`org_`, `usr_`, `mem_`, `inv_`) via
+`advanced.database.generateId` and `packages/core/src/ids.ts`. A model we have
+not claimed falls back to Better Auth's own generator rather than getting a
+prefix we invented.
+
+The session gate lives in `app/(dashboard)/layout.tsx`, not in middleware —
+middleware runs on the edge runtime with no D1 binding, so the session cannot be
+read there at all.
+
+```bash
+pnpm --filter @sequel/control-panel db:generate   # schema from the auth config
+pnpm --filter @sequel/control-panel db:migrate    # apply to local D1
+```
+
+`db:generate` reads `lib/auth-cli.ts`, which is the same options object pointed
+at an in-memory SQLite file — the CLI cannot reach D1, and sharing `authOptions`
+is what stops the generated schema drifting from the running one.
+
+## Shared UI
+
+`packages/ui` holds anything used on more than one page. One rule worth knowing:
+Tailwind only scans this app's own tree, so `globals.css` carries an explicit
+`@source` pointing at the package. Without it a utility used *only* inside
+`packages/ui` is never generated, the class lands in the markup, and the element
+silently renders unstyled.
 
 ## Search
 
