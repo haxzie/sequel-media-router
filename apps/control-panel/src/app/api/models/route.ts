@@ -16,7 +16,9 @@ export async function GET(request: Request) {
       query: query ?? undefined,
       type: (type as 'image' | 'video' | 'audio' | null) ?? undefined,
       includeDisabled: true,
-      limit: 50,
+      // The page filters ranked results by tab in the browser, so a server-side
+      // cut would silently empty a tab once the catalog outgrows the limit.
+      limit: 200,
     });
     return Response.json(out);
   }

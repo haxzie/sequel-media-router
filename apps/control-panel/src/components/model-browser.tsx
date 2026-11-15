@@ -147,34 +147,69 @@ function Price({ model }: { model: ModelSummary }) {
 export function ModelBrowser() {
   const [tab, setTab] = useState<Modality>('image');
   const [query, setQuery] = useState('');
-  const [models, setModels] = useState<ModelSummary[]>([]);
+
+  /*
+   * The catalog is fetched once and filtered in the browser.
+   *
+   * Every tab switch used to be a round trip — `?type=` alone runs the whole
+   * server search path — so moving between Image, Video and Audio flashed an
+   * empty table each time. There are twenty models; the tab is a filter, not a
+   * query, and a filter does not need the network.
+   */
+  const [catalog, setCatalog] = useState<ModelSummary[] | null>(null);
+
+  // Ranked results, only while there is a query. Null means "show the catalog".
+  const [results, setResults] = useState<ModelSummary[] | null>(null);
   const [mode, setMode] = useState('all');
   const [note, setNote] = useState<string | undefined>();
-  const [busy, setBusy] = useState(true);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then((r) => r.json() as Promise<{ models: ModelSummary[] }>)
+      .then((data) => setCatalog(data.models ?? []))
+      .catch(() => setCatalog([]));
+  }, []);
 
   // Debounced: each keystroke would otherwise fire an embedding call.
   useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults(null);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
     const handle = setTimeout(() => {
-      setBusy(true);
-      const params = new URLSearchParams({ type: tab });
-      if (query.trim()) params.set('q', query.trim());
-      fetch(`/api/models?${params}`)
+      fetch(`/api/models?q=${encodeURIComponent(trimmed)}`)
         .then((r) => r.json() as Promise<{ models: ModelSummary[]; mode: string; note?: string }>)
         .then((data) => {
-          setModels(data.models ?? []);
+          setResults(data.models ?? []);
           setMode(data.mode);
           setNote(data.note);
         })
-        .finally(() => setBusy(false));
+        .catch(() => setResults([]))
+        .finally(() => setSearching(false));
     }, 250);
     return () => clearTimeout(handle);
-  }, [tab, query]);
+  }, [query]);
 
-  const visible = useMemo(() => models.filter((m) => m.modality === tab), [models, tab]);
+  // Search is ranked across every modality, so the tab still filters it — that
+  // keeps rank order within the tab rather than re-querying per tab.
+  const source = results ?? catalog ?? [];
+  const visible = useMemo(() => source.filter((m) => m.modality === tab), [source, tab]);
   const enabledCount = visible.filter((m) => m.enabled).length;
+  const loading = catalog === null;
 
   async function toggle(id: string, enabled: boolean) {
-    setModels((prev) => prev.map((m) => (m.id === id ? { ...m, enabled } : m)));
+    // Both lists hold the same model, so an optimistic flip has to touch both
+    // or the row snaps back when a search clears.
+    const flip = (list: ModelSummary[] | null) =>
+      list?.map((m) => (m.id === id ? { ...m, enabled } : m)) ?? null;
+    setCatalog(flip);
+    setResults(flip);
+
     await fetch('/api/models', {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -211,14 +246,18 @@ export function ModelBrowser() {
 
       {query.trim() && (
         <div className="mb-4 text-[12px] text-[var(--color-dim)]">
-          {busy
+          {searching
             ? 'Searching…'
             : `Ranked by ${mode === 'hybrid' ? 'embeddings + keywords' : 'keywords only'}`}
           {note ? ` · ${note}` : ''}
         </div>
       )}
 
-      {visible.length === 0 && !busy ? (
+      {loading ? (
+        <Card className="px-5 py-14 text-center text-[13px] text-[var(--color-muted)]">
+          Loading…
+        </Card>
+      ) : visible.length === 0 ? (
         <Card className="px-5 py-14 text-center text-[13px] text-[var(--color-muted)]">
           No {tab} models match that search.
         </Card>
