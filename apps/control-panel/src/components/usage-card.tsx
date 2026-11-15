@@ -1,6 +1,6 @@
 'use client';
 
-import { formatUsd } from '@sequel/core/pricing';
+import { formatUsd, formatUsdRounded } from '@sequel/core/pricing';
 import { useEffect, useState } from 'react';
 import { Eyebrow } from '@sequel/ui';
 
@@ -42,7 +42,7 @@ export function UsageCard() {
       </div>
 
       <div className="display nums mt-2 text-[28px] leading-none">
-        {usage ? formatUsd(usage.totalUsd) : '—'}
+        {usage ? formatUsdRounded(usage.totalUsd) : '—'}
       </div>
       <div className="mt-1 text-[12px] text-[var(--color-dim)]">
         {usage ? `${usage.taskCount} run${usage.taskCount === 1 ? '' : 's'}` : 'loading'}
@@ -75,7 +75,7 @@ export function UsageCard() {
                 />
                 {modality}
               </span>
-              <span className="nums text-[var(--color-dim)]">{formatUsd(bucket.usd)}</span>
+              <span className="nums text-[var(--color-dim)]">{formatUsdRounded(bucket.usd)}</span>
             </div>
           ))}
       </div>

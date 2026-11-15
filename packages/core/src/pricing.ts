@@ -165,6 +165,21 @@ export function addMoney(a: string, b: string): string {
  * toFixed(6) first also launders float noise out of summed totals
  * (3.9600000000000004 -> "3.960000" -> $3.96).
  */
+/**
+ * Money rounded to cents, for a glanceable summary.
+ *
+ * The exact figure belongs anywhere a number is being reconciled; a sidebar
+ * total is read at a glance and six decimals there is noise. A non-zero amount
+ * that rounds to nothing shows `<$0.01` rather than `$0.00`, so a page full of
+ * sub-cent audio runs never looks like it cost nothing.
+ */
+export function formatUsdRounded(value: string | number): string {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n === 0) return '$0.00';
+  if (Math.abs(n) < 0.005) return '<$0.01';
+  return `$${n.toFixed(2)}`;
+}
+
 export function formatUsd(value: string | number): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return '$0.00';
