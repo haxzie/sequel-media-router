@@ -11,10 +11,11 @@ interface Usage {
   byModality: Record<string, { usd: string; count: number }>;
 }
 
+/** Shared with the usage chart through the --chart-* tokens. */
 const BAR_TONE: Record<string, string> = {
-  image: 'var(--color-periwinkle)',
-  video: 'var(--color-pink)',
-  audio: 'var(--color-sand)',
+  image: 'var(--chart-image)',
+  video: 'var(--chart-video)',
+  audio: 'var(--chart-audio)',
 };
 
 /** Spend card pinned to the foot of the sidebar. */
