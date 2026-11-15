@@ -202,6 +202,45 @@ third-party request while someone is signed in. The import sits behind a
 `process.env.NODE_ENV` check, which Next inlines at build time, so it is
 statically unreachable in a production bundle.
 
+## Webhooks
+
+Settings → Webhooks. We POST a signed JSON event when a run settles, so a
+caller does not have to poll `list_tasks`.
+
+One envelope for every event, so a receiver can switch on `type` and trust the
+rest:
+
+```jsonc
+{
+  "id": "evt_...",            // unique per event, STABLE across retries
+  "type": "task.completed",   // or task.failed
+  "created": "2026-11-15T20:14:03.412Z",
+  "apiVersion": "2026-11-15",
+  "data": { "task": { /* id, status, model, cost, assets, error, createdBy */ } }
+}
+```
+
+`data.task` is a projection, not the stored row: `raw` (megabytes for a video)
+and `input` (which can hold a base64 image) are deliberately not sent to a
+third party.
+
+Signed Stripe-style, because receivers already have code for it:
+
+```
+Sequel-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>
+```
+
+The timestamp is inside the signed string, so a captured request cannot be
+replayed later. The secret is shown once at creation and stored in plain text
+— it is a shared secret, and signing needs the same bytes the receiver holds,
+so unlike a password it cannot be hashed.
+
+**Delivery is at-least-once with no durable queue.** Three attempts over a few
+seconds, then the event is gone; an endpoint down for a minute misses it. Every
+attempt is recorded so the gap is visible rather than silent. Treat the webhook
+as the fast path and `list_tasks` as the source of truth. A real pipeline wants
+Cloudflare Queues or a cron sweep over undelivered rows.
+
 ## Shared UI
 
 `packages/ui` holds anything used on more than one page. One rule worth knowing:

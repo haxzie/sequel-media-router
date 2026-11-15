@@ -32,6 +32,16 @@ export interface ForgeOptions {
   baseUrl: string;
   /** Hook for Workers' `ctx.waitUntil`. Defaults to a floating promise. */
   waitUntil?: (promise: Promise<unknown>) => void;
+  /**
+   * Called once a task reaches a terminal state, for anything that wants to
+   * react — webhooks today.
+   *
+   * A hook rather than a direct dependency: core knows nothing about D1, HTTP
+   * endpoints or organisations, and it should not learn about them to deliver
+   * a notification. Failures here are swallowed by the caller; a broken
+   * listener must not be able to fail a run that already succeeded.
+   */
+  onTaskSettled?: (task: Task) => void | Promise<void>;
 }
 
 /** ~10 chars of base62. Collision risk is negligible at POC volumes. */
@@ -292,6 +302,24 @@ export class Forge {
   }
 
   /** Shared execution path for both inline and background runs. */
+  /**
+   * Fan out a settled task, without letting a listener break the run.
+   *
+   * Deliberately not awaited by `execute`: a slow endpoint should not hold a
+   * task's own completion open, and on Workers `waitUntil` is what keeps the
+   * isolate alive long enough to finish.
+   */
+  private announce(task: Task): Task {
+    const hook = this.opts.onTaskSettled;
+    if (!hook) return task;
+
+    const work = Promise.resolve()
+      .then(() => hook(task))
+      .catch(() => undefined);
+    (this.opts.waitUntil ?? ((p: Promise<unknown>) => void p.catch(() => undefined)))(work);
+    return task;
+  }
+
   private async execute(
     model: AnyModel,
     input: Record<string, unknown>,
@@ -318,7 +346,7 @@ export class Forge {
           raw: output.raw ?? null,
           completedAt: new Date().toISOString(),
         });
-        return patched ?? (await this.opts.store.getTask(taskId))!;
+        return this.announce(patched ?? (await this.opts.store.getTask(taskId))!);
       }
 
       const patched = await this.opts.store.patchTask(taskId, {
@@ -328,7 +356,7 @@ export class Forge {
         raw: output.raw ?? null,
         completedAt: new Date().toISOString(),
       });
-      return patched ?? (await this.opts.store.getTask(taskId))!;
+      return this.announce(patched ?? (await this.opts.store.getTask(taskId))!);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const patched = await this.opts.store.patchTask(taskId, {
@@ -336,7 +364,7 @@ export class Forge {
         error: message,
         completedAt: new Date().toISOString(),
       });
-      return patched ?? (await this.opts.store.getTask(taskId))!;
+      return this.announce(patched ?? (await this.opts.store.getTask(taskId))!);
     }
   }
 

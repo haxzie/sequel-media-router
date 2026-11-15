@@ -287,3 +287,14 @@ export function ChevronDownIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function WebhookIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <circle cx="5" cy="4.6" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="11.6" cy="10.4" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="4" cy="11.4" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M6.3 6.3 9.2 9.6M6.2 11.4h3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}

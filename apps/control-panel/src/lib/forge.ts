@@ -66,6 +66,16 @@ export function getForge(): Forge {
         console.error('[forge] background task failed:', error);
       });
     },
+    /*
+     * Imported lazily. webhooks.ts reaches for the D1 binding, and pulling
+     * that in at module scope would make every import of this file — the MCP
+     * route, the task API, the dashboard — depend on a Cloudflare context
+     * they may not need.
+     */
+    onTaskSettled: async (task) => {
+      const { dispatchTask } = await import('./webhooks');
+      await dispatchTask(task);
+    },
   });
 
   globalThis.__forge = forge;
