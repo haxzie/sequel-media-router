@@ -92,7 +92,7 @@ export function ChoiceGroup<T extends string>({
   columns = 1,
 }: {
   value: T | null;
-  options: Array<{ value: T; label: string; description?: string }>;
+  options: Array<{ value: T; label: ReactNode; description?: string }>;
   onChange: (next: T) => void;
   columns?: 1 | 2;
 }) {
@@ -129,6 +129,88 @@ export function ChoiceGroup<T extends string>({
         );
       })}
     </div>
+  );
+}
+
+/**
+ * The multi-select sibling of ChoiceGroup.
+ *
+ * Same card, same layout, same right-hand indicator — a square one, because a
+ * circle that fills is the shape people read as "pick one" and these are not
+ * exclusive. Shares the markup so the two cannot drift apart.
+ */
+export function MultiChoiceGroup<T extends string>({
+  value,
+  options,
+  onChange,
+  columns = 1,
+}: {
+  value: T[];
+  options: Array<{ value: T; label: ReactNode; description?: string }>;
+  onChange: (next: T[]) => void;
+  columns?: 1 | 2;
+}) {
+  return (
+    <div className={`grid gap-2 ${columns === 2 ? 'grid-cols-2' : ''}`}>
+      {options.map((option) => {
+        const active = value.includes(option.value);
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="checkbox"
+            aria-checked={active}
+            onClick={() =>
+              onChange(
+                active ? value.filter((entry) => entry !== option.value) : [...value, option.value],
+              )
+            }
+            className={[
+              'flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors',
+              active
+                ? 'border-[var(--color-text)] bg-[var(--color-card-hover)]'
+                : 'border-[var(--color-line)] bg-[var(--color-card)] hover:border-[var(--color-line-strong)]',
+            ].join(' ')}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] text-[var(--color-text)]">
+                {option.label}
+              </span>
+              {option.description && (
+                <span className="mt-0.5 block truncate text-[12px] text-[var(--color-dim)]">
+                  {option.description}
+                </span>
+              )}
+            </span>
+            <CheckBox active={active} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CheckBox({ active }: { active: boolean }) {
+  return (
+    <span
+      className={[
+        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border transition-colors',
+        active ? 'border-white bg-white text-[#0a0a0a]' : 'border-[var(--color-line-strong)]',
+      ].join(' ')}
+      aria-hidden
+    >
+      {active && (
+        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+          <path
+            d="m3 6.2 2.1 2.1L9 4.4"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
   );
 }
 

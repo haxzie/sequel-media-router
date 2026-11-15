@@ -8,6 +8,7 @@ import {
   Field,
   Input,
   Modal,
+  MultiChoiceGroup,
   PrimaryButton,
   RowMenu,
   StatusDot,
@@ -365,47 +366,15 @@ function CreateDialog({
 
         <div>
           <div className="mb-1.5 text-[13px] text-[var(--color-muted)]">Events</div>
-          <div className="space-y-2">
-            {EVENTS.map((event) => {
-              const checked = events.includes(event.value);
-              return (
-                <button
-                  key={event.value}
-                  type="button"
-                  onClick={() =>
-                    setEvents(
-                      checked
-                        ? events.filter((value) => value !== event.value)
-                        : [...events, event.value],
-                    )
-                  }
-                  className={[
-                    'flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-colors',
-                    checked
-                      ? 'border-[var(--color-text)] bg-[var(--color-card-hover)]'
-                      : 'border-[var(--color-line)] hover:border-[var(--color-line-strong)]',
-                  ].join(' ')}
-                >
-                  <span
-                    className={[
-                      'flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[5px] border',
-                      checked
-                        ? 'border-white bg-white text-[#0a0a0a]'
-                        : 'border-[var(--color-line-strong)]',
-                    ].join(' ')}
-                  >
-                    {checked && <CheckIcon className="h-2.5 w-2.5" />}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-mono text-[12px] text-[var(--color-text)]">
-                      {event.label}
-                    </span>
-                    <span className="block text-[12px] text-[var(--color-dim)]">{event.hint}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <MultiChoiceGroup
+            value={events}
+            onChange={setEvents}
+            options={EVENTS.map((event) => ({
+              value: event.value,
+              label: <span className="font-mono text-[13px]">{event.label}</span>,
+              description: event.hint,
+            }))}
+          />
         </div>
 
         {error && <Alert>{error}</Alert>}
