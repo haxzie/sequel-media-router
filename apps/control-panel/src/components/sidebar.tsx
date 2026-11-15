@@ -15,8 +15,8 @@ import { OrgSwitcher } from './org-switcher';
 import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
 
-/** Create is the action the panel exists to start, so it is not in this list. */
 const NAV = [
+  { href: '/', label: 'Create', icon: PlusIcon },
   { href: '/mcp', label: 'MCP Server', icon: McpIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
   { href: '/tasks', label: 'Tasks', icon: TasksIcon },
@@ -55,25 +55,13 @@ export function Sidebar({
 
         <div className="my-4 h-px bg-[var(--color-line)]" />
 
-        {/*
-          Create sits with the nav rather than above the divider: it is still
-          the action the panel exists to start, but it belongs to the same
-          group as the places it leads to. The pill carries the emphasis.
-        */}
         <nav className="space-y-0.5">
-          <Link
-            href="/"
-            className="nav-item mb-2 flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[14px] font-medium text-[#0a0a0a] transition-opacity hover:opacity-90"
-          >
-            <PlusIcon />
-            Create
-          </Link>
-
           {NAV.map((item) => {
             // Settings lives under /settings/<tab>, so an exact match would
-            // unlight the item the moment you land on one. No '/' entry here
-            // any more, so prefix matching is unambiguous.
-            const active = pathname.startsWith(item.href);
+            // unlight the item the moment you land on one. Create is the
+            // exception: '/' prefixes every path, so it needs an exact match.
+            const active =
+              item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link
