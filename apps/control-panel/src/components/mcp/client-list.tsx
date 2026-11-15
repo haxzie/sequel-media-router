@@ -18,12 +18,7 @@ export function McpClientList({ url }: { url: string }) {
               index > 0 ? 'border-t border-[var(--color-line)]' : '',
             ].join(' ')}
           >
-            {/* White tile, same as the provider marks on Models — these are
-                monochrome brand glyphs and need a light ground to read. */}
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={client.logo} alt="" className="h-[18px] w-[18px] object-contain" />
-            </div>
+            <ClientMark client={client} />
 
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14px]">{client.name}</div>
@@ -43,6 +38,39 @@ export function McpClientList({ url }: { url: string }) {
 
       <InstallDialog client={open} url={url} onClose={() => setOpen(null)} />
     </>
+  );
+}
+
+/**
+ * Brand-coloured tile with the mark knocked out in white.
+ *
+ * The mark is a CSS mask rather than an <img>, because an image cannot be
+ * recoloured — and these are single-colour glyphs, so masking to white is
+ * exactly right. Brand hexes are used as-is, including the black ones: a black
+ * tile sits darker than the card behind it and the white glyph carries the
+ * contrast.
+ */
+function ClientMark({ client }: { client: McpClient }) {
+  return (
+    <div
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+      style={{ backgroundColor: client.tone }}
+    >
+      <span
+        className="h-[18px] w-[18px] bg-white"
+        style={{
+          maskImage: `url(${client.logo})`,
+          WebkitMaskImage: `url(${client.logo})`,
+          maskSize: 'contain',
+          WebkitMaskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          WebkitMaskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          WebkitMaskPosition: 'center',
+        }}
+        aria-hidden
+      />
+    </div>
   );
 }
 

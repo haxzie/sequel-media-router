@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@better-auth/api-key": "^1.7.25",
+    "@better-auth/mcp": "^1.7.25",
     "@sequel/core": "workspace:*",
     "@sequel/models": "workspace:*",
     "@sequel/ui": "workspace:*",

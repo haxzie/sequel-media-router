@@ -11,10 +11,17 @@ the marks themselves remain trademarks), retrieved 2026-11-15.
 | `claude.svg`, `claude-code.svg` | `claude` |
 | `cursor.svg` | `cursor` |
 | `vscode.svg` | `visualstudiocode` |
-| `chatgpt.svg`, `codex.svg` | `openai` |
+| `chatgpt.svg` | `openai` |
 | `gemini.svg` | `googlegemini` |
 | `windsurf.svg` | `windsurf` |
 | `zed.svg` | `zedindustries` |
 
-Claude Code and Claude share the Claude mark; ChatGPT and Codex share OpenAI's.
-Neither has a separate entry.
+`codex.svg` is LobeHub's Codex mark, supplied directly — Simple Icons has no
+Codex entry, and OpenAI's logo is the wrong mark for it.
+
+Claude Code and Claude share the Claude mark; neither Simple Icons nor anyone
+else ships a separate Claude Code one.
+
+Marks render as a CSS mask filled white over a brand-coloured tile, so each
+file needs to be a single-colour glyph. Brand hexes live in
+`components/mcp/clients.ts`.

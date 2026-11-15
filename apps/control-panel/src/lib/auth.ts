@@ -1,8 +1,9 @@
 import { idForModel } from '@sequel/core/ids';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { apiKey } from '@better-auth/api-key';
+import { mcp } from '@better-auth/mcp';
 import { betterAuth } from 'better-auth';
-import { magicLink, organization } from 'better-auth/plugins';
+import { jwt, magicLink, organization } from 'better-auth/plugins';
 import { Kysely } from 'kysely';
 import { D1Dialect } from 'kysely-d1';
 import { sendMagicLink } from './email';
@@ -27,6 +28,12 @@ export type Role = (typeof ROLES)[number];
 export function authOptions(database: Parameters<typeof betterAuth>[0]['database']) {
   return {
     database,
+    /*
+     * The JWT plugin's own /token route would mint a session JWT signed with
+     * the same key as our OAuth access tokens, which a resource server
+     * checking only issuer and audience could mistake for one. Off.
+     */
+    disabledPaths: ['/token'],
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
 
@@ -60,6 +67,37 @@ export function authOptions(database: Parameters<typeof betterAuth>[0]['database
     },
 
     plugins: [
+      /*
+       * OAuth for MCP clients.
+       *
+       * jwt() supplies the signing key and the /jwks endpoint the resource
+       * server verifies access tokens against. mcp() is the OAuth 2.1
+       * provider: discovery, PKCE authorization, consent, token issuance, and
+       * the RFC 9728 protected-resource document.
+       */
+      jwt({ disableSettingJwtHeader: true }),
+      mcp({
+        loginPage: '/login',
+        consentPage: '/consent',
+        resource: mcpResource(),
+        scopes: ['openid', 'profile', 'offline_access', 'mcp:tools'],
+
+        /*
+         * DCR, deliberately. The 2026-07-28 MCP profile deprecates it in
+         * favour of Client ID Metadata Documents, and Better Auth will not
+         * turn it on implicitly — but every client shipping today still
+         * registers this way, so without it none of them can connect.
+         *
+         * Unauthenticated registration means anyone who can reach this server
+         * can create a client with a name and logo of their choosing. That is
+         * what the consent screen is for: the person approving sees the name
+         * the client chose and has to agree to it.
+         */
+        allowDynamicClientRegistration: true,
+        allowUnauthenticatedClientRegistration: true,
+        clientRegistrationDefaultApplicationType: 'infer',
+        clientRegistrationDefaultScopes: ['openid', 'profile', 'mcp:tools'],
+      }),
       apiKey({
         // `sk_` reads as a secret at a glance, the way every other key in a
         // .env file does. `start` keeps the first characters in plain text so
@@ -95,6 +133,15 @@ export function authOptions(database: Parameters<typeof betterAuth>[0]['database
 function build(d1: D1Database) {
   const db = new Kysely<Record<string, never>>({ dialect: new D1Dialect({ database: d1 }) });
   return betterAuth(authOptions({ db, type: 'sqlite' }));
+}
+
+/**
+ * The protected resource identifier, which access tokens carry as `aud`.
+ * Must match what `requireMcpAuth` is given, or every token is rejected.
+ */
+export function mcpResource(): string {
+  const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3317';
+  return `${base.replace(/\/$/, '')}/api/mcp`;
 }
 
 export async function getAuth() {

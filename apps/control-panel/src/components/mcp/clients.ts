@@ -13,6 +13,8 @@ export interface McpClient {
   /** What the install actually is, in three or four words. */
   method: string;
   logo: string;
+  /** Brand colour for the tile. The mark itself is masked to white on top. */
+  tone: string;
   /** Opens the client with the server prefilled, where one exists. */
   deepLink?: (url: string) => string;
   /** Where the snippet goes: a terminal, or the path of a config file. */
@@ -27,6 +29,7 @@ const base64 = (value: string) =>
 export const MCP_CLIENTS: McpClient[] = [
   {
     id: 'claude-code',
+    tone: '#D97757',
     name: 'Claude Code',
     method: 'One command',
     logo: '/clients/claude-code.svg',
@@ -36,6 +39,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'claude',
+    tone: '#D97757',
     name: 'Claude',
     method: 'Custom connector',
     logo: '/clients/claude.svg',
@@ -46,6 +50,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'cursor',
+    tone: '#000000',
     name: 'Cursor',
     method: 'Deep link or config',
     logo: '/clients/cursor.svg',
@@ -59,6 +64,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'vscode',
+    tone: '#0065A9',
     name: 'VS Code',
     method: 'Deep link or config',
     logo: '/clients/vscode.svg',
@@ -72,6 +78,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'chatgpt',
+    tone: '#000000',
     name: 'ChatGPT',
     method: 'Connector settings',
     logo: '/clients/chatgpt.svg',
@@ -80,6 +87,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'codex',
+    tone: '#000000',
     name: 'Codex',
     method: 'One command',
     logo: '/clients/codex.svg',
@@ -89,6 +97,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'windsurf',
+    tone: '#0B100F',
     name: 'Windsurf',
     method: 'Config file',
     logo: '/clients/windsurf.svg',
@@ -99,6 +108,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'zed',
+    tone: '#084CCF',
     name: 'Zed',
     method: 'Config file',
     logo: '/clients/zed.svg',
@@ -108,6 +118,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     id: 'gemini',
+    tone: '#8E75B2',
     name: 'Gemini CLI',
     method: 'Config file',
     logo: '/clients/gemini.svg',
