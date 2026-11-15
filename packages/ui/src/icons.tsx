@@ -186,8 +186,45 @@ export function BuildingIcon({ className = '' }: IconProps) {
 export function SettingsIcon({ className = '' }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
-      <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M8 1.6v1.5M8 12.9v1.5M14.4 8h-1.5M3.1 8H1.6M12.5 3.5l-1 1M4.5 11.5l-1 1M12.5 12.5l-1-1M4.5 4.5l-1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="8" cy="8" r="4.6" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M12.90 8.00L14.60 8.00M11.46 11.46L12.67 12.67M8.00 12.90L8.00 14.60M4.54 11.46L3.33 12.67M3.10 8.00L1.40 8.00M4.54 4.54L3.33 3.33M8.00 3.10L8.00 1.40M11.46 4.54L12.67 3.33"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Checklist, for Tasks — a run is a thing with a state, not a waveform. */
+export function TasksIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="m1.9 4.3 1.3 1.3 2.4-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m1.9 11.3 1.3 1.3 2.4-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 4.4h5.9M8.2 11.4h5.9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Sparkle, for Create — generation rather than a destination. */
+export function CreateIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path
+        d="M6.6 2.2 7.7 5.2 10.7 6.3 7.7 7.4 6.6 10.4 5.5 7.4 2.5 6.3 5.5 5.2z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.7 9.2 12.3 10.9 14 11.5 12.3 12.1 11.7 13.8 11.1 12.1 9.4 11.5 11.1 10.9z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

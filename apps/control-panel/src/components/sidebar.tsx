@@ -1,6 +1,6 @@
 'use client';
 
-import { ActivityIcon, Avatar, HomeIcon, LayersIcon, SettingsIcon } from '@sequel/ui';
+import { Avatar, CreateIcon, LayersIcon, SettingsIcon, TasksIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { OrgSwitcher } from './org-switcher';
@@ -8,9 +8,9 @@ import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
 
 const NAV = [
-  { href: '/', label: 'Home', icon: HomeIcon },
+  { href: '/', label: 'Create', icon: CreateIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
-  { href: '/tasks', label: 'Tasks', icon: ActivityIcon },
+  { href: '/tasks', label: 'Tasks', icon: TasksIcon },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
