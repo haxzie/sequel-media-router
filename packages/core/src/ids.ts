@@ -26,6 +26,7 @@ export const ID_PREFIX = {
   asset: 'ast',
   /** Better Auth names this model by its table, lowercase. */
   apikey: 'key',
+  walletCredit: 'cr',
 } as const;
 
 export type EntityKind = keyof typeof ID_PREFIX;

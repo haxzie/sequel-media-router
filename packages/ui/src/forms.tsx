@@ -51,6 +51,34 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 }
 
 /**
+ * Input with a fixed unit stuck to its left, behind a divider.
+ *
+ * A `$` typed into the field would be parsed as part of the number and a `$`
+ * floated over it would sit on top of the caret. Putting it outside the input
+ * but inside the border makes it unmistakably a label rather than content.
+ */
+export function PrefixedInput({
+  prefix,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { prefix: string }) {
+  const { className = '', ...rest } = props;
+  return (
+    <div className="flex items-stretch overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)] focus-within:border-[var(--color-line-strong)]">
+      <span
+        className="flex select-none items-center border-r border-[var(--color-line)] px-3.5 text-[14px] text-[var(--color-dim)]"
+        aria-hidden
+      >
+        {prefix}
+      </span>
+      <input
+        {...rest}
+        className={`w-full bg-transparent px-3.5 py-2.5 text-[14px] text-[var(--color-text)] outline-none placeholder:text-[var(--color-dim)] disabled:opacity-50 ${className}`}
+      />
+    </div>
+  );
+}
+
+/**
  * A radio group that looks like a list of cards.
  *
  * Single-choice, so the indicator is a ring that fills when chosen — a square

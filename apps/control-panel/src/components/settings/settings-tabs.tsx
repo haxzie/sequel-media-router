@@ -1,12 +1,13 @@
 'use client';
 
-import { BuildingIcon, KeyIcon, tabItemClass, TabStrip, UsersIcon } from '@sequel/ui';
+import { BuildingIcon, CardIcon, KeyIcon, tabItemClass, TabStrip, UsersIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { SETTINGS_TABS, type SettingsTab } from './tabs';
 
 const ICONS = {
   members: UsersIcon,
   keys: KeyIcon,
+  billing: CardIcon,
   organisation: BuildingIcon,
 } as const;
 

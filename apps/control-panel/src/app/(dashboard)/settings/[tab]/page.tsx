@@ -4,6 +4,7 @@ import { SettingsPanels } from '@/components/settings/settings-panels';
 import { isSettingsTab, settingsTabLabel } from '@/components/settings/tabs';
 import { getAuth } from '@/lib/auth';
 import { getActiveOrganization, requireOnboarded } from '@/lib/session';
+import { getWallet } from '@/lib/wallet';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,8 @@ export default async function SettingsTabPage({ params }: { params: Promise<{ ta
    */
   const keys = tab === 'keys' ? await listOrganizationKeys(auth, org.members) : [];
 
+  const wallet = tab === 'billing' ? await getWallet(org.id) : null;
+
   return (
     <SettingsPanels
       tab={tab}
@@ -75,6 +78,29 @@ export default async function SettingsTabPage({ params }: { params: Promise<{ ta
           expiresAt: String(invite.expiresAt),
         }))}
       apiKeys={keys}
+      wallet={
+        wallet
+          ? {
+              availableUsd: wallet.availableUsd,
+              spentUsd: wallet.spentUsd,
+              credits: wallet.credits.map((credit) => {
+                const member = org.members.find((m) => m.userId === credit.createdByUserId);
+                return {
+                  id: credit.id,
+                  amountUsd: credit.amountUsd,
+                  source: credit.source,
+                  createdAt: credit.createdAt,
+                  createdBy: member
+                    ? {
+                        name: member.user.name || member.user.email,
+                        image: member.user.image ?? null,
+                      }
+                    : null,
+                };
+              }),
+            }
+          : null
+      }
     />
   );
 }

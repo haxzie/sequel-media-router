@@ -2,6 +2,7 @@ import { PageHeader } from '@sequel/ui';
 import type { InviteView, MemberView } from '../team/team-manager';
 import { TeamManager } from '../team/team-manager';
 import { ApiKeysPanel, type ApiKeyView } from './api-keys-panel';
+import { BillingPanel, type CreditRow } from './billing-panel';
 import { OrganisationPanel } from './organisation-panel';
 import { SettingsTabs } from './settings-tabs';
 import { settingsTabLabel, type SettingsTab } from './tabs';
@@ -18,6 +19,7 @@ export function SettingsPanels({
   members,
   invitations,
   apiKeys,
+  wallet,
 }: {
   tab: SettingsTab;
   organization: { id: string; name: string; slug: string };
@@ -26,6 +28,7 @@ export function SettingsPanels({
   members: MemberView[];
   invitations: InviteView[];
   apiKeys: ApiKeyView[];
+  wallet: { availableUsd: string; spentUsd: string; credits: CreditRow[] } | null;
 }) {
   return (
     <div className="mx-auto max-w-4xl">
@@ -48,6 +51,13 @@ export function SettingsPanels({
           />
         )}
         {tab === 'keys' && <ApiKeysPanel keys={apiKeys} />}
+        {tab === 'billing' && wallet && (
+          <BillingPanel
+            credits={wallet.credits}
+            availableUsd={wallet.availableUsd}
+            spentUsd={wallet.spentUsd}
+          />
+        )}
         {tab === 'organisation' && (
           <OrganisationPanel organization={organization} viewerRole={viewerRole} />
         )}

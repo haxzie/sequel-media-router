@@ -164,6 +164,24 @@ only, which a retry or a race bypasses:
 | `session_activeOrganizationId_idx` | — finds sessions pointing at a deleted organisation without a scan |
 | `*_expiresAt_idx` (3) | — expiry sweeps scanning the whole table |
 
+## Wallet
+
+`walletCredit` is ours, not Better Auth's, and is queried straight through the
+D1 binding — the auth adapter only knows models a plugin declared, and it
+rejects this one. Putting an application table into the auth schema to borrow
+its query builder would place our domain inside the thing that regenerates
+itself from plugin definitions.
+
+It is a ledger, not a balance column: available = sum(credits) − spend, where
+spend comes from the tasks. A derived balance cannot drift from its own
+history. `source` is `test_credit` for everything written today, because no
+payment provider is connected and a row must not claim otherwise.
+
+Nothing refuses a run for lack of funds. Metering and enforcement are
+different problems, and the second needs a provider to be worth having — so
+the balance can go negative, and the wallet card shows that in the warning
+tone rather than clamping it to zero.
+
 ## Known gaps
 
 **1. The application's data has no schema.** Tasks, model enablement,

@@ -426,6 +426,106 @@ export class Forge {
     return { totalUsd: total, taskCount: tasks.length, byModality, windowDays };
   }
 
+  /**
+   * Spend per day per modality, for the usage chart.
+   *
+   * Every day in the window is present, including the empty ones — a bar chart
+   * that silently drops quiet days compresses time and misreads as steady use.
+   */
+  async usageSeries(
+    windowDays: number,
+    organizationId?: string,
+  ): Promise<{
+    days: Array<{ date: string; image: string; video: string; audio: string }>;
+    windowDays: number;
+  }> {
+    const since = Date.now() - windowDays * 86_400_000;
+    const tasks = (
+      await this.opts.store.listTasks(organizationId ? { organizationId } : undefined)
+    ).filter((t) => t.status !== 'failed' && Date.parse(t.createdAt) >= since);
+
+    const byDay = new Map<string, { image: string; video: string; audio: string }>();
+    for (let i = windowDays - 1; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+      byDay.set(date, { image: '0.000000', video: '0.000000', audio: '0.000000' });
+    }
+
+    for (const task of tasks) {
+      const date = task.createdAt.slice(0, 10);
+      const row = byDay.get(date);
+      if (!row) continue;
+      row[task.modality] = addMoney(row[task.modality], task.costUsd);
+    }
+
+    return {
+      days: [...byDay.entries()].map(([date, row]) => ({ date, ...row })),
+      windowDays,
+    };
+  }
+
+  /** Spend and run count grouped by model, and separately by person. */
+  async usageBreakdown(
+    windowDays: number,
+    organizationId?: string,
+  ): Promise<{
+    byModel: Array<{ model: string; modality: Modality; usd: string; count: number }>;
+    byUser: Array<{
+      userId: string;
+      name: string;
+      image?: string | null;
+      usd: string;
+      count: number;
+    }>;
+  }> {
+    const since = Date.now() - windowDays * 86_400_000;
+    const tasks = (
+      await this.opts.store.listTasks(organizationId ? { organizationId } : undefined)
+    ).filter((t) => t.status !== 'failed' && Date.parse(t.createdAt) >= since);
+
+    const models = new Map<string, { modality: Modality; usd: string; count: number }>();
+    const users = new Map<
+      string,
+      { name: string; image?: string | null; usd: string; count: number }
+    >();
+
+    for (const task of tasks) {
+      const model = models.get(task.model) ?? {
+        modality: task.modality,
+        usd: '0.000000',
+        count: 0,
+      };
+      models.set(task.model, {
+        modality: task.modality,
+        usd: addMoney(model.usd, task.costUsd),
+        count: model.count + 1,
+      });
+
+      // Runs with no credential are grouped rather than dropped: the spend is
+      // real even when the name is missing.
+      const id = task.createdBy?.userId ?? 'unattributed';
+      const user = users.get(id) ?? {
+        name: task.createdBy?.name ?? 'Unattributed',
+        image: task.createdBy?.image ?? null,
+        usd: '0.000000',
+        count: 0,
+      };
+      users.set(id, {
+        ...user,
+        usd: addMoney(user.usd, task.costUsd),
+        count: user.count + 1,
+      });
+    }
+
+    const bySpend = <T extends { usd: string }>(a: T, b: T) => Number(b.usd) - Number(a.usd);
+
+    return {
+      byModel: [...models.entries()]
+        .map(([model, row]) => ({ model, ...row }))
+        .sort(bySpend),
+      byUser: [...users.entries()].map(([userId, row]) => ({ userId, ...row })).sort(bySpend),
+    };
+  }
+
   async listAllModels(): Promise<ModelSummary[]> {
     return Promise.all(this.opts.registry.list().map((m) => this.summarise(m)));
   }

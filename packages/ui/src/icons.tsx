@@ -242,3 +242,22 @@ export function MoreIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function ChartIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="M2 13.5h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M4.2 13.5V9.2M8 13.5V4.1M11.8 13.5V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CardIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <rect x="1.6" y="3.4" width="12.8" height="9.2" rx="1.6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1.6 6.8h12.8" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M4.2 10.2h2.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
