@@ -1,19 +1,35 @@
-import { PageHeader } from '@sequel/ui';
+import { CopyField, Eyebrow, PageHeader } from '@sequel/ui';
+import { McpClientList } from '@/components/mcp/client-list';
+import { baseUrl } from '@/lib/forge';
 
 export const metadata = { title: 'MCP Server — Sequel' };
+export const dynamic = 'force-dynamic';
 
-/**
- * No data read here any more, so no dynamic rendering either — the counts went
- * with the old description.
- */
 export default function McpPage() {
+  const url = `${baseUrl()}/api/mcp`;
+
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
         breadcrumb={['Sequel', 'MCP Server']}
         title="MCP Server"
-        meta={<>Generate from the agent you already work in — Claude Code, Cursor, or anything that speaks MCP.</>}
+        meta={
+          <>
+            Generate from the agent you already work in — Claude Code, Cursor, or anything that
+            speaks MCP.
+          </>
+        }
       />
+
+      <section className="mb-8">
+        <Eyebrow className="mb-3">Server URL</Eyebrow>
+        <CopyField value={url} />
+      </section>
+
+      <section>
+        <Eyebrow className="mb-3">Install</Eyebrow>
+        <McpClientList url={url} />
+      </section>
     </div>
   );
 }

@@ -209,25 +209,6 @@ export function TasksIcon({ className = '' }: IconProps) {
   );
 }
 
-/** Sparkle, for Create — generation rather than a destination. */
-export function CreateIcon({ className = '' }: IconProps) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
-      <path
-        d="M6.6 2.2 7.7 5.2 10.7 6.3 7.7 7.4 6.6 10.4 5.5 7.4 2.5 6.3 5.5 5.2z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.7 9.2 12.3 10.9 14 11.5 12.3 12.1 11.7 13.8 11.1 12.1 9.4 11.5 11.1 10.9z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 /**
  * MCP's mark — the official octicon, filled rather than stroked.
