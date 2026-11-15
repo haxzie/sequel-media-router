@@ -94,20 +94,6 @@ export function WebhooksPanel() {
         <PrimaryButton onClick={() => setCreating(true)}>Add endpoint</PrimaryButton>
       </div>
 
-      {/*
-        Said once, here: there is no durable queue behind delivery, so an
-        endpoint that is down long enough loses the event. Better stated than
-        discovered.
-      */}
-      <div className="mb-5">
-        <Alert tone="info">
-          Delivery is at-least-once and retries three times over a few seconds. There is no
-          durable queue yet, so an endpoint that stays down will miss events — treat the webhook
-          as a fast path and <code className="font-mono text-[12px]">list_tasks</code> as the
-          source of truth.
-        </Alert>
-      </div>
-
       {webhooks === null ? (
         <Card className="px-5 py-14 text-center text-[13px] text-[var(--color-muted)]">
           Loading…
@@ -137,8 +123,6 @@ export function WebhooksPanel() {
           ))}
         </Card>
       )}
-
-      <SchemaReference />
 
       <CreateDialog
         open={creating}
@@ -393,54 +377,5 @@ function CreateDialog({
         </div>
       </form>
     </Modal>
-  );
-}
-
-/** The contract, where someone wiring up a receiver will look for it. */
-function SchemaReference() {
-  const example = `POST https://your-endpoint
-content-type: application/json
-sequel-event-id: evt_...
-sequel-event-type: task.completed
-sequel-signature: t=1763251200,v1=<hex hmac-sha256>
-
-{
-  "id": "evt_9f2b...",
-  "type": "task.completed",
-  "created": "2026-11-15T20:14:03.412Z",
-  "apiVersion": "2026-11-15",
-  "data": {
-    "task": {
-      "id": "task_b3b50c452f4b4435ab1a",
-      "status": "completed",
-      "model": "google/veo-3.1",
-      "modality": "video",
-      "label": "a ceramic mug rotating slowly",
-      "organizationId": "org_6EzZ...",
-      "createdAt": "2026-11-15T20:13:41.004Z",
-      "completedAt": "2026-11-15T20:14:03.412Z",
-      "cost": { "usd": "0.800000", "estimated": true },
-      "assets": [{ "url": "https://.../f/NfMNQ9Rjgw", "mime": "video/mp4", "bytes": 885383 }],
-      "error": null,
-      "createdBy": { "userId": "usr_...", "via": "api_key" }
-    }
-  }
-}`;
-
-  return (
-    <div className="mt-8">
-      <div className="mb-2 text-[13px] text-[var(--color-muted)]">What we send</div>
-      <Card className="overflow-hidden">
-        <pre className="scroll-area overflow-x-auto px-5 py-4 font-mono text-[11px] leading-relaxed text-[var(--color-muted)]">
-          {example}
-        </pre>
-      </Card>
-      <p className="mt-3 text-[12px] leading-relaxed text-[var(--color-dim)]">
-        Verify by computing <code className="font-mono">HMAC-SHA256(secret, "{'{t}'}.{'{body}'}")</code>{' '}
-        and comparing it to <code className="font-mono">v1</code>. The timestamp is inside the
-        signed string, so a captured request cannot be replayed later. <code className="font-mono">id</code> is
-        stable across retries — store it and ignore one you have already handled.
-      </p>
-    </div>
   );
 }
