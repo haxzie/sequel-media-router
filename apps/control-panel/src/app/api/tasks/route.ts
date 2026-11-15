@@ -18,6 +18,7 @@ export async function GET(request: Request) {
    */
   const start = isoOrUndefined(url.searchParams.get('start'));
   const end = isoOrUndefined(url.searchParams.get('end'));
+  const userId = url.searchParams.get('user_id') ?? undefined;
 
   /*
    * Scoped to the caller's organisation, from their credential — never from a
@@ -35,6 +36,7 @@ export async function GET(request: Request) {
       organizationId: actor.organizationId,
       ...(start ? { start } : {}),
       ...(end ? { end } : {}),
+      ...(userId ? { user_id: userId } : {}),
     }),
   );
 }

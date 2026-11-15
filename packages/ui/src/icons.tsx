@@ -269,3 +269,21 @@ export function ChevronRightIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function CalendarIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <rect x="2" y="3.4" width="12" height="10.6" rx="1.6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 6.6h12" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.4 1.9v2.6M10.6 1.9v2.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="m4.4 6.4 3.6 3.6 3.6-3.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

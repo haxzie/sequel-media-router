@@ -28,6 +28,8 @@ export interface TaskFilter {
    */
   createdAfter?: string;
   createdBefore?: string;
+  /** Only runs this person started. */
+  createdByUserId?: string;
 }
 
 export interface Store extends EmbeddingCache {
@@ -80,6 +82,9 @@ abstract class BaseStore implements Store {
     // ISO-8601 sorts lexicographically, so no date parsing is needed here.
     if (filter?.createdAfter) out = out.filter((t) => t.createdAt >= filter.createdAfter!);
     if (filter?.createdBefore) out = out.filter((t) => t.createdAt <= filter.createdBefore!);
+    if (filter?.createdByUserId) {
+      out = out.filter((t) => t.createdBy?.userId === filter.createdByUserId);
+    }
     if (filter?.ids?.length) {
       const want = new Set(filter.ids);
       out = out.filter((t) => want.has(t.id));

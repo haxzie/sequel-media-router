@@ -363,6 +363,8 @@ export class Forge {
     /** Inclusive ISO bounds. Either may be omitted; see TaskFilter. */
     start?: string;
     end?: string;
+    /** Only runs started by this person. */
+    user_id?: string;
     /**
      * Server-supplied, never a tool argument — a caller must not be able to
      * widen its own scope by passing someone else's organisation id.
@@ -376,6 +378,7 @@ export class Forge {
       ...(params.organizationId ? { organizationId: params.organizationId } : {}),
       ...(params.start ? { createdAfter: params.start } : {}),
       ...(params.end ? { createdBefore: params.end } : {}),
+      ...(params.user_id ? { createdByUserId: params.user_id } : {}),
     });
     return {
       tasks: tasks.map((t) => ({
@@ -583,5 +586,6 @@ export const toolSchemas = {
       .describe(
         'Inclusive ISO-8601 upper bound. Omit for a live range that keeps including new runs.',
       ),
+    user_id: z.string().optional().describe('Only runs started by this user.'),
   }),
 };

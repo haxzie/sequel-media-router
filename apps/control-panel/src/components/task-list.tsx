@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Select } from '@sequel/ui';
+import { Avatar, CalendarIcon, PillSelect, UsersIcon } from '@sequel/ui';
 import { formatUsd } from '@sequel/core/pricing';
 import { TaskPanel, type TaskSummary } from './task-panel';
 import { Card, PageHeader, Segmented, StatusDot } from '@sequel/ui';
@@ -54,6 +54,15 @@ export function TaskList() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
   const [days, setDays] = useState('7');
+  const [member, setMember] = useState('all');
+  const [members, setMembers] = useState<Array<{ userId: string; name: string }>>([]);
+
+  useEffect(() => {
+    fetch('/api/organization/members')
+      .then((r) => r.json() as Promise<{ members: Array<{ userId: string; name: string }> }>)
+      .then((data) => setMembers(data.members ?? []))
+      .catch(() => undefined);
+  }, []);
   const [loaded, setLoaded] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -64,7 +73,9 @@ export function TaskList() {
       // Only `start` is sent. Leaving `end` open is what keeps the list live:
       // a run that finishes between polls appears without the window moving.
       const start = new Date(Date.now() - Number(days) * 86_400_000).toISOString();
-      return fetch(`/api/tasks?start=${encodeURIComponent(start)}`)
+      const query = new URLSearchParams({ start });
+      if (member !== 'all') query.set('user_id', member);
+      return fetch(`/api/tasks?${query}`)
         .then((r) => r.json() as Promise<{ tasks: TaskRow[] }>)
         .then((data) => setTasks(data.tasks ?? []))
         .catch(() => undefined)
@@ -75,7 +86,7 @@ export function TaskList() {
     // Video takes a minute or two; poll so running rows settle on their own.
     const timer = setInterval(load, 4000);
     return () => clearInterval(timer);
-  }, [days]);
+  }, [days, member]);
 
   const visible = useMemo(
     () => (filter === 'all' ? tasks : tasks.filter((t) => t.status === filter)),
@@ -113,8 +124,23 @@ export function TaskList() {
       <div className="mb-6 flex items-center justify-between gap-3">
         <Segmented value={filter} options={FILTERS} onChange={setFilter} />
 
-        <div className="w-[150px] shrink-0">
-          <Select
+        <div className="flex shrink-0 items-center gap-2">
+          <PillSelect
+            icon={<UsersIcon className="h-3.5 w-3.5" />}
+            value={member}
+            aria-label="Member"
+            onChange={(event) => setMember(event.target.value)}
+          >
+            <option value="all">Everyone</option>
+            {members.map((entry) => (
+              <option key={entry.userId} value={entry.userId}>
+                {entry.name}
+              </option>
+            ))}
+          </PillSelect>
+
+          <PillSelect
+            icon={<CalendarIcon className="h-3.5 w-3.5" />}
             value={days}
             aria-label="Time range"
             onChange={(event) => setDays(event.target.value)}
@@ -124,7 +150,7 @@ export function TaskList() {
                 {option.label}
               </option>
             ))}
-          </Select>
+          </PillSelect>
         </div>
       </div>
 

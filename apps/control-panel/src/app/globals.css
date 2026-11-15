@@ -36,6 +36,20 @@
   --color-mint: #c9e8d4;
 
   /*
+   * Status. Reserved — never reused as a chart series, which is why these sit
+   * apart from the --chart-* set below.
+   *
+   * The pastels these replace were not low contrast; measured against the card
+   * they read higher (APCA Lc 80+) than any of these. They were low
+   * *identity*: three near-white tints at 6px, under a label that stayed grey
+   * whatever the status, so all four states looked the same.
+   */
+  --status-queued: #8b949e;
+  --status-running: #e3b341;
+  --status-done: #56d364;
+  --status-failed: #ff7b72;
+
+  /*
    * Series colours, shared by the usage chart and the sidebar usage card so
    * the two read as one system.
    *
