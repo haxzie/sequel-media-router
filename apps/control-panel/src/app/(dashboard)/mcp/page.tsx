@@ -1,24 +1,18 @@
 import { PageHeader } from '@sequel/ui';
-import { getForge } from '@/lib/forge';
 
 export const metadata = { title: 'MCP Server — Sequel' };
-export const dynamic = 'force-dynamic';
 
-export default async function McpPage() {
-  const forge = getForge();
-  const models = await forge.listAllModels();
-  const enabled = models.filter((model) => model.enabled).length;
-
+/**
+ * No data read here any more, so no dynamic rendering either — the counts went
+ * with the old description.
+ */
+export default function McpPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
         breadcrumb={['Sequel', 'MCP Server']}
         title="MCP Server"
-        meta={
-          <>
-            {models.length} models · {enabled} enabled · one endpoint for image, video and audio
-          </>
-        }
+        meta={<>Generate from the agent you already work in — Claude Code, Cursor, or anything that speaks MCP.</>}
       />
     </div>
   );
