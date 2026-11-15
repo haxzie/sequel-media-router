@@ -12,6 +12,26 @@ export interface ToolPart {
   errorText?: string;
 }
 
+/**
+ * A thinking step.
+ *
+ * These were being dropped entirely, which is how a turn ended up showing
+ * four tool calls and not one word — the model had reasoned its way into a
+ * dead end and said nothing, so the screen just stopped. Thinking is part of
+ * what happened and belongs in the record of it.
+ */
+export interface ReasoningPart {
+  type: 'reasoning';
+  text: string;
+  state?: string;
+}
+
+export type TracePart = ToolPart | ReasoningPart;
+
+function isTool(part: TracePart): part is ToolPart {
+  return part.type === 'dynamic-tool';
+}
+
 /** Server-measured timings, attached to the assistant message at finish. */
 export interface ChatMetadata {
   totalMs?: number;
@@ -80,7 +100,7 @@ export function ToolTimeline({
   metadata,
   streaming,
 }: {
-  parts: ToolPart[];
+  parts: TracePart[];
   metadata?: unknown;
   /**
    * Whether the assistant's turn is still open.
@@ -96,6 +116,7 @@ export function ToolTimeline({
 
   const { totalMs, toolMs } = readMetadata(metadata);
   const running = Boolean(streaming);
+  const tools = parts.filter(isTool);
 
   /*
    * A call left unfinished with the turn closed did not finish — it was cut
@@ -103,7 +124,7 @@ export function ToolTimeline({
    * done' as 'running' is what made a restored chat spin forever: the browser
    * was animating a tool call that stopped existing minutes ago.
    */
-  const stopped = !running && parts.some((part) => !isDone(part.state));
+  const stopped = !running && tools.some((part) => !isDone(part.state));
 
   /*
    * Client-side stopwatch, for the live case only.
@@ -119,6 +140,7 @@ export function ToolTimeline({
   useEffect(() => {
     const now = Date.now();
     for (const part of parts) {
+      if (!isTool(part)) continue;
       if (!starts.current.has(part.toolCallId)) starts.current.set(part.toolCallId, now);
       if (isDone(part.state) && !ends.current.has(part.toolCallId)) {
         ends.current.set(part.toolCallId, now);
@@ -160,7 +182,7 @@ export function ToolTimeline({
     : stopped
       ? `Stopped${spent === null ? '' : ` after ${duration(spent)}`}`
       : `Worked for ${spent === null ? 'a moment' : duration(spent)}`;
-  const count = `${parts.length} tool call${parts.length === 1 ? '' : 's'}`;
+  const count = `${tools.length} tool call${tools.length === 1 ? '' : 's'}`;
 
   return (
     <div>
@@ -212,7 +234,55 @@ export function ToolTimeline({
               aria-hidden
             />
 
-            {parts.map((part) => {
+            {parts.map((part, position) => {
+              if (!isTool(part)) {
+                const key = `reasoning-${position}`;
+                const isOpen = expanded === key;
+                return (
+                  <li key={key} className="relative pl-6">
+                    <span
+                      className="absolute left-[2px] top-[13px] h-[7px] w-[7px] rounded-full ring-[3px] ring-[var(--color-bg)]"
+                      style={{ background: 'var(--color-line-strong)' }}
+                      aria-hidden
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setExpanded(isOpen ? null : key)}
+                      className="nav-item flex items-center gap-2 py-2 text-left"
+                    >
+                      <span className="text-[12.5px] text-[var(--color-muted)]">Thought</span>
+                      <svg
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden
+                        className={`h-3 w-3 shrink-0 text-[var(--color-dim)] transition-transform ${
+                          isOpen ? 'rotate-90' : ''
+                        }`}
+                      >
+                        <path
+                          d="M6 4L10 8L6 12"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    {isOpen && (
+                      <div className="mb-2">
+                        {/* Prose, not JSON — it is the one item in the trace
+                            written to be read. */}
+                        <div className="overflow-hidden rounded-lg bg-[var(--color-card)]">
+                          <p className="scroll-area max-h-[180px] overflow-auto whitespace-pre-wrap px-2.5 py-2 text-[12px] leading-relaxed text-[var(--color-muted)]">
+                            {part.text}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              }
+
               const done = isDone(part.state);
               const failed = part.state === 'output-error';
               const cut = !done && !running;

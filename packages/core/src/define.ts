@@ -97,6 +97,35 @@ function toJsonSchema(schema: z.ZodType): Record<string, unknown> {
   }) as Record<string, unknown>;
 }
 
+/**
+ * Validate input, refusing keys the model does not have.
+ *
+ * zod strips unknown keys by default, which for an agent is the worst
+ * outcome available: it invented `style_image`, we dropped it without a word,
+ * the provider generated something unrelated to the reference, and the run
+ * was reported as a success. A wrong answer with a green tick is worse than
+ * an error, because nothing downstream can tell it went wrong.
+ *
+ * The thrown message names the fields that do exist, since the caller is
+ * usually a model that is guessing and can correct itself from the list.
+ */
+function parseStrict(schema: z.ZodType, raw: unknown): unknown {
+  if (schema instanceof z.ZodObject && raw && typeof raw === 'object') {
+    const allowed = Object.keys(schema.shape);
+    const unknown = Object.keys(raw as Record<string, unknown>).filter(
+      (key) => !allowed.includes(key),
+    );
+    if (unknown.length > 0) {
+      throw new Error(
+        `This model has no ${unknown.map((key) => `\`${key}\``).join(', ')} input. ` +
+          `It accepts: ${allowed.join(', ')}. ` +
+          'Call get_model_schemas for the full schema, or pick a model that takes what you need.',
+      );
+    }
+  }
+  return schema.parse(raw);
+}
+
 function build<S extends z.ZodType, O extends ModelOutput>(
   modality: Modality,
   def: ModelDefinition<S, O>,
@@ -106,7 +135,7 @@ function build<S extends z.ZodType, O extends ModelOutput>(
   return {
     ...def,
     modality,
-    parse: (raw) => def.input.parse(raw) as z.infer<S>,
+    parse: (raw) => parseStrict(def.input, raw) as z.infer<S>,
     jsonSchema: () => (cachedSchema ??= toJsonSchema(def.input)),
     searchText: () =>
       [

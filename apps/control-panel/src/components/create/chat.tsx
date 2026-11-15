@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Streamdown } from 'streamdown';
 import { Composer, type Attachment } from './composer';
 import { GenerationPending, GenerationResult, type RunResult } from './generation-card';
-import { ToolTimeline, type ToolPart } from './tool-timeline';
+import { ToolTimeline, type ToolPart, type TracePart } from './tool-timeline';
 
 /**
  * Separates what you typed from the attachment list appended for the model.
@@ -245,6 +245,17 @@ function Message({ message, streaming }: { message: UIMessage; streaming?: boole
 
   const parts = blocks(message);
 
+  /*
+   * A turn with no prose in it.
+   *
+   * The model can reason itself into a corner, run its tools and then simply
+   * stop — which rendered as a trace and nothing else, and reads as the app
+   * having broken. Say that it ended without an answer, so the next message
+   * can be about that rather than 'What happened?'.
+   */
+  const silent =
+    !streaming && parts.length > 0 && !parts.some((block) => block.kind === 'text');
+
   return (
     <div className="space-y-3">
       {parts.map((block, index) => {
@@ -272,6 +283,7 @@ function Message({ message, streaming }: { message: UIMessage; streaming?: boole
               streaming={streaming && index === parts.length - 1}
             />
             {block.parts
+              .filter((part): part is ToolPart => part.type === 'dynamic-tool')
               .filter((part) => part.toolName === 'run_models')
               .map((part) => (
                 <Generation
@@ -283,6 +295,13 @@ function Message({ message, streaming }: { message: UIMessage; streaming?: boole
           </div>
         );
       })}
+
+      {silent && (
+        <p className="text-[13px] text-[var(--color-muted)]">
+          That turn ended without a reply. Open the trace above to see how far it got, or
+          ask again.
+        </p>
+      )}
     </div>
   );
 }
@@ -322,7 +341,7 @@ function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }
 
 type Block =
   | { kind: 'text'; text: string }
-  | { kind: 'tools'; parts: ToolPart[] };
+  | { kind: 'tools'; parts: TracePart[] };
 
 /**
  * Collapse the part list into blocks, merging consecutive tool calls.
@@ -343,11 +362,13 @@ function blocks(message: UIMessage): Block[] {
       out.push({ kind: 'text', text: part.text });
       continue;
     }
-    if (part.type !== 'dynamic-tool') continue;
+    // Reasoning joins the trace rather than being dropped. Interleaved with
+    // the calls it explains, which is the order it happened in.
+    if (part.type !== 'dynamic-tool' && part.type !== 'reasoning') continue;
 
     const last = out[out.length - 1];
-    if (last?.kind === 'tools') last.parts.push(part as ToolPart);
-    else out.push({ kind: 'tools', parts: [part as ToolPart] });
+    if (last?.kind === 'tools') last.parts.push(part as TracePart);
+    else out.push({ kind: 'tools', parts: [part as TracePart] });
   }
 
   return out;

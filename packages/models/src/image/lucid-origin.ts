@@ -9,7 +9,15 @@ export const lucidOrigin = createImageModel({
   name: 'Lucid Origin',
   description:
     'Leonardo’s sharpest text-to-image model for graphic design: strong prompt adherence, legible in-image text and full-HD renders.',
-  capabilities: ['text-to-image', 'text-rendering', 'style-reference'],
+  /*
+   * No 'style-reference'. It was listed here and is not true: Cloudflare's
+   * published schema for this model takes prompt, guidance, width, height,
+   * steps and seed, and nothing else. An agent searching for a model that
+   * accepts a reference image found this one, could not find the field,
+   * guessed `style_image`, and got back a confident image that had never
+   * seen the reference.
+   */
+  capabilities: ['text-to-image', 'text-rendering'],
   tags: ['high-fidelity'],
   keywords: [
     'graphic design',
