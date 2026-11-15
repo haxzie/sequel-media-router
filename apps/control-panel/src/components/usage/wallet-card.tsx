@@ -154,15 +154,9 @@ function AddFundsDialog({
 
         {error && <Alert>{error}</Alert>}
 
-        {/*
-          Stated before the button, not after. No payment provider is
-          connected, so this credits the ledger and charges nothing — and a
-          row that says `test_credit` must never be read as a real payment.
-        */}
-        <Alert tone="info">
-          No card is charged. There is no payment provider connected yet, so this records a test
-          credit against your organisation and nothing more.
-        </Alert>
+        <p className="text-[12px] leading-relaxed text-[var(--color-dim)]">
+          Tax and platform fees will be applied at checkout.
+        </p>
 
         <div className="flex justify-end gap-2 pt-1">
           <button
