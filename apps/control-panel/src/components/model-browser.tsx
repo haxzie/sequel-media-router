@@ -225,7 +225,6 @@ export function ModelBrowser() {
         : inTab.filter((model) => capabilities.every((c) => model.capabilities.includes(c))),
     [inTab, capabilities],
   );
-  const enabledCount = visible.filter((m) => m.enabled).length;
   const loading = catalog === null;
 
   async function toggle(id: string, enabled: boolean) {
@@ -248,13 +247,7 @@ export function ModelBrowser() {
       <PageHeader
         breadcrumb={['Sequel', 'Models']}
         title="Models"
-        meta={
-          <>
-            {visible.length} {tab} model{visible.length === 1 ? '' : 's'}
-            {capabilities.length > 0 && ` of ${inTab.length}`} · {enabledCount} enabled ·
-            disabled models are hidden from search and refused by runs
-          </>
-        }
+        meta="Every model Sequel can run. Turn one off to hide it from search and refuse it on runs."
       />
 
       <div className="mb-6 flex items-center gap-3">
