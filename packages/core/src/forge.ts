@@ -114,6 +114,17 @@ export class Forge {
     return { ...asset, url: `${this.opts.baseUrl.replace(/\/$/, '')}/f/${alias.id}` };
   }
 
+  /**
+   * Store bytes we were handed and return them with a short link.
+   *
+   * The same path a model's output takes, so a file someone attaches in chat
+   * is addressed exactly like one a model produced — and can therefore be fed
+   * straight back in as `file_url` on the next run.
+   */
+  async storeAsset(opts: { bytes: ArrayBuffer; mime: string; ext: string }): Promise<Asset> {
+    return this.shorten(await this.opts.uploads.put(opts));
+  }
+
   /** Resolve a short handle to a directly-fetchable URL. */
   async resolveAlias(id: string): Promise<{ url: string; mime: string } | undefined> {
     const alias = await this.opts.store.getAlias(id);
@@ -330,7 +341,7 @@ export class Forge {
       // in `failed`, not escape and strand it at `in_progress` forever.
       const ctx: RunContext = {
         ai: this.requireAi(),
-        storeAsset: async (opts) => this.shorten(await this.opts.uploads.put(opts)),
+        storeAsset: async (opts) => this.storeAsset(opts),
       };
       const output = await model.run(input, ctx);
       const first = output.assets[0];

@@ -6,7 +6,17 @@ import { PageHeader } from '@sequel/ui';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useEffect, useRef, useState } from 'react';
 import { Streamdown } from 'streamdown';
+import { Composer, type Attachment } from './composer';
 import { GenerationPending, GenerationResult, type RunResult } from './generation-card';
+import { ToolTimeline, type ToolPart } from './tool-timeline';
+
+/**
+ * Separates what you typed from the attachment list appended for the model.
+ *
+ * Both have to be in the same text part — that is what reaches the model —
+ * but only the first half is yours, so the bubble renders up to this marker.
+ */
+const ATTACHMENT_NOTE = '\n\nAttached files (pass the URL as file_url when running a model):\n';
 
 const SUGGESTIONS = [
   'A product photo of a ceramic mug on seamless white',
@@ -39,6 +49,7 @@ export function CreateChat({
   initialMessages?: UIMessage[];
 }) {
   const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const bottom = useRef<HTMLDivElement>(null);
 
   /*
@@ -76,9 +87,45 @@ export function CreateChat({
       window.history.replaceState(null, '', `/c/${chatId}`);
     }
 
-    void sendMessage({ text: trimmed });
+    /*
+     * Files ride along as parts so the message renders with them, and their
+     * links are spelled out in the text as well.
+     *
+     * The chat model is text-only — it cannot look at an attachment. What it
+     * needs is the URL, because that is what it passes to run_models as
+     * file_url. Without this line it knows a file exists and has no way to
+     * refer to it.
+     */
+    const note = attachments.length
+      ? ATTACHMENT_NOTE +
+        attachments.map((file) => `- ${file.name} (${file.mime}): ${file.url}`).join('\n')
+      : '';
+
+    void sendMessage({
+      text: trimmed + note,
+      files: attachments.map((file) => ({
+        type: 'file' as const,
+        url: file.url,
+        mediaType: file.mime,
+        filename: file.name,
+      })),
+    });
+
     setInput('');
+    setAttachments([]);
   }
+
+  const composer = {
+    value: input,
+    onChange: setInput,
+    onSubmit: submit,
+    busy,
+    chatId,
+    attachments,
+    onAttach: (file: Attachment) => setAttachments((files) => [...files, file]),
+    onRemove: (id: string) =>
+      setAttachments((files) => files.filter((file) => file.id !== id)),
+  };
 
   if (empty) {
     return (
@@ -89,7 +136,7 @@ export function CreateChat({
           meta="Describe it. Sequel picks a model, runs it, and shows you the result."
         />
 
-        <Composer value={input} onChange={setInput} onSubmit={submit} busy={busy} autoFocus />
+        <Composer {...composer} autoFocus />
 
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map((suggestion) => (
@@ -110,8 +157,13 @@ export function CreateChat({
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col">
       <div className="flex-1 space-y-6 py-2">
-        {messages.map((message) => (
-          <Message key={message.id} message={message} />
+        {messages.map((message, index) => (
+          <Message
+            key={message.id}
+            message={message}
+            // Only the last message can still be arriving.
+            streaming={busy && index === messages.length - 1}
+          />
         ))}
 
         {status === 'submitted' && (
@@ -128,13 +180,13 @@ export function CreateChat({
       </div>
 
       <div className="sticky bottom-0 bg-[var(--color-bg)] pb-6 pt-3">
-        <Composer value={input} onChange={setInput} onSubmit={submit} busy={busy} />
+        <Composer {...composer} />
       </div>
     </div>
   );
 }
 
-function Message({ message }: { message: UIMessage }) {
+function Message({ message, streaming }: { message: UIMessage; streaming?: boolean }) {
   /*
    * Asymmetric on purpose. What you said is a short, known quantity, so it
    * gets a bubble on the right. What the assistant said is the content of the
@@ -144,141 +196,154 @@ function Message({ message }: { message: UIMessage }) {
     const text = message.parts
       .filter((part) => part.type === 'text')
       .map((part) => (part as { text: string }).text)
-      .join('\n');
+      .join('\n')
+      .split(ATTACHMENT_NOTE)[0] ?? '';
+
+    const files = message.parts.filter((part) => part.type === 'file') as Array<{
+      url: string;
+      mediaType?: string;
+      filename?: string;
+    }>;
 
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] whitespace-pre-wrap rounded-[20px] bg-[var(--color-card)] px-4 py-2.5 text-[14px] leading-relaxed text-[var(--color-text)]">
-          {text}
-        </div>
+      <div className="flex flex-col items-end gap-1.5">
+        {files.length > 0 && (
+          <div className="flex max-w-[80%] flex-wrap justify-end gap-1.5">
+            {files.map((file) => (
+              <a
+                key={file.url}
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block overflow-hidden rounded-xl bg-[var(--color-card)]"
+              >
+                {file.mediaType?.startsWith('image/') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={file.url}
+                    alt={file.filename ?? 'Attachment'}
+                    className="h-28 w-auto max-w-[220px] object-cover"
+                  />
+                ) : (
+                  <span className="block px-3 py-2 text-[12px] text-[var(--color-muted)]">
+                    {file.filename ?? 'Attachment'}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {text.trim() && (
+          <div className="max-w-[80%] whitespace-pre-wrap rounded-[20px] bg-[var(--color-card)] px-4 py-2.5 text-[14px] leading-relaxed text-[var(--color-text)]">
+            {text}
+          </div>
+        )}
       </div>
     );
   }
 
+  const parts = blocks(message);
+
   return (
-    <div className="space-y-2">
-      {message.parts.map((part, index) => {
-        if (part.type === 'text') {
+    <div className="space-y-3">
+      {parts.map((block, index) => {
+        if (block.kind === 'text') {
           return (
             <div key={index} className="chat-prose text-[14px] leading-relaxed">
-              <Streamdown>{part.text}</Streamdown>
+              <Streamdown>{block.text}</Streamdown>
             </div>
           );
         }
 
         /*
-         * MCP tools arrive as `dynamic-tool` parts with the name in a field,
-         * not as `tool-<name>` — the SDK cannot type what it discovers at
-         * runtime. Matching on `tool-run_models` silently rendered nothing.
+         * One accordion per run of calls, and the generations they produced
+         * below it. The trace and the result are different things: the trace
+         * is how the assistant got there and stays folded away, the picture is
+         * what was asked for and is always on screen.
          */
-        if (part.type === 'dynamic-tool') {
-          if (part.toolName !== 'run_models') {
-            // The search and schema steps are on the way to the picture, not
-            // the picture. A dot is enough.
-            const done = part.state === 'output-available';
-            return (
-              <div key={index} className="flex items-center gap-2 text-[12px]">
-                <span
-                  className="h-[5px] w-[5px] rounded-full"
-                  style={{ background: done ? 'var(--status-done)' : 'var(--status-running)' }}
-                />
-                <span className="font-mono text-[var(--color-dim)]">{part.toolName}</span>
-              </div>
-            );
-          }
-
-          if (part.state === 'output-available') {
-            const result = readToolOutput(part.output);
-            return result ? <GenerationResult key={index} result={result} /> : null;
-          }
-          if (part.state === 'output-error') {
-            return (
-              <div
-                key={index}
-                className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]"
-              >
-                {part.errorText}
-              </div>
-            );
-          }
-          return (
-            <GenerationPending
-              key={index}
-              input={part.input as Record<string, unknown> | undefined}
+        return (
+          <div key={index} className="space-y-3">
+            <ToolTimeline
+              parts={block.parts}
+              metadata={message.metadata}
+              // Only the final block of the final message is still open; an
+              // earlier run of calls was closed by the text that followed it.
+              streaming={streaming && index === parts.length - 1}
             />
-          );
-        }
-
-        return null;
+            {block.parts
+              .filter((part) => part.toolName === 'run_models')
+              .map((part) => (
+                <Generation
+                  key={part.toolCallId}
+                  part={part}
+                  streaming={streaming && index === parts.length - 1}
+                />
+              ))}
+          </div>
+        );
       })}
     </div>
   );
 }
 
-function Composer({
-  value,
-  onChange,
-  onSubmit,
-  busy,
-  autoFocus,
-}: {
-  value: string;
-  onChange: (next: string) => void;
-  onSubmit: (text: string) => void;
-  busy: boolean;
-  autoFocus?: boolean;
-}) {
-  const field = useRef<HTMLTextAreaElement>(null);
+function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
+  if (part.state === 'output-available') {
+    const result = readToolOutput(part.output);
+    return result ? <GenerationResult result={result} /> : null;
+  }
+  if (part.state === 'output-error') {
+    return (
+      <div className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]">
+        {part.errorText}
+      </div>
+    );
+  }
 
-  // Grow with the content up to a ceiling, the way every chat composer does.
-  useEffect(() => {
-    const node = field.current;
-    if (!node) return;
-    node.style.height = 'auto';
-    node.style.height = `${Math.min(node.scrollHeight, 200)}px`;
-  }, [value]);
+  /*
+   * Unfinished and nothing streaming means the run was cut off, not that it
+   * is still going. Shimmering here is a lie that never resolves.
+   */
+  if (!streaming) {
+    return (
+      <div className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-muted)]">
+        This generation was interrupted. The run may still have finished — check Tasks.
+      </div>
+    );
+  }
 
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit(value);
-      }}
-      className="flex items-end gap-2 rounded-[26px] border border-[var(--color-line)] bg-[var(--color-card)] py-2 pl-5 pr-2 transition-colors focus-within:border-[var(--color-line-strong)]"
-    >
-      <textarea
-        ref={field}
-        value={value}
-        autoFocus={autoFocus}
-        rows={1}
-        placeholder="Describe an image, a video, or something to say out loud…"
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={(event) => {
-          // Enter sends; Shift+Enter is a newline. A prompt is usually one
-          // line, and reaching for a button each time would be the friction.
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            onSubmit(value);
-          }
-        }}
-        className="scroll-area max-h-[200px] flex-1 resize-none bg-transparent py-2 text-[14px] leading-relaxed outline-none placeholder:text-[var(--color-dim)]"
-      />
-      <button
-        type="submit"
-        aria-label="Send"
-        disabled={busy || !value.trim()}
-        className="mb-[1px] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-30"
-      >
-        <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4" aria-hidden>
-          <path
-            d="M8 13V3m0 0L3.6 7.4M8 3l4.4 4.4"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-    </form>
-  );
+  return <GenerationPending input={part.input as Record<string, unknown> | undefined} />;
+}
+
+type Block =
+  | { kind: 'text'; text: string }
+  | { kind: 'tools'; parts: ToolPart[] };
+
+/**
+ * Collapse the part list into blocks, merging consecutive tool calls.
+ *
+ * The model calls search, then schemas, then run, with nothing said in
+ * between — three separate accordions for one stretch of work would be worse
+ * than the three dots this replaced. A sentence between calls does split
+ * them, because then the assistant has genuinely started a second thing.
+ *
+ * MCP tools arrive as `dynamic-tool` parts with the name in a field, not as
+ * `tool-<name>`: the SDK cannot type what it discovers at runtime.
+ */
+function blocks(message: UIMessage): Block[] {
+  const out: Block[] = [];
+
+  for (const part of message.parts) {
+    if (part.type === 'text') {
+      out.push({ kind: 'text', text: part.text });
+      continue;
+    }
+    if (part.type !== 'dynamic-tool') continue;
+
+    const last = out[out.length - 1];
+    if (last?.kind === 'tools') last.parts.push(part as ToolPart);
+    else out.push({ kind: 'tools', parts: [part as ToolPart] });
+  }
+
+  return out;
 }

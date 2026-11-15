@@ -34,6 +34,11 @@ you. Follow this order:
 3. run_models to generate. Pass the person's intent as the prompt, improved
    where it is vague, but never contradicting what they asked for.
 
+If the person attached files, their URLs are listed at the end of their
+message. Pass the URL straight through as file_url when a model takes an
+input image, video or audio. You cannot see an attachment yourself — do not
+describe its contents, ask if you need to know what is in it.
+
 Rules:
 - Never invent a model id. Only use ids returned by search_models.
 - Video is asynchronous: run_models returns in_progress with a task_id. Say so
@@ -94,11 +99,56 @@ export async function POST(request: Request) {
 
   const workersai = createWorkersAI({ accountId, apiKey });
 
+  /*
+   * Time each tool around its own execute, rather than inferring it from step
+   * boundaries. A step is model time plus tool time; only the wrapper can
+   * tell them apart, and 'worked for 12s' is worth nothing if the 12s is
+   * mostly the model thinking about what to call next.
+   *
+   * Keyed by toolCallId because the same tool is called more than once in a
+   * run — two search_models calls are two rows in the trace, not one.
+   */
+  const startedAt = Date.now();
+  const toolMs: Record<string, number> = {};
+  const rawTools = await mcp.tools();
+  const tools = Object.fromEntries(
+    Object.entries(rawTools).map(([name, tool]) => [
+      name,
+      {
+        ...tool,
+        execute: async (args: unknown, options: { toolCallId: string }) => {
+          const began = Date.now();
+          try {
+            return await tool.execute?.(args as never, options as never);
+          } finally {
+            toolMs[options.toolCallId] = Date.now() - began;
+          }
+        },
+      },
+    ]),
+  ) as typeof rawTools;
+
+  /*
+   * File parts are for the browser, not the model.
+   *
+   * gpt-oss-120b is text-only: handed an image content part it returns an
+   * empty message and the whole turn is lost silently. What it needs is the
+   * URL, which submit() already spells out in the message text, and which is
+   * what it passes to run_models anyway. Keep the parts on the message we
+   * persist so the attachment still renders; drop them on the way in.
+   *
+   * Revisit when the chat model is one that can actually see.
+   */
+  const forModel = messages.map((message) => ({
+    ...message,
+    parts: message.parts.filter((part) => part.type !== 'file'),
+  }));
+
   const result = streamText({
     model: workersai(CHAT_MODEL),
     system: SYSTEM,
-    messages: await convertToModelMessages(messages),
-    tools: await mcp.tools(),
+    messages: await convertToModelMessages(forModel),
+    tools,
     // Search, then maybe a schema, then run, then summarise. Four is the
     // shortest path that completes; eight leaves room for one retry.
     stopWhen: stepCountIs(8),
@@ -109,6 +159,13 @@ export async function POST(request: Request) {
 
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
+    /*
+     * Attached at 'finish', when every duration is known. The browser times
+     * the same work live off part state transitions; this is the copy that
+     * survives a reload.
+     */
+    messageMetadata: ({ part }) =>
+      part.type === 'finish' ? { totalMs: Date.now() - startedAt, toolMs } : undefined,
     // Written once the stream ends, with the assistant's parts complete —
     // tool calls, their results and all. Persisting mid-stream would store
     // half a tool call.

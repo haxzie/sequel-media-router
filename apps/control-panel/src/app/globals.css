@@ -145,6 +145,27 @@ body {
 }
 
 /*
+ * Tool-trace spinner. Unlike a generation, a tool call has no shape to
+ * reserve space for and usually lasts under a second, so a small ring is the
+ * right amount of signal next to the running clock.
+ */
+@keyframes sequel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-slow {
+  animation: sequel-spin 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-slow {
+    animation-duration: 2.4s;
+  }
+}
+
+/*
  * Markdown from the assistant. Streamdown ships unstyled on purpose, so the
  * surrounding type scale has to be stated here rather than inherited.
  */

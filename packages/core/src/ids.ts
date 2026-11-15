@@ -32,6 +32,7 @@ export const ID_PREFIX = {
   event: 'evt',
   chat: 'cht',
   chatMessage: 'msg',
+  chatFile: 'fil',
 } as const;
 
 export type EntityKind = keyof typeof ID_PREFIX;

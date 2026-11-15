@@ -94,7 +94,7 @@ export async function getChat(
   const { results } = await handle
     .prepare(`SELECT * FROM chatMessage WHERE chatId = ? ORDER BY createdAt ASC`)
     .bind(chatId)
-    .all<{ id: string; role: string; parts: string }>();
+    .all<{ id: string; role: string; parts: string; metadata: string | null }>();
 
   return {
     chat,
@@ -102,6 +102,9 @@ export async function getChat(
       id: row.id,
       role: row.role as UIMessage['role'],
       parts: JSON.parse(row.parts) as UIMessage['parts'],
+      // Tool timings, written by the server that ran them. Absent on older
+      // rows and on messages that called nothing.
+      metadata: row.metadata ? (JSON.parse(row.metadata) as unknown) : undefined,
     })),
   };
 }
@@ -133,13 +136,15 @@ export async function saveMessages(chatId: string, messages: UIMessage[]): Promi
     ...messages.map((message, index) =>
       handle
         .prepare(
-          `INSERT INTO chatMessage (id, chatId, role, parts, createdAt) VALUES (?, ?, ?, ?, ?)`,
+          `INSERT INTO chatMessage (id, chatId, role, parts, metadata, createdAt)
+           VALUES (?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           message.id?.startsWith('msg_') ? message.id : newId('chatMessage'),
           chatId,
           message.role,
           JSON.stringify(message.parts),
+          message.metadata === undefined ? null : JSON.stringify(message.metadata),
           // Index keeps insertion order stable; two messages in the same
           // millisecond would otherwise sort arbitrarily on reload.
           new Date(now + index).toISOString(),
@@ -149,4 +154,65 @@ export async function saveMessages(chatId: string, messages: UIMessage[]): Promi
       .prepare(`UPDATE chat SET updatedAt = ? WHERE id = ?`)
       .bind(new Date().toISOString(), chatId),
   ]);
+}
+
+export interface ChatFile {
+  id: string;
+  name: string;
+  mime: string;
+  bytes: number;
+  url: string;
+}
+
+export async function addChatFile(params: {
+  chatId: string;
+  organizationId: string;
+  userId: string;
+  name: string;
+  mime: string;
+  bytes: number;
+  url: string;
+}): Promise<ChatFile> {
+  const file: ChatFile = {
+    id: newId('chatFile'),
+    name: params.name,
+    mime: params.mime,
+    bytes: params.bytes,
+    url: params.url,
+  };
+
+  await (await db())
+    .prepare(
+      `INSERT INTO chatFile (id, chatId, organizationId, userId, name, mime, bytes, url, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      file.id,
+      params.chatId,
+      params.organizationId,
+      params.userId,
+      file.name,
+      file.mime,
+      file.bytes,
+      file.url,
+      new Date().toISOString(),
+    )
+    .run();
+
+  return file;
+}
+
+/** Everything attached to this chat, oldest first. */
+export async function listChatFiles(
+  chatId: string,
+  organizationId: string,
+): Promise<ChatFile[]> {
+  const { results } = await (await db())
+    .prepare(
+      `SELECT id, name, mime, bytes, url FROM chatFile
+       WHERE chatId = ? AND organizationId = ? ORDER BY createdAt ASC`,
+    )
+    .bind(chatId, organizationId)
+    .all<ChatFile>();
+  return results ?? [];
 }
