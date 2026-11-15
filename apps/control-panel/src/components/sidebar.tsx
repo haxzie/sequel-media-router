@@ -15,8 +15,8 @@ import { OrgSwitcher } from './org-switcher';
 import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
 
+/** Create is the action the panel exists to start, so it is not in this list. */
 const NAV = [
-  { href: '/', label: 'Create', icon: PlusIcon },
   { href: '/mcp', label: 'MCP Server', icon: McpIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
   { href: '/tasks', label: 'Tasks', icon: TasksIcon },
@@ -53,14 +53,26 @@ export function Sidebar({
       <div className="scroll-area min-h-0 overflow-y-auto">
         <OrgSwitcher organizations={organizations} activeId={activeOrganizationId} />
 
+        {/*
+          Create is a call to action, not a destination among equals — a white
+          pill above the divider, so the eye lands on it before the list.
+        */}
+        <Link
+          href="/"
+          className="nav-item mt-1 flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[14px] font-medium text-[#0a0a0a] transition-opacity hover:opacity-90"
+        >
+          <PlusIcon />
+          Create
+        </Link>
+
         <div className="my-4 h-px bg-[var(--color-line)]" />
 
         <nav className="space-y-0.5">
           {NAV.map((item) => {
             // Settings lives under /settings/<tab>, so an exact match would
-            // unlight the item the moment you land on one.
-            const active =
-              item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+            // unlight the item the moment you land on one. No '/' entry here
+            // any more, so prefix matching is unambiguous.
+            const active = pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link
