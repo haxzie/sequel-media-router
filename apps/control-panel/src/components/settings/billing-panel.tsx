@@ -38,12 +38,10 @@ export function BillingPanel({
   credits,
   availableUsd,
   spentUsd,
-  organizationName,
 }: {
   credits: CreditRow[];
   availableUsd: string;
   spentUsd: string;
-  organizationName: string;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = credits.find((credit) => credit.id === openId) ?? null;
@@ -131,11 +129,7 @@ export function BillingPanel({
       )}
 
       {open && (
-        <CreditPanel
-          credit={open}
-          organizationName={organizationName}
-          onClose={() => setOpenId(null)}
-        />
+        <CreditPanel credit={open} onClose={() => setOpenId(null)} />
       )}
     </div>
   );

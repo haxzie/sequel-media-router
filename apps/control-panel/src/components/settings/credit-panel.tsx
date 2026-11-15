@@ -29,15 +29,7 @@ function stamp(iso: string): string {
  * that derives its own tax would stop matching the row it describes the moment
  * a rate changed.
  */
-export function CreditPanel({
-  credit,
-  organizationName,
-  onClose,
-}: {
-  credit: CreditRow;
-  organizationName: string;
-  onClose: () => void;
-}) {
+export function CreditPanel({ credit, onClose }: { credit: CreditRow; onClose: () => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -93,22 +85,25 @@ export function CreditPanel({
       </div>
 
       <footer className="flex items-center gap-2 border-t border-[var(--color-line)] px-5 py-4">
-        <button
-          type="button"
-          onClick={() => downloadReceipt(credit, organizationName)}
+        {/*
+          Plain links to the server routes. The PDF is rendered from the ledger
+          there, so what downloads cannot differ from what this panel shows,
+          and the figures are never assembled in the browser.
+        */}
+        <a
+          href={`/api/billing/${credit.id}/receipt`}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-[13px] font-medium text-[#0a0a0a] transition-opacity hover:opacity-90"
         >
           <DownloadIcon />
           Receipt
-        </button>
-        <button
-          type="button"
-          onClick={() => downloadInvoice(credit, organizationName)}
+        </a>
+        <a
+          href={`/api/billing/${credit.id}/invoice`}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--color-line-strong)] px-4 py-2 text-[13px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
         >
           <DownloadIcon />
           Invoice
-        </button>
+        </a>
       </footer>
     </aside>
   );
@@ -141,75 +136,4 @@ function Row({
       </div>
     </div>
   );
-}
-
-function save(filename: string, body: string, type: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Both documents carry the same stored figures and both say the charge was not
- * processed by a payment provider. A receipt that omitted that would be the
- * one artefact a person keeps and later relies on.
- */
-function downloadReceipt(credit: CreditRow, organizationName: string) {
-  const lines = [
-    'SEQUEL — RECEIPT',
-    '',
-    `Reference:      ${credit.id}`,
-    `Date:           ${stamp(credit.createdAt)}`,
-    `Organisation:   ${organizationName}`,
-    `Added by:       ${credit.createdBy?.name ?? '—'}`,
-    `Payment method: ${credit.paymentMethod ?? 'None on file'}`,
-    '',
-    `Credit          ${formatUsd(credit.amountUsd)}`,
-    `Platform fee    ${formatUsd(credit.platformFeeUsd)}`,
-    `Tax             ${formatUsd(credit.taxUsd)}  (no tax jurisdiction on file)`,
-    `Total charged   ${formatUsd(credit.totalUsd)}`,
-    '',
-    credit.source === 'test_credit'
-      ? 'This was recorded as a test credit. No payment provider was involved and no card was charged.'
-      : '',
-  ];
-  save(`sequel-receipt-${credit.id}.txt`, lines.join('\n'), 'text/plain');
-}
-
-function downloadInvoice(credit: CreditRow, organizationName: string) {
-  const row = (label: string, value: string, strong = false) =>
-    `<tr><td>${label}</td><td style="text-align:right${
-      strong ? ';font-weight:600' : ''
-    }">${value}</td></tr>`;
-
-  const html = `<!doctype html>
-<meta charset="utf-8">
-<title>Invoice ${credit.id}</title>
-<style>
-  body { font: 14px/1.6 system-ui, sans-serif; margin: 48px; color: #111; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  table { border-collapse: collapse; margin-top: 24px; width: 360px; }
-  td { padding: 6px 0; border-bottom: 1px solid #eee; }
-  .note { margin-top: 32px; color: #666; font-size: 12px; }
-</style>
-<h1>Invoice</h1>
-<div>${organizationName}</div>
-<div>${stamp(credit.createdAt)}</div>
-<div>Reference ${credit.id}</div>
-<table>
-  ${row('Credit', formatUsd(credit.amountUsd))}
-  ${row('Platform fee', formatUsd(credit.platformFeeUsd))}
-  ${row('Tax (no jurisdiction on file)', formatUsd(credit.taxUsd))}
-  ${row('Total charged', formatUsd(credit.totalUsd), true)}
-</table>
-<div>Payment method: ${credit.paymentMethod ?? 'None on file'}</div>
-${
-  credit.source === 'test_credit'
-    ? '<p class="note">Recorded as a test credit. No payment provider was involved and no card was charged.</p>'
-    : ''
-}`;
-  save(`sequel-invoice-${credit.id}.html`, html, 'text/html');
 }

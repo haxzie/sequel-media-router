@@ -56,7 +56,6 @@ export function SettingsPanels({
             credits={wallet.credits}
             availableUsd={wallet.availableUsd}
             spentUsd={wallet.spentUsd}
-            organizationName={organization.name}
           />
         )}
         {tab === 'organisation' && (
