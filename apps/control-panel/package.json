@@ -18,16 +18,17 @@
     "db:console": "wrangler d1 execute sequel --local --command"
   },
   "dependencies": {
+    "@better-auth/api-key": "^1.7.25",
     "@sequel/core": "workspace:*",
     "@sequel/models": "workspace:*",
+    "@sequel/ui": "workspace:*",
     "better-auth": "^1.7.25",
     "kysely": "^0.29.9",
     "kysely-d1": "^0.4.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zod": "^3.24.1",
-    "@sequel/ui": "workspace:*"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.3.0",

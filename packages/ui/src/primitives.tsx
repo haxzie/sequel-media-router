@@ -197,3 +197,46 @@ export function PageHeader({
     </div>
   );
 }
+
+/**
+ * Tab strip with icons, for a page that holds several settings surfaces.
+ *
+ * Unlike `Segmented`, which filters one list in place, these switch what the
+ * page is about — so they read as navigation: underline on the active tab, no
+ * pill, and enough weight to sit under a page title.
+ */
+export function Tabs<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: Array<{ value: T; label: string; icon?: (props: { className?: string }) => ReactNode }>;
+  onChange: (next: T) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 border-b border-[var(--color-line)]">
+      {options.map((option) => {
+        const active = option.value === value;
+        const Icon = option.icon;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            aria-current={active ? 'page' : undefined}
+            className={[
+              '-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-[14px] transition-colors',
+              active
+                ? 'border-[var(--color-text)] text-[var(--color-text)]'
+                : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]',
+            ].join(' ')}
+          >
+            {Icon && <Icon />}
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

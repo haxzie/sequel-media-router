@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Badge, Card, PageHeader, PrimaryButton } from '@sequel/ui';
+import { Avatar, Badge, Card, PrimaryButton } from '@sequel/ui';
 import { useState } from 'react';
 import { InviteDialog } from './invite-dialog';
 import { InviteRow } from './invite-row';
@@ -45,22 +45,14 @@ export function TeamManager({
   const canManage = CAN_MANAGE.includes(viewerRole);
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <PageHeader
-        breadcrumb={['Sequel', 'Team']}
-        title="Team"
-        meta={
-          <>
-            {members.length} member{members.length === 1 ? '' : 's'} in {organization.name}
-            {invitations.length > 0 && ` · ${invitations.length} pending`}
-          </>
-        }
-        actions={
-          canManage ? (
-            <PrimaryButton onClick={() => setInviting(true)}>Invite</PrimaryButton>
-          ) : undefined
-        }
-      />
+    <div>
+      <div className="mb-4 flex items-start justify-between gap-6">
+        <p className="text-[13px] text-[var(--color-muted)]">
+          {members.length} member{members.length === 1 ? '' : 's'}
+          {invitations.length > 0 && ` · ${invitations.length} pending`}
+        </p>
+        {canManage && <PrimaryButton onClick={() => setInviting(true)}>Invite</PrimaryButton>}
+      </div>
 
       <Card className="overflow-hidden">
         <div className="border-b border-[var(--color-line)] px-5 py-3 text-[12px] font-medium text-[var(--color-dim)]">

@@ -24,6 +24,8 @@ export const ID_PREFIX = {
   organizationRole: 'role',
   task: 'task',
   asset: 'ast',
+  /** Better Auth names this model by its table, lowercase. */
+  apikey: 'key',
 } as const;
 
 export type EntityKind = keyof typeof ID_PREFIX;
@@ -41,10 +43,15 @@ export function newId(kind: EntityKind, length = 22): string {
 }
 
 /**
- * Prefix for a Better Auth model name. Returns undefined for a model we have
- * not claimed, so the caller can fall back to the library's own generator
- * rather than inventing a prefix for a table it does not know about.
+ * Id for a Better Auth model.
+ *
+ * An unclaimed model gets an unprefixed random id rather than deferring to the
+ * database. Deferring sounds tidy and is wrong here: every id column is a text
+ * primary key with no autoincrement, so "let the database do it" means
+ * inserting NULL and failing the NOT NULL constraint. A plugin that adds a
+ * table should still be able to write to it.
  */
-export function prefixForModel(model: string): string | undefined {
-  return (ID_PREFIX as Record<string, string | undefined>)[model];
+export function idForModel(model: string): string {
+  const prefix = (ID_PREFIX as Record<string, string | undefined>)[model];
+  return prefix ? `${prefix}_${randomSuffix()}` : randomSuffix(26);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { ActivityIcon, Avatar, HomeIcon, LayersIcon, UsersIcon } from '@sequel/ui';
+import { ActivityIcon, Avatar, HomeIcon, LayersIcon, SettingsIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { OrgSwitcher } from './org-switcher';
@@ -11,7 +11,7 @@ const NAV = [
   { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
   { href: '/tasks', label: 'Tasks', icon: ActivityIcon },
-  { href: '/team', label: 'Team', icon: UsersIcon },
+  { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export interface SidebarUser {

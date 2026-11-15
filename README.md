@@ -169,6 +169,11 @@ Every table gets Stripe-style prefixed ids (`org_`, `usr_`, `mem_`, `inv_`) via
 not claimed falls back to Better Auth's own generator rather than getting a
 prefix we invented.
 
+Settings lives at `/settings` with three tabs: Members, API Keys and
+Organisation. **API keys are not checked by anything yet** — `/api/mcp` and the
+REST routes are still unauthenticated, and the UI says so rather than implying
+a key protects something.
+
 The session gate lives in `app/(dashboard)/layout.tsx`, not in middleware —
 middleware runs on the edge runtime with no D1 binding, so the session cannot be
 read there at all.

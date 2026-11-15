@@ -163,3 +163,31 @@ export function PlusIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function KeyIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <circle cx="5.4" cy="5.4" r="3.1" stroke="currentColor" strokeWidth="1.3" />
+      <path d="m7.7 7.7 5.6 5.6M11 11.4l1.3-1.3M9.4 9.8l1.3-1.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function BuildingIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="M2.75 13.5V3.4a1 1 0 0 1 .7-.95l5-1.4a1 1 0 0 1 1.3.95V13.5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M9.75 6.2h2.6a1 1 0 0 1 1 1v6.3M1.5 13.5h13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.2 5.4h2M5.2 8h2M5.2 10.6h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function SettingsIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 1.6v1.5M8 12.9v1.5M14.4 8h-1.5M3.1 8H1.6M12.5 3.5l-1 1M4.5 11.5l-1 1M12.5 12.5l-1-1M4.5 4.5l-1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -1,5 +1,6 @@
-import { prefixForModel, randomSuffix } from '@sequel/core/ids';
+import { idForModel } from '@sequel/core/ids';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { apiKey } from '@better-auth/api-key';
 import { betterAuth } from 'better-auth';
 import { magicLink, organization } from 'better-auth/plugins';
 import { Kysely } from 'kysely';
@@ -31,15 +32,8 @@ export function authOptions(database: Parameters<typeof betterAuth>[0]['database
 
     advanced: {
       database: {
-        /**
-         * Stripe-style prefixed ids for every table. Falling back to Better
-         * Auth's own generator for an unclaimed model is deliberate: a table we
-         * have not thought about should not get a prefix we invented.
-         */
-        generateId: ({ model }) => {
-          const prefix = prefixForModel(model);
-          return prefix ? `${prefix}_${randomSuffix()}` : false;
-        },
+        /** Stripe-style prefixed ids for every table. See core/src/ids.ts. */
+        generateId: ({ model }) => idForModel(model),
         joins: true,
       },
     },
@@ -66,6 +60,15 @@ export function authOptions(database: Parameters<typeof betterAuth>[0]['database
     },
 
     plugins: [
+      apiKey({
+        // `sk_` reads as a secret at a glance, the way every other key in a
+        // .env file does. `start` keeps the first characters in plain text so
+        // a key can be identified in a list without ever storing the rest.
+        defaultPrefix: 'sk_sequel_',
+        defaultKeyLength: 48,
+        startingCharactersConfig: { shouldStore: true, charactersLength: 8 },
+        enableMetadata: true,
+      }),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
           await sendMagicLink({ email, url });
