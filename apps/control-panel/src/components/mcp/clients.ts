@@ -13,7 +13,10 @@ export interface McpClient {
   /** What the install actually is, in three or four words. */
   method: string;
   logo: string;
-  /** Brand colour for the tile. The mark itself is masked to white on top. */
+  /**
+   * Tile background — any CSS background value, so a brand with a gradient
+   * (Gemini) gets one rather than being flattened to a single hex.
+   */
   tone: string;
   /** Opens the client with the server prefilled, where one exists. */
   deepLink?: (url: string) => string;
@@ -27,6 +30,9 @@ const base64 = (value: string) =>
   typeof window === 'undefined' ? '' : window.btoa(value);
 
 export const MCP_CLIENTS: McpClient[] = [
+  // Ordered by lab — Anthropic, OpenAI, Google — then the editors and
+  // CLIs that embed them. Someone looking for their client scans by the
+  // name they already know.
   {
     id: 'claude-code',
     tone: '#D97757',
@@ -47,6 +53,35 @@ export const MCP_CLIENTS: McpClient[] = [
       `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Sequel&connectorUrl=${encodeURIComponent(url)}`,
     target: 'claude.ai → Settings → Connectors',
     snippet: (url) => `Name:\nSequel\n\nRemote MCP server URL:\n${url}`,
+  },
+  {
+    id: 'chatgpt',
+    tone: '#10A37F',
+    name: 'ChatGPT',
+    method: 'Connector settings',
+    logo: '/clients/chatgpt.svg',
+    target: 'Settings → Connectors',
+    snippet: (url) => `Server URL:\n${url}`,
+  },
+  {
+    id: 'codex',
+    tone: '#000000',
+    name: 'Codex',
+    method: 'One command',
+    logo: '/clients/codex.svg',
+    target: 'Run in your terminal',
+    snippet: (url) =>
+      `codex --add-mcp-server \\\n  --name sequel \\\n  --transport http \\\n  --url ${url}`,
+  },
+  {
+    id: 'gemini',
+    tone: 'linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%)',
+    name: 'Gemini CLI',
+    method: 'Config file',
+    logo: '/clients/gemini.svg',
+    target: '~/.gemini/settings.json',
+    snippet: (url) =>
+      JSON.stringify({ mcpServers: { sequel: { url } } }, null, 2),
   },
   {
     id: 'cursor',
@@ -77,25 +112,6 @@ export const MCP_CLIENTS: McpClient[] = [
       JSON.stringify({ servers: { sequel: { type: 'http', url } } }, null, 2),
   },
   {
-    id: 'chatgpt',
-    tone: '#000000',
-    name: 'ChatGPT',
-    method: 'Connector settings',
-    logo: '/clients/chatgpt.svg',
-    target: 'Settings → Connectors',
-    snippet: (url) => `Server URL:\n${url}`,
-  },
-  {
-    id: 'codex',
-    tone: '#000000',
-    name: 'Codex',
-    method: 'One command',
-    logo: '/clients/codex.svg',
-    target: 'Run in your terminal',
-    snippet: (url) =>
-      `codex --add-mcp-server \\\n  --name sequel \\\n  --transport http \\\n  --url ${url}`,
-  },
-  {
     id: 'windsurf',
     tone: '#0B100F',
     name: 'Windsurf',
@@ -115,15 +131,5 @@ export const MCP_CLIENTS: McpClient[] = [
     target: '~/.config/zed/settings.json',
     snippet: (url) =>
       JSON.stringify({ context_servers: { sequel: { url } } }, null, 2),
-  },
-  {
-    id: 'gemini',
-    tone: '#8E75B2',
-    name: 'Gemini CLI',
-    method: 'Config file',
-    logo: '/clients/gemini.svg',
-    target: '~/.gemini/settings.json',
-    snippet: (url) =>
-      JSON.stringify({ mcpServers: { sequel: { url } } }, null, 2),
   },
 ];

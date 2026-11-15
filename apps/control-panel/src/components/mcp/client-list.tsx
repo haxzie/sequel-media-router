@@ -54,7 +54,7 @@ function ClientMark({ client }: { client: McpClient }) {
   return (
     <div
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-      style={{ backgroundColor: client.tone }}
+      style={{ background: client.tone }}
     >
       <span
         className="h-[18px] w-[18px] bg-white"
