@@ -1,16 +1,22 @@
 'use client';
 
-import { CheckIcon } from '@sequel/ui';
+import { AnvilIcon, CheckIcon } from '@sequel/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import type { SidebarOrg } from './sidebar';
 
 /**
- * Switching organization rewrites the session's activeOrganizationId, which is
- * what every org-scoped query reads. A full refresh follows so server
- * components re-render against the new org rather than showing the old one's
- * data under the new name.
+ * Brand mark and organization picker in one row.
+ *
+ * A separate "Sequel" wordmark above this said nothing the page title does not
+ * already say, and the slug under the name was an id nobody navigates by. What
+ * is left is the one thing that changes: which organization you are looking at.
+ *
+ * Switching rewrites the session's activeOrganizationId, which is what every
+ * org-scoped query reads. A full refresh follows so server components
+ * re-render against the new org rather than showing the old one's data under
+ * the new name.
  */
 export function OrgSwitcher({
   organizations,
@@ -53,13 +59,10 @@ export function OrgSwitcher({
         disabled={busy}
         className="flex w-full items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors hover:bg-[var(--color-card)]"
       >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-card-hover)] text-[12px] font-semibold uppercase text-[var(--color-muted)]">
-          {active.name.charAt(0)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] text-[var(--color-text)]">{active.name}</div>
-          <div className="truncate text-[11px] text-[var(--color-dim)]">{active.slug}</div>
-        </div>
+        <AnvilIcon className="h-[18px] w-[18px] shrink-0 text-[var(--color-text)]" />
+        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight">
+          {active.name}
+        </span>
         <svg viewBox="0 0 12 12" className="h-3 w-3 shrink-0 text-[var(--color-dim)]" aria-hidden>
           <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

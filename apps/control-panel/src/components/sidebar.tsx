@@ -1,6 +1,6 @@
 'use client';
 
-import { ActivityIcon, AnvilIcon, Avatar, HomeIcon, LayersIcon, UsersIcon } from '@sequel/ui';
+import { ActivityIcon, Avatar, HomeIcon, LayersIcon, UsersIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { OrgSwitcher } from './org-switcher';
@@ -41,11 +41,6 @@ export function Sidebar({
   return (
     <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col justify-between bg-[var(--color-surface)] px-4 py-5">
       <div className="min-h-0 overflow-y-auto">
-        <div className="flex items-center gap-2.5 px-2 pb-4">
-          <AnvilIcon className="h-[18px] w-[18px] text-[var(--color-text)]" />
-          <div className="min-w-0 truncate text-[15px] font-semibold tracking-tight">Sequel</div>
-        </div>
-
         <OrgSwitcher organizations={organizations} activeId={activeOrganizationId} />
 
         <div className="my-4 h-px bg-[var(--color-line)]" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, ChoiceGroup, Field, Input, SubmitButton } from '@sequel/ui';
+import { Alert, ChoiceGroup, Field, Input, StepBar, SubmitButton } from '@sequel/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -20,10 +20,18 @@ const USE_CASES = [
   { value: 'prototyping', label: 'Prototyping', description: 'Trying models out' },
 ] as const;
 
+type StepId = 'organisation' | 'role' | 'useCase';
+
 /**
- * One screen, three questions. Onboarding exists because the account is created
- * silently on first sign-in, so this is the only place to ask — but it is also
- * the last thing between someone and the product, so it stays short.
+ * One question per step.
+ *
+ * All three on one page meant scrolling past two answered questions to reach
+ * the button, and the long use-case list pushed it off screen entirely. A
+ * wizard also makes the required-ness obvious: you cannot continue past a
+ * question you have not answered, so the submit button is never mysteriously
+ * disabled with no indication of why.
+ *
+ * An invited person already has an organisation, so their wizard is two steps.
  */
 export function OnboardingForm({
   name,
@@ -35,14 +43,32 @@ export function OnboardingForm({
   joinedOrganization: string | null;
 }) {
   const router = useRouter();
+  const steps: StepId[] = joinedOrganization
+    ? ['role', 'useCase']
+    : ['organisation', 'role', 'useCase'];
+
+  const [index, setIndex] = useState(0);
   const [org, setOrg] = useState(suggestedOrg);
   const [jobRole, setJobRole] = useState<string | null>(null);
   const [useCase, setUseCase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const step = steps[index]!;
+  const last = index === steps.length - 1;
+
+  const answered =
+    step === 'organisation' ? org.trim().length > 0 : step === 'role' ? jobRole : useCase;
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+
+    // Enter on an early step advances rather than submitting half an answer.
+    if (!last) {
+      if (answered) setIndex(index + 1);
+      return;
+    }
+
     setBusy(true);
     setError(null);
 
@@ -72,19 +98,24 @@ export function OnboardingForm({
 
   return (
     <div>
-      <h1 className="text-[22px] font-medium tracking-tight">
-        {first ? `Welcome, ${first}` : 'Welcome'}
-      </h1>
-      <p className="mt-2 text-[14px] text-[var(--color-muted)]">
-        {joinedOrganization
-          ? `You have joined ${joinedOrganization}. Two questions, then you are in.`
-          : 'Three questions, then you are in.'}
-      </p>
+      <StepBar step={index + 1} total={steps.length} />
 
-      <form onSubmit={submit} className="mt-8 space-y-6">
-        {!joinedOrganization && (
+      <div className="mt-6">
+        <h1 className="text-[22px] font-medium tracking-tight">
+          {index === 0 ? (first ? `Welcome, ${first}` : 'Welcome') : TITLES[step]}
+        </h1>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--color-muted)]">
+          {index === 0 && joinedOrganization
+            ? `You're in ${joinedOrganization}. Two quick questions.`
+            : SUBTITLES[step]}
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="mt-7">
+        {step === 'organisation' && (
           <Field label="Organisation" hint="You can rename this later, and invite people to it.">
             <Input
+              autoFocus
               required
               maxLength={60}
               placeholder="Acme Inc"
@@ -94,28 +125,45 @@ export function OnboardingForm({
           </Field>
         )}
 
-        <div>
-          <div className="mb-1.5 text-[13px] text-[var(--color-muted)]">What do you do?</div>
+        {step === 'role' && (
           <ChoiceGroup columns={2} value={jobRole} options={[...JOB_ROLES]} onChange={setJobRole} />
-        </div>
+        )}
 
-        <div>
-          <div className="mb-1.5 text-[13px] text-[var(--color-muted)]">
-            What will you use Sequel for?
-          </div>
+        {step === 'useCase' && (
           <ChoiceGroup value={useCase} options={[...USE_CASES]} onChange={setUseCase} />
+        )}
+
+        {error && <div className="mt-4">{<Alert>{error}</Alert>}</div>}
+
+        <div className="mt-7 flex items-center gap-3">
+          {index > 0 && (
+            <button
+              type="button"
+              onClick={() => setIndex(index - 1)}
+              className="rounded-full px-4 py-2.5 text-[14px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
+            >
+              Back
+            </button>
+          )}
+          <div className="flex-1">
+            <SubmitButton full busy={busy} disabled={!answered}>
+              {last ? 'Finish setup' : 'Continue'}
+            </SubmitButton>
+          </div>
         </div>
-
-        {error && <Alert>{error}</Alert>}
-
-        <SubmitButton
-          full
-          busy={busy}
-          disabled={(!joinedOrganization && !org.trim()) || !jobRole || !useCase}
-        >
-          Finish setup
-        </SubmitButton>
       </form>
     </div>
   );
 }
+
+const TITLES: Record<StepId, string> = {
+  organisation: 'Your organisation',
+  role: 'What do you do?',
+  useCase: 'What will you use Sequel for?',
+};
+
+const SUBTITLES: Record<StepId, string> = {
+  organisation: 'Everything — models, tasks and spend — belongs to it.',
+  role: 'So we know who we are building for.',
+  useCase: 'This shapes which models we put in front of you.',
+};

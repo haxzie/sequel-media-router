@@ -51,9 +51,11 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 }
 
 /**
- * A radio group that looks like a list of cards. Onboarding asks three
- * single-choice questions and a native radio would be the only unstyled thing
- * on the page.
+ * A radio group that looks like a list of cards.
+ *
+ * Single-choice, so the indicator is a ring that fills when chosen — a square
+ * checkbox would promise multi-select. Without any indicator the only signal
+ * was a border colour, which is too quiet to read as "this is your answer".
  */
 export function ChoiceGroup<T extends string>({
   value,
@@ -74,23 +76,74 @@ export function ChoiceGroup<T extends string>({
           <button
             key={option.value}
             type="button"
+            role="radio"
+            aria-checked={active}
             onClick={() => onChange(option.value)}
             className={[
-              'rounded-xl border px-3.5 py-3 text-left transition-colors',
+              'flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors',
               active
                 ? 'border-[var(--color-text)] bg-[var(--color-card-hover)]'
                 : 'border-[var(--color-line)] bg-[var(--color-card)] hover:border-[var(--color-line-strong)]',
             ].join(' ')}
           >
-            <div className="text-[14px] text-[var(--color-text)]">{option.label}</div>
-            {option.description && (
-              <div className="mt-0.5 text-[12px] text-[var(--color-dim)]">
-                {option.description}
-              </div>
-            )}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] text-[var(--color-text)]">
+                {option.label}
+              </span>
+              {option.description && (
+                <span className="mt-0.5 block truncate text-[12px] text-[var(--color-dim)]">
+                  {option.description}
+                </span>
+              )}
+            </span>
+            <CheckRing active={active} />
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function CheckRing({ active }: { active: boolean }) {
+  return (
+    <span
+      className={[
+        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border transition-colors',
+        active ? 'border-white bg-white text-[#0a0a0a]' : 'border-[var(--color-line-strong)]',
+      ].join(' ')}
+      aria-hidden
+    >
+      {active && (
+        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+          <path
+            d="m3 6.2 2.1 2.1L9 4.4"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+/**
+ * Wizard progress. Segments rather than numbered dots: the point is how much
+ * is left, and three labelled circles would outweigh the question itself.
+ */
+export function StepBar({ step, total }: { step: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1.5" aria-label={`Step ${step} of ${total}`}>
+      {Array.from({ length: total }, (_, index) => (
+        <span
+          key={index}
+          className={[
+            'h-[3px] flex-1 rounded-full transition-colors',
+            index < step ? 'bg-white' : 'bg-[var(--color-line-strong)]',
+          ].join(' ')}
+        />
+      ))}
     </div>
   );
 }
