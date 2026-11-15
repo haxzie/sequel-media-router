@@ -365,6 +365,8 @@ export class Forge {
     end?: string;
     /** Only runs started by this person. */
     user_id?: string;
+    /** Only these model ids. Empty or absent means every model. */
+    models?: string[];
     /**
      * Server-supplied, never a tool argument — a caller must not be able to
      * widen its own scope by passing someone else's organisation id.
@@ -379,6 +381,7 @@ export class Forge {
       ...(params.start ? { createdAfter: params.start } : {}),
       ...(params.end ? { createdBefore: params.end } : {}),
       ...(params.user_id ? { createdByUserId: params.user_id } : {}),
+      ...(params.models?.length ? { models: params.models } : {}),
     });
     return {
       tasks: tasks.map((t) => ({
@@ -587,5 +590,9 @@ export const toolSchemas = {
         'Inclusive ISO-8601 upper bound. Omit for a live range that keeps including new runs.',
       ),
     user_id: z.string().optional().describe('Only runs started by this user.'),
+    models: z
+      .array(z.string())
+      .optional()
+      .describe('Only runs of these model ids. Omit for every model.'),
   }),
 };

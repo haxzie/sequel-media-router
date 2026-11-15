@@ -30,6 +30,8 @@ export interface TaskFilter {
   createdBefore?: string;
   /** Only runs this person started. */
   createdByUserId?: string;
+  /** Only these model ids. An empty array means no filter, not no results. */
+  models?: string[];
 }
 
 export interface Store extends EmbeddingCache {
@@ -84,6 +86,10 @@ abstract class BaseStore implements Store {
     if (filter?.createdBefore) out = out.filter((t) => t.createdAt <= filter.createdBefore!);
     if (filter?.createdByUserId) {
       out = out.filter((t) => t.createdBy?.userId === filter.createdByUserId);
+    }
+    if (filter?.models?.length) {
+      const want = new Set(filter.models);
+      out = out.filter((t) => want.has(t.model));
     }
     if (filter?.ids?.length) {
       const want = new Set(filter.ids);

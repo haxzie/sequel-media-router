@@ -19,6 +19,7 @@ export async function GET(request: Request) {
   const start = isoOrUndefined(url.searchParams.get('start'));
   const end = isoOrUndefined(url.searchParams.get('end'));
   const userId = url.searchParams.get('user_id') ?? undefined;
+  const models = url.searchParams.getAll('model');
 
   /*
    * Scoped to the caller's organisation, from their credential — never from a
@@ -27,18 +28,40 @@ export async function GET(request: Request) {
    * everything.
    */
   const actor = await resolveActor(request);
-  if (!actor?.organizationId) return Response.json({ tasks: [] });
+  if (!actor?.organizationId) return Response.json({ tasks: [], modelFacets: [] });
 
-  return Response.json(
-    await forge.listTasks({
-      status: status.length ? status : undefined,
-      limit: 100,
-      organizationId: actor.organizationId,
-      ...(start ? { start } : {}),
-      ...(end ? { end } : {}),
-      ...(userId ? { user_id: userId } : {}),
-    }),
-  );
+  /*
+   * Facets are computed over the same scope *minus* the model filter, so the
+   * option list does not shrink as you select from it — a filter that deletes
+   * its own choices cannot be undone without clearing it.
+   */
+  const facetScope = {
+    status: status.length ? status : undefined,
+    limit: 500,
+    organizationId: actor.organizationId,
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
+    ...(userId ? { user_id: userId } : {}),
+  };
+  const counts = new Map<string, number>();
+  for (const task of (await forge.listTasks(facetScope)).tasks) {
+    counts.set(task.model, (counts.get(task.model) ?? 0) + 1);
+  }
+  const modelFacets = [...counts.entries()]
+    .map(([model, count]) => ({ model, count }))
+    .sort((a, b) => b.count - a.count || a.model.localeCompare(b.model));
+
+  const page = await forge.listTasks({
+    status: status.length ? status : undefined,
+    limit: 100,
+    organizationId: actor.organizationId,
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
+    ...(userId ? { user_id: userId } : {}),
+    ...(models.length ? { models } : {}),
+  });
+
+  return Response.json({ ...page, modelFacets });
 }
 
 function isoOrUndefined(value: string | null): string | undefined {

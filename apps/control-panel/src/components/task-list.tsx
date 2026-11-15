@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, CalendarIcon, PillSelect, UsersIcon } from '@sequel/ui';
+import {
+  Avatar,
+  CalendarIcon,
+  LayersIcon,
+  MultiSelectPill,
+  PillSelect,
+  UsersIcon,
+} from '@sequel/ui';
 import { formatUsd } from '@sequel/core/pricing';
 import { TaskPanel, type TaskSummary } from './task-panel';
 import { Card, PageHeader, Segmented, StatusDot } from '@sequel/ui';
@@ -56,6 +63,8 @@ export function TaskList() {
   const [days, setDays] = useState('7');
   const [member, setMember] = useState('all');
   const [members, setMembers] = useState<Array<{ userId: string; name: string }>>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [modelFacets, setModelFacets] = useState<Array<{ model: string; count: number }>>([]);
 
   useEffect(() => {
     fetch('/api/organization/members')
@@ -75,9 +84,20 @@ export function TaskList() {
       const start = new Date(Date.now() - Number(days) * 86_400_000).toISOString();
       const query = new URLSearchParams({ start });
       if (member !== 'all') query.set('user_id', member);
+      for (const model of models) query.append('model', model);
+
       return fetch(`/api/tasks?${query}`)
-        .then((r) => r.json() as Promise<{ tasks: TaskRow[] }>)
-        .then((data) => setTasks(data.tasks ?? []))
+        .then(
+          (r) =>
+            r.json() as Promise<{
+              tasks: TaskRow[];
+              modelFacets: Array<{ model: string; count: number }>;
+            }>,
+        )
+        .then((data) => {
+          setTasks(data.tasks ?? []);
+          setModelFacets(data.modelFacets ?? []);
+        })
         .catch(() => undefined)
         .finally(() => setLoaded(true));
     };
@@ -86,7 +106,7 @@ export function TaskList() {
     // Video takes a minute or two; poll so running rows settle on their own.
     const timer = setInterval(load, 4000);
     return () => clearInterval(timer);
-  }, [days, member]);
+  }, [days, member, models]);
 
   const visible = useMemo(
     () => (filter === 'all' ? tasks : tasks.filter((t) => t.status === filter)),
@@ -125,6 +145,19 @@ export function TaskList() {
         <Segmented value={filter} options={FILTERS} onChange={setFilter} />
 
         <div className="flex shrink-0 items-center gap-2">
+          <MultiSelectPill
+            label="Models"
+            icon={<LayersIcon className="h-3.5 w-3.5" />}
+            options={modelFacets.map((facet) => ({
+              value: facet.model,
+              label: facet.model,
+              count: facet.count,
+            }))}
+            selected={models}
+            onChange={setModels}
+            emptyText="No models ran in this window."
+          />
+
           <PillSelect
             icon={<UsersIcon className="h-3.5 w-3.5" />}
             value={member}

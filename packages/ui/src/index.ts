@@ -3,5 +3,6 @@ export * from './forms';
 export * from './modal';
 export * from './menu';
 export * from './pill-select';
+export * from './multi-select';
 export * from './icons';
 export * from './copy-field';
