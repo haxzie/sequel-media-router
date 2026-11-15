@@ -20,12 +20,22 @@ async function db(): Promise<D1Database> {
 export interface WalletCredit {
   id: string;
   organizationId: string;
+  /** What lands in the wallet. */
   amountUsd: string;
+  platformFeeUsd: string;
+  taxUsd: string;
+  /** amount + fee + tax. What a card would have been charged. */
+  totalUsd: string;
+  /** Null until a payment provider exists. */
+  paymentMethod: string | null;
   source: 'test_credit' | 'stripe' | 'grant';
   reference: string | null;
   createdByUserId: string | null;
   createdAt: string;
 }
+
+/** Our own cut, applied on top of the credit. Declared, not guessed. */
+export const PLATFORM_FEE_RATE = 0.05;
 
 export interface Wallet {
   /** Everything ever added. */
@@ -51,7 +61,8 @@ export interface Wallet {
 export async function getWallet(organizationId: string): Promise<Wallet> {
   const { results } = await (await db())
     .prepare(
-      `SELECT id, organizationId, amountUsd, source, reference, createdByUserId, createdAt
+      `SELECT id, organizationId, amountUsd, platformFeeUsd, taxUsd, totalUsd,
+              paymentMethod, source, reference, createdByUserId, createdAt
          FROM walletCredit
         WHERE organizationId = ?
         ORDER BY createdAt DESC
@@ -81,10 +92,24 @@ export async function addCredit(params: {
   userId: string;
   source?: WalletCredit['source'];
 }): Promise<WalletCredit> {
+  /*
+   * Tax is 0.00 and labelled as not calculated rather than invented. We hold
+   * no billing address and no jurisdiction, so any rate here would be a number
+   * someone could reconcile against and find wrong.
+   */
+  const amount = Number(params.amountUsd);
+  const platformFeeUsd = (amount * PLATFORM_FEE_RATE).toFixed(6);
+  const taxUsd = '0.000000';
+  const totalUsd = (amount + Number(platformFeeUsd) + Number(taxUsd)).toFixed(6);
+
   const credit: WalletCredit = {
     id: newId('walletCredit'),
     organizationId: params.organizationId,
     amountUsd: params.amountUsd,
+    platformFeeUsd,
+    taxUsd,
+    totalUsd,
+    paymentMethod: null,
     // Defaults to test_credit on purpose. A row only claims to be a real
     // payment when something real produced it.
     source: params.source ?? 'test_credit',
@@ -96,13 +121,18 @@ export async function addCredit(params: {
   await (await db())
     .prepare(
       `INSERT INTO walletCredit
-         (id, organizationId, amountUsd, source, reference, createdByUserId, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, organizationId, amountUsd, platformFeeUsd, taxUsd, totalUsd,
+          paymentMethod, source, reference, createdByUserId, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       credit.id,
       credit.organizationId,
       credit.amountUsd,
+      credit.platformFeeUsd,
+      credit.taxUsd,
+      credit.totalUsd,
+      credit.paymentMethod,
       credit.source,
       credit.reference,
       credit.createdByUserId,

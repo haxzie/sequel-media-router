@@ -261,3 +261,11 @@ export function CardIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function ChevronRightIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path d="m6.2 3.8 4.2 4.2-4.2 4.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

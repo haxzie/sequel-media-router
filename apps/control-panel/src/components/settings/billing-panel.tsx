@@ -1,12 +1,18 @@
 'use client';
 
 import { formatUsd } from '@sequel/core/pricing';
-import { Alert, Avatar, Card } from '@sequel/ui';
+import { Alert, Avatar, Card, ChevronRightIcon } from '@sequel/ui';
 import Link from 'next/link';
+import { useState } from 'react';
+import { CreditPanel } from './credit-panel';
 
 export interface CreditRow {
   id: string;
   amountUsd: string;
+  platformFeeUsd: string;
+  taxUsd: string;
+  totalUsd: string;
+  paymentMethod: string | null;
   source: 'test_credit' | 'stripe' | 'grant';
   createdAt: string;
   createdBy: { name: string; image: string | null } | null;
@@ -32,11 +38,16 @@ export function BillingPanel({
   credits,
   availableUsd,
   spentUsd,
+  organizationName,
 }: {
   credits: CreditRow[];
   availableUsd: string;
   spentUsd: string;
+  organizationName: string;
 }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = credits.find((credit) => credit.id === openId) ?? null;
+
   return (
     <div>
       <div className="mb-5 grid gap-4 sm:grid-cols-2">
@@ -80,13 +91,17 @@ export function BillingPanel({
             <div className="w-[140px]">Source</div>
             <div className="w-[160px]">Added by</div>
             <div className="w-[90px] text-right">Amount</div>
+            <div className="w-[20px]" />
           </div>
 
           {credits.map((credit, index) => (
-            <div
+            <button
               key={credit.id}
+              type="button"
+              onClick={() => setOpenId(credit.id)}
               className={[
-                'flex items-center gap-4 px-5 py-3.5',
+                'flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-[var(--color-card-hover)]',
+                credit.id === openId ? 'bg-[var(--color-card-hover)]' : '',
                 index > 0 ? 'border-t border-[var(--color-line)]' : '',
               ].join(' ')}
             >
@@ -109,9 +124,18 @@ export function BillingPanel({
               <div className="nums w-[90px] text-right text-[13px]">
                 {formatUsd(credit.amountUsd)}
               </div>
-            </div>
+              <ChevronRightIcon className="w-[20px] shrink-0 text-[var(--color-dim)]" />
+            </button>
           ))}
         </Card>
+      )}
+
+      {open && (
+        <CreditPanel
+          credit={open}
+          organizationName={organizationName}
+          onClose={() => setOpenId(null)}
+        />
       )}
     </div>
   );

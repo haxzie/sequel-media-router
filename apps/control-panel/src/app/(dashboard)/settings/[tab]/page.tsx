@@ -88,6 +88,10 @@ export default async function SettingsTabPage({ params }: { params: Promise<{ ta
                 return {
                   id: credit.id,
                   amountUsd: credit.amountUsd,
+                  platformFeeUsd: credit.platformFeeUsd,
+                  taxUsd: credit.taxUsd,
+                  totalUsd: credit.totalUsd,
+                  paymentMethod: credit.paymentMethod,
                   source: credit.source,
                   createdAt: credit.createdAt,
                   createdBy: member
