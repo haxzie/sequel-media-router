@@ -1,6 +1,6 @@
 import { createImageModel } from '@sequel/core';
 import { z } from 'zod/v4';
-import { collectAssets, partnerSchemaUrl } from '../_shared';
+import { collectAssets, partnerSchemaUrl, toBase64 } from '../_shared';
 
 /**
  * OpenAI's fast everyday image model, reached through AI Gateway.
@@ -44,17 +44,32 @@ export const gptImage25Flare = createImageModel({
       .array(z.string())
       .max(16)
       .optional()
-      .describe('Base64 or data: URIs to edit. Omit for pure text-to-image.'),
+      .describe(
+        'Images to edit or use as reference: a URL, a data: URI, or raw base64. ' +
+          'URLs are fetched and inlined for you. Omit for pure text-to-image.',
+      ),
     quality: z.enum(['low', 'medium', 'high', 'auto']).default('auto'),
     size: z.enum(['1024x1024', '1536x1024', '1024x1536', 'auto']).default('auto'),
     output_format: z.enum(['png', 'jpeg', 'webp']).default('png'),
   }),
   estimate: () => '0.000000',
   run: async (input, ctx) => {
+    /*
+     * The provider takes inline bytes, not links.
+     *
+     * Everything that produces an image here — a model run, an attachment, an
+     * upload — hands back a URL, so an agent naturally passes one and the
+     * provider answers with an unexplained failure. Fetch and encode instead,
+     * the same way the video models already do with their reference frames.
+     */
+    const images = input.images?.length
+      ? await Promise.all(input.images.map((image) => toBase64(image)))
+      : undefined;
+
     const result = await ctx.ai.run({
       model: 'openai/gpt-image-2.5-flare',
       runtime: 'ai-gateway',
-      input,
+      input: { ...input, ...(images ? { images } : {}) },
     });
     const mime = `image/${input.output_format === 'jpeg' ? 'jpeg' : input.output_format}`;
     return {

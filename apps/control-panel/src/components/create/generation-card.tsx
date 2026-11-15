@@ -1,6 +1,8 @@
 'use client';
 
 import { formatUsd } from '@sequel/core/pricing';
+import { useState } from 'react';
+import { MediaViewer } from './media-viewer';
 
 /**
  * What a run_models call looks like while it is happening, and after.
@@ -60,7 +62,16 @@ export function GenerationPending({
   );
 }
 
-export function GenerationResult({ result }: { result: RunResult }) {
+export function GenerationResult({
+  result,
+  input,
+}: {
+  result: RunResult;
+  /** The run_models arguments, so the viewer can show what produced this. */
+  input?: Record<string, unknown>;
+}) {
+  const [open, setOpen] = useState(false);
+
   if (result.error) {
     return (
       <div className="mt-2 rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]">
@@ -96,14 +107,39 @@ export function GenerationResult({ result }: { result: RunResult }) {
   return (
     <div className="mt-2 max-w-[360px]">
       {isVideo ? (
+        /*
+         * Video and audio keep their own controls and are opened from the
+         * caption instead — a click on a player is a click on play, and
+         * hijacking it to open a dialog would break the obvious thing.
+         */
         <video src={url} controls playsInline preload="metadata" className="w-full rounded-xl bg-black" />
       ) : isAudio ? (
         <div className="rounded-xl bg-[var(--color-card)] px-4 py-4">
           <audio src={url} controls preload="metadata" className="w-full" />
         </div>
       ) : (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img src={url} alt="" className="w-full rounded-xl bg-[var(--color-card)]" />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open generation"
+          className="block w-full cursor-zoom-in overflow-hidden rounded-xl transition-opacity hover:opacity-90"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="" className="w-full bg-[var(--color-card)]" />
+        </button>
+      )}
+
+      {open && (
+        <MediaViewer
+          media={{
+            url,
+            mime: asset?.mime,
+            input,
+            cost: result.cost,
+            taskId: result.task_id,
+          }}
+          onClose={() => setOpen(false)}
+        />
       )}
 
       <div className="mt-2 flex items-center gap-2 text-[12px] text-[var(--color-dim)]">
@@ -113,14 +149,13 @@ export function GenerationResult({ result }: { result: RunResult }) {
             {result.cost.estimated ? ' est' : ''}
           </span>
         )}
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
           className="transition-colors hover:text-[var(--color-text)]"
         >
           Open
-        </a>
+        </button>
       </div>
     </div>
   );

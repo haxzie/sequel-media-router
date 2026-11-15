@@ -290,7 +290,12 @@ function Message({ message, streaming }: { message: UIMessage; streaming?: boole
 function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
   if (part.state === 'output-available') {
     const result = readToolOutput(part.output);
-    return result ? <GenerationResult result={result} /> : null;
+    return result ? (
+      <GenerationResult
+        result={result}
+        input={part.input as Record<string, unknown> | undefined}
+      />
+    ) : null;
   }
   if (part.state === 'output-error') {
     return (

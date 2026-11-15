@@ -6,7 +6,7 @@
  * and human-facing surfaces from drifting apart.
  */
 import { z } from 'zod/v4';
-import type { CloudflareAI } from './cloudflare';
+import { CloudflareError, type CloudflareAI } from './cloudflare';
 import type { AnyModel, RunContext } from './define';
 import { EmbeddingIndex } from './embeddings';
 import { estimateCost, addMoney, type CostEstimate } from './pricing';
@@ -370,9 +370,20 @@ export class Forge {
       return this.announce(patched ?? (await this.opts.store.getTask(taskId))!);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      /*
+       * Keep the provider's own payload on a failure too.
+       *
+       * It was only being stored on the success-with-no-asset path, so the
+       * case you most need to debug — a flat rejection — was the one that
+       * recorded nothing but a one-line message. 'Model execution failed
+       * (Error)' is all Cloudflare says when a partner model refuses input,
+       * and without the body there is no way to find out why.
+       */
+      const raw = error instanceof CloudflareError ? (error.body ?? null) : null;
       const patched = await this.opts.store.patchTask(taskId, {
         status: 'failed',
         error: message,
+        raw,
         completedAt: new Date().toISOString(),
       });
       return this.announce(patched ?? (await this.opts.store.getTask(taskId))!);
