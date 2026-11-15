@@ -67,6 +67,9 @@ has public access enabled. Left unset, reads are handed out as presigned GET
 URLs valid for 7 days, so the bucket can stay private and a provider can still
 fetch an input you uploaded.
 
+The dashboard shows the endpoint, the model counts and the tool list at
+`/mcp`.
+
 ## The five tools
 
 | Tool | Does |

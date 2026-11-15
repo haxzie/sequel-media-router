@@ -228,3 +228,34 @@ export function CreateIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * MCP's mark, approximated: two nested arcs sweeping up to the right, with the
+ * short tail that crosses them. Drawn here rather than imported so it inherits
+ * currentColor like every other nav icon and needs no asset.
+ */
+export function McpIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+      <path
+        d="M1.5 11.6C3.4 7 6.1 4.2 9.6 2.6"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.2 13.4C6.1 8.8 8.8 6 12.3 4.4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M9.6 2.6c1.4-.6 2.9.1 3.4 1.3M7.2 13.4l4.6-5.3"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

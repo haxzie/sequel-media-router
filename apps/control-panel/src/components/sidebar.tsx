@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, CreateIcon, LayersIcon, SettingsIcon, TasksIcon } from '@sequel/ui';
+import { Avatar, CreateIcon, LayersIcon, McpIcon, SettingsIcon, TasksIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { OrgSwitcher } from './org-switcher';
@@ -9,6 +9,7 @@ import { UsageCard } from './usage-card';
 
 const NAV = [
   { href: '/', label: 'Create', icon: CreateIcon },
+  { href: '/mcp', label: 'MCP Server', icon: McpIcon },
   { href: '/models', label: 'Models', icon: LayersIcon },
   { href: '/tasks', label: 'Tasks', icon: TasksIcon },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
