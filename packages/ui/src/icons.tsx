@@ -230,31 +230,23 @@ export function CreateIcon({ className = '' }: IconProps) {
 }
 
 /**
- * MCP's mark, approximated: two nested arcs sweeping up to the right, with the
- * short tail that crosses them. Drawn here rather than imported so it inherits
- * currentColor like every other nav icon and needs no asset.
+ * MCP's mark — the official octicon, filled rather than stroked.
+ *
+ * It carries its own 24 viewBox because the path is drawn on that grid, and it
+ * uses `fill="currentColor"` so it still takes the nav colour like the rest of
+ * the set. My earlier approximations were a pen and then a set of arcs; this
+ * is the real thing.
  */
 export function McpIcon({ className = '' }: IconProps) {
   return (
-    <svg viewBox="0 0 16 16" fill="none" className={`${base} ${className}`} aria-hidden>
+    <svg viewBox="0 0 24 24" className={`${base} ${className}`} aria-hidden>
       <path
-        d="M1.5 11.6C3.4 7 6.1 4.2 9.6 2.6"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
+        fill="currentColor"
+        d="M9.795 1.694a4.287 4.287 0 0 1 6.061 0a4.28 4.28 0 0 1 1.181 3.819a4.28 4.28 0 0 1 3.819 1.181a4.287 4.287 0 0 1 0 6.061l-6.793 6.793a.25.25 0 0 0 0 .353l2.617 2.618a.75.75 0 1 1-1.061 1.061l-2.617-2.618a1.75 1.75 0 0 1 0-2.475l6.793-6.793a2.785 2.785 0 1 0-3.939-3.939l-5.9 5.9a.7.7 0 0 1-.249.165a.749.749 0 0 1-.812-1.225l5.9-5.901a2.785 2.785 0 1 0-3.939-3.939L2.931 10.68A.75.75 0 1 1 1.87 9.619z"
       />
       <path
-        d="M4.2 13.4C6.1 8.8 8.8 6 12.3 4.4"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.6 2.6c1.4-.6 2.9.1 3.4 1.3M7.2 13.4l4.6-5.3"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
+        d="M12.42 4.069a.75.75 0 0 1 1.061 0a.75.75 0 0 1 0 1.061L7.33 11.28a2.79 2.79 0 0 0 0 3.94a2.79 2.79 0 0 0 3.94 0l6.15-6.151a.75.75 0 0 1 1.061 0a.75.75 0 0 1 0 1.061l-6.151 6.15a4.285 4.285 0 1 1-6.06-6.06z"
       />
     </svg>
   );
