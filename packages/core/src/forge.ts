@@ -360,6 +360,9 @@ export class Forge {
     status?: TaskStatus[];
     limit?: number;
     include_raw?: boolean;
+    /** Inclusive ISO bounds. Either may be omitted; see TaskFilter. */
+    start?: string;
+    end?: string;
     /**
      * Server-supplied, never a tool argument — a caller must not be able to
      * widen its own scope by passing someone else's organisation id.
@@ -371,6 +374,8 @@ export class Forge {
       status: params.status,
       limit: params.limit ?? 50,
       ...(params.organizationId ? { organizationId: params.organizationId } : {}),
+      ...(params.start ? { createdAfter: params.start } : {}),
+      ...(params.end ? { createdBefore: params.end } : {}),
     });
     return {
       tasks: tasks.map((t) => ({
@@ -566,5 +571,17 @@ export const toolSchemas = {
       .boolean()
       .optional()
       .describe('Include the untouched provider payload. Verbose; use when debugging a result.'),
+    start: z
+      .string()
+      .optional()
+      .describe(
+        'Inclusive ISO-8601 lower bound on when the run started. Omit to reach back to the first run.',
+      ),
+    end: z
+      .string()
+      .optional()
+      .describe(
+        'Inclusive ISO-8601 upper bound. Omit for a live range that keeps including new runs.',
+      ),
   }),
 };

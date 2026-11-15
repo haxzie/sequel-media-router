@@ -1,7 +1,7 @@
 'use client';
 
 import { formatUsd } from '@sequel/core/pricing';
-import { Alert, Avatar, Card, ChevronRightIcon } from '@sequel/ui';
+import { Avatar, Card, ChevronRightIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { useState } from 'react';
 import { CreditPanel } from './credit-panel';
@@ -57,18 +57,6 @@ export function BillingPanel({
           <div className="text-[12px] text-[var(--color-dim)]">Spent all time</div>
           <div className="nums mt-1 text-[22px]">{formatUsd(spentUsd)}</div>
         </Card>
-      </div>
-
-      {/*
-        Every row here was added from the dashboard. Saying so once, above the
-        table, beats a disclaimer per row — and beats letting the word
-        "payment" imply something was charged.
-      */}
-      <div className="mb-5">
-        <Alert tone="info">
-          No payment provider is connected, so every entry below is a test credit added from the
-          dashboard. Nothing has been charged.
-        </Alert>
       </div>
 
       {credits.length === 0 ? (

@@ -20,6 +20,14 @@ export interface TaskFilter {
    * dashboard's own maintenance paths should ever want.
    */
   organizationId?: string;
+  /**
+   * Inclusive ISO bounds on `createdAt`. Either end may be omitted, and each
+   * omission means exactly what it says: no `createdBefore` is a live range
+   * that keeps including new runs, no `createdAfter` reaches back to the
+   * first one.
+   */
+  createdAfter?: string;
+  createdBefore?: string;
 }
 
 export interface Store extends EmbeddingCache {
@@ -69,6 +77,9 @@ abstract class BaseStore implements Store {
       // Strict equality, so an unassigned task is not visible to any team.
       out = out.filter((t) => t.organizationId === filter.organizationId);
     }
+    // ISO-8601 sorts lexicographically, so no date parsing is needed here.
+    if (filter?.createdAfter) out = out.filter((t) => t.createdAt >= filter.createdAfter!);
+    if (filter?.createdBefore) out = out.filter((t) => t.createdAt <= filter.createdBefore!);
     if (filter?.ids?.length) {
       const want = new Set(filter.ids);
       out = out.filter((t) => want.has(t.id));
