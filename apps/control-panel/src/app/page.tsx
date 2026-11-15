@@ -28,7 +28,7 @@ export default async function HomePage() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
-        breadcrumb={['Forge', 'Home']}
+        breadcrumb={['Sequel', 'Home']}
         title="MCP server"
         meta={
           <>
@@ -60,7 +60,7 @@ export default async function HomePage() {
         <p className="mt-3 text-[13px] text-[var(--color-muted)]">
           Streamable HTTP. Add it to Claude Code with{' '}
           <code className="font-mono text-[12px] text-[var(--color-text)]">
-            claude mcp add --transport http forge {url}
+            claude mcp add --transport http sequel {url}
           </code>
         </p>
       </section>

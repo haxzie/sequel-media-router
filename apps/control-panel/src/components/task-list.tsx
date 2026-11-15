@@ -81,7 +81,7 @@ export function TaskList() {
   return (
     <>
       <PageHeader
-        breadcrumb={['Forge', 'Tasks']}
+        breadcrumb={['Sequel', 'Tasks']}
         title="Tasks"
         meta={
           <>

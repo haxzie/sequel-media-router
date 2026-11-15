@@ -21,7 +21,7 @@ export function Sidebar() {
         {/* Workspace header */}
         <div className="flex items-center gap-2.5 px-2 pb-5">
           <AnvilIcon className="h-[18px] w-[18px] text-[var(--color-text)]" />
-          <div className="min-w-0 truncate text-[15px] font-semibold tracking-tight">Forge</div>
+          <div className="min-w-0 truncate text-[15px] font-semibold tracking-tight">Sequel</div>
         </div>
 
         <div className="mb-4 h-px bg-[var(--color-line)]" />

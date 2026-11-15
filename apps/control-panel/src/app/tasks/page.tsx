@@ -1,6 +1,6 @@
 import { TaskList } from '@/components/task-list';
 
-export const metadata = { title: 'Tasks — Forge' };
+export const metadata = { title: 'Tasks — Sequel' };
 
 export default function TasksPage() {
   return (

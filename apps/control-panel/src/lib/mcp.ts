@@ -110,9 +110,9 @@ export async function handleMcpMessage(
       return result(id, {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'composio-forge', version: '0.1.0' },
+        serverInfo: { name: 'composio-sequel', version: '0.1.0' },
         instructions:
-          'Forge exposes image, video and audio generation models behind one interface. Start with search_models to find a model by use case, then get_model_schemas for its parameters, then run_models. Video runs are asynchronous — poll list_tasks.',
+          'Sequel exposes image, video and audio generation models behind one interface. Start with search_models to find a model by use case, then get_model_schemas for its parameters, then run_models. Video runs are asynchronous — poll list_tasks.',
       });
 
     case 'notifications/initialized':

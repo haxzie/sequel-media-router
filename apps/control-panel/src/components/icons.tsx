@@ -65,7 +65,7 @@ export function ExternalIcon({ className = '' }: IconProps) {
 }
 
 /**
- * The Forge mark. Solid rather than stroked, and sized by the caller — it is a
+ * The Sequel mark. Solid rather than stroked, and sized by the caller — it is a
  * logo, not part of the 16px nav icon set.
  */
 export function AnvilIcon({ className = '' }: IconProps) {

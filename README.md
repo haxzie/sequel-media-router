@@ -1,4 +1,4 @@
-# Composio Forge
+# Composio Sequel
 
 One MCP server for image, video and audio generation models, with a control
 panel to enable, price and watch them.
@@ -79,7 +79,7 @@ fetch an input you uploaded.
 Connect it:
 
 ```bash
-claude mcp add --transport http forge http://localhost:3000/api/mcp
+claude mcp add --transport http sequel http://localhost:3000/api/mcp
 ```
 
 Or call it directly — it is stateless JSON-RPC over Streamable HTTP:
@@ -132,7 +132,7 @@ export const wan30 = createVideoModel({
 ```
 
 Set `requiresByok: true` when Cloudflare will not bill a model through unified
-billing — Forge then lists it but refuses the run up front rather than paying for
+billing — Sequel then lists it but refuses the run up front rather than paying for
 a round trip that the provider rejects.
 
 Add the export to `packages/models/src/index.ts` and it appears in the panel,

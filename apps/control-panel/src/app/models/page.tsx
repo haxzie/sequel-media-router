@@ -1,6 +1,6 @@
 import { ModelBrowser } from '@/components/model-browser';
 
-export const metadata = { title: 'Models — Forge' };
+export const metadata = { title: 'Models — Sequel' };
 
 export default function ModelsPage() {
   return (

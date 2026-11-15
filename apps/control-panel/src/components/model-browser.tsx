@@ -185,7 +185,7 @@ export function ModelBrowser() {
   return (
     <>
       <PageHeader
-        breadcrumb={['Forge', 'Models']}
+        breadcrumb={['Sequel', 'Models']}
         title="Models"
         meta={
           <>
