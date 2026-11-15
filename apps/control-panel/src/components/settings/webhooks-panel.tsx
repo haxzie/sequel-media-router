@@ -88,8 +88,7 @@ export function WebhooksPanel() {
     <div>
       <div className="mb-4 flex items-start justify-between gap-6">
         <p className="max-w-xl text-[13px] leading-relaxed text-[var(--color-muted)]">
-          We POST a signed JSON event to your endpoint when a run settles, so you do not have to
-          poll <code className="font-mono text-[12px]">list_tasks</code>.
+          We POST a signed JSON event to your endpoint when a run settles.
         </p>
         <PrimaryButton onClick={() => setCreating(true)}>Add endpoint</PrimaryButton>
       </div>
