@@ -119,6 +119,27 @@ export interface OutputFor {
 
 export type TaskStatus = 'queued' | 'in_progress' | 'completed' | 'failed';
 
+/**
+ * Who asked for a run, and through which door.
+ *
+ * Denormalised on purpose. The task store has no access to the auth tables —
+ * core knows nothing about users — and a task list that had to join against
+ * them to render a name would couple the two for the sake of a label. The
+ * snapshot is what was true when the run started, which is also the honest
+ * thing to show later if the person is renamed or removed.
+ */
+export interface TaskActor {
+  userId: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  /** Which credential authorised it. */
+  via: 'session' | 'api_key' | 'oauth';
+  /** Set when `via` is api_key, so a run can be traced to one key. */
+  apiKeyId?: string;
+  organizationId?: string;
+}
+
 export interface Task {
   id: string;
   model: string;
@@ -137,6 +158,8 @@ export interface Task {
   completedAt?: string;
   /** Untouched provider payload, so the abstraction is never the only path. */
   raw?: unknown;
+  /** Absent on runs made before attribution existed, or by an unauthenticated caller. */
+  createdBy?: TaskActor;
 }
 
 export interface UsageSummary {

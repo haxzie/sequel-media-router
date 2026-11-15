@@ -5,8 +5,9 @@
  * body; requests get 200 with the response. GET is advertised but we hold no
  * server-initiated stream, so it returns 405 as the spec allows.
  */
-import { handleMcpMessage } from '@/lib/mcp';
+import { resolveActor } from '@/lib/actor';
 import { getForge } from '@/lib/forge';
+import { handleMcpMessage } from '@/lib/mcp';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,10 +41,17 @@ export async function POST(request: Request) {
     );
   }
 
+  /*
+   * Resolved once per request, not per message: a batch arrives on one
+   * connection with one credential. Null when the caller sent none — the
+   * endpoint is still open, so the run happens and simply carries no name.
+   */
+  const actor = await resolveActor(request);
+
   const messages = Array.isArray(body) ? body : [body];
   const responses = [];
   for (const message of messages) {
-    const response = await handleMcpMessage(forge, message as never);
+    const response = await handleMcpMessage(forge, message as never, actor);
     if (response) responses.push(response);
   }
 

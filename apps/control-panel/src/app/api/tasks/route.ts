@@ -1,3 +1,4 @@
+import { resolveActor } from '@/lib/actor';
 import { getForge } from '@/lib/forge';
 import type { TaskStatus } from '@sequel/core';
 
@@ -19,7 +20,14 @@ export async function POST(request: Request) {
   if (!body.model) return Response.json({ error: 'model is required' }, { status: 400 });
 
   try {
-    return Response.json(await forge.runModel({ model: body.model, input: body.input ?? {} }));
+    const createdBy = await resolveActor(request);
+    return Response.json(
+      await forge.runModel({
+        model: body.model,
+        input: body.input ?? {},
+        ...(createdBy ? { createdBy } : {}),
+      }),
+    );
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : String(error) },

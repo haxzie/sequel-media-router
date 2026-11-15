@@ -1,6 +1,18 @@
 'use client';
 
-import { Alert, Card, CheckIcon, CopyIcon, Field, Input, Modal, PrimaryButton, SubmitButton } from '@sequel/ui';
+import {
+  Alert,
+  Avatar,
+  Card,
+  CheckIcon,
+  CopyIcon,
+  Field,
+  Input,
+  Modal,
+  PrimaryButton,
+  RowMenu,
+  SubmitButton,
+} from '@sequel/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
@@ -13,6 +25,8 @@ export interface ApiKeyView {
   enabled: boolean;
   createdAt: string;
   lastRequest: string | null;
+  /** Null when the owner is no longer a member of this organisation. */
+  createdBy: { userId: string; name: string; email: string; image: string | null } | null;
 }
 
 function when(iso: string | null): string {
@@ -62,7 +76,8 @@ export function ApiKeysPanel({ keys }: { keys: ApiKeyView[] }) {
     <div>
       <div className="mb-4 flex items-start justify-between gap-6">
         <p className="max-w-xl text-[13px] leading-relaxed text-[var(--color-muted)]">
-          Keys for calling Sequel outside this dashboard.
+          Keys for calling Sequel outside this dashboard. Every key in this organisation is
+          listed, whoever made it.
         </p>
         <PrimaryButton onClick={() => setCreating(true)}>New key</PrimaryButton>
       </div>
@@ -73,9 +88,9 @@ export function ApiKeysPanel({ keys }: { keys: ApiKeyView[] }) {
       */}
       <div className="mb-5">
         <Alert tone="info">
-          Nothing checks these yet — the MCP endpoint and REST API are still
-          unauthenticated. Creating a key is safe, but it does not protect anything until
-          verification is wired up.
+          Nothing gates access on these yet — the MCP endpoint and REST API still answer
+          without one. A key does work for attribution though: a run made with it is recorded
+          against whoever created the key.
         </Alert>
       </div>
 
@@ -107,15 +122,35 @@ export function ApiKeysPanel({ keys }: { keys: ApiKeyView[] }) {
                 {when(key.lastRequest)}
               </span>
 
-              <div className="w-[70px] text-right">
-                <button
-                  type="button"
-                  onClick={() => void revoke(key.id)}
-                  className="text-[12px] text-[var(--color-dim)] transition-colors hover:text-[var(--color-pink)]"
-                >
-                  Revoke
-                </button>
+              {/*
+                Who made it. Shown because a key is a credential someone on the
+                team is responsible for — a list of anonymous keys is a list
+                nobody can safely revoke.
+              */}
+              <div className="w-[30px] shrink-0">
+                {key.createdBy ? (
+                  <span title={`Created by ${key.createdBy.name}`}>
+                    <Avatar name={key.createdBy.name} src={key.createdBy.image} size={24} />
+                  </span>
+                ) : (
+                  <span className="text-[12px] text-[var(--color-dim)]">—</span>
+                )}
               </div>
+
+              <RowMenu
+                label={`Actions for ${key.name}`}
+                items={[
+                  {
+                    label: 'Copy key ID',
+                    onSelect: () => void navigator.clipboard.writeText(key.id),
+                  },
+                  {
+                    label: 'Revoke',
+                    destructive: true,
+                    onSelect: () => void revoke(key.id),
+                  },
+                ]}
+              />
             </div>
           ))}
         </Card>

@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { formatUsd } from '@sequel/core/pricing';
-import { CloseIcon, DownloadIcon, ExternalIcon } from '@sequel/ui';
+import { Avatar, CloseIcon, DownloadIcon, ExternalIcon } from '@sequel/ui';
 import { StatusDot } from '@sequel/ui';
+
+export interface TaskCreator {
+  userId: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  via: 'session' | 'api_key' | 'oauth';
+  apiKeyId?: string;
+}
 
 export interface TaskSummary {
   task_id: string;
@@ -17,6 +26,7 @@ export interface TaskSummary {
   error?: string;
   created_at: string;
   completed_at?: string;
+  created_by?: TaskCreator;
 }
 
 interface TaskDetail extends TaskSummary {
@@ -62,6 +72,12 @@ function stamp(iso?: string): string {
     second: '2-digit',
   });
 }
+
+const VIA_LABEL: Record<TaskCreator['via'], string> = {
+  session: 'dashboard',
+  api_key: 'API key',
+  oauth: 'OAuth',
+};
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -246,6 +262,22 @@ export function TaskPanel({ task, onClose }: { task: TaskSummary; onClose: () =>
                 </span>
               </Row>
             )}
+            {detail.created_by && (
+              <Row label="Run by">
+                <span className="inline-flex items-center gap-2">
+                  <Avatar
+                    name={detail.created_by.name}
+                    src={detail.created_by.image}
+                    size={18}
+                  />
+                  <span className="text-[var(--color-muted)]">{detail.created_by.name}</span>
+                  <span className="text-[11px] text-[var(--color-dim)]">
+                    {VIA_LABEL[detail.created_by.via]}
+                  </span>
+                </span>
+              </Row>
+            )}
+
             <Row label="Task">
               <code className="font-mono text-[11px] text-[var(--color-dim)]">
                 {detail.task_id}

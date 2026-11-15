@@ -13,7 +13,15 @@ import { estimateCost, addMoney, type CostEstimate } from './pricing';
 import type { ModelRegistry } from './registry';
 import type { Store } from './storage';
 import type { Uploads } from './uploads';
-import type { Asset, AssetAlias, Modality, Task, TaskStatus, UsageSummary } from './types';
+import type {
+  Asset,
+  AssetAlias,
+  Modality,
+  Task,
+  TaskActor,
+  TaskStatus,
+  UsageSummary,
+} from './types';
 
 export interface ForgeOptions {
   registry: ModelRegistry;
@@ -207,7 +215,12 @@ export class Forge {
    * `async`, not inferred from the modality, so a fast video model could run
    * inline without changing this code.
    */
-  async runModel(params: { model: string; input: unknown }): Promise<{
+  async runModel(params: {
+    model: string;
+    input: unknown;
+    /** Who asked. Absent when the caller presented no credential. */
+    createdBy?: TaskActor;
+  }): Promise<{
     task_id: string;
     status: TaskStatus;
     result_url?: string;
@@ -249,6 +262,7 @@ export class Forge {
       costUsd: cost.usd,
       costEstimated: cost.estimated,
       createdAt: new Date().toISOString(),
+      ...(params.createdBy ? { createdBy: params.createdBy } : {}),
     };
     await this.opts.store.putTask(task);
 
@@ -359,6 +373,7 @@ export class Forge {
         result_url: t.resultUrl,
         assets: t.assets,
         cost: { usd: t.costUsd, estimated: t.costEstimated },
+        created_by: t.createdBy,
         error: t.error,
         created_at: t.createdAt,
         completed_at: t.completedAt,

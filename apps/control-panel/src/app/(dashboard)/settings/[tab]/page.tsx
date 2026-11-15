@@ -41,11 +41,15 @@ export default async function SettingsTabPage({ params }: { params: Promise<{ ta
           .catch(() => [])
       : [];
 
-  const keyPage =
-    tab === 'keys'
-      ? await auth.api.listApiKeys({ headers: requestHeaders }).catch(() => ({ apiKeys: [] }))
-      : { apiKeys: [] };
-  const keys = 'apiKeys' in keyPage ? keyPage.apiKeys : [];
+  /*
+   * Every key in the organisation, not just the viewer's own.
+   *
+   * listApiKeys is session-scoped, which would hide a teammate's key from the
+   * person trying to work out what is calling the API. Read through the
+   * adapter instead and resolve each owner against the member list already
+   * loaded above.
+   */
+  const keys = tab === 'keys' ? await listOrganizationKeys(auth, org.members) : [];
 
   return (
     <SettingsPanels
@@ -70,15 +74,58 @@ export default async function SettingsTabPage({ params }: { params: Promise<{ ta
           role: invite.role ?? 'member',
           expiresAt: String(invite.expiresAt),
         }))}
-      apiKeys={keys.map((key) => ({
-        id: key.id,
-        name: key.name ?? 'Untitled key',
-        start: key.start ?? null,
-        prefix: key.prefix ?? null,
-        enabled: key.enabled ?? true,
-        createdAt: String(key.createdAt),
-        lastRequest: key.lastRequest ? String(key.lastRequest) : null,
-      }))}
+      apiKeys={keys}
     />
   );
+}
+
+interface KeyRow {
+  id: string;
+  name: string | null;
+  start: string | null;
+  prefix: string | null;
+  enabled: boolean | null;
+  referenceId: string;
+  createdAt: string | Date;
+  lastRequest: string | Date | null;
+}
+
+type Member = { userId: string; user: { name?: string | null; email: string; image?: string | null } };
+
+async function listOrganizationKeys(
+  auth: Awaited<ReturnType<typeof getAuth>>,
+  members: Member[],
+) {
+  const ctx = await auth.$context;
+  const owners = new Set(members.map((member) => member.userId));
+
+  // The adapter types findMany from the model name, which here resolves to the
+  // plugin's full ApiKey shape; only these columns are read.
+  const rows = (await ctx.adapter
+    .findMany({ model: 'apikey', limit: 200 })
+    .catch(() => [])) as unknown as KeyRow[];
+
+  return rows
+    .filter((row) => owners.has(row.referenceId))
+    .map((row) => {
+      const member = members.find((entry) => entry.userId === row.referenceId);
+      return {
+        id: row.id,
+        name: row.name ?? 'Untitled key',
+        start: row.start ?? null,
+        prefix: row.prefix ?? null,
+        enabled: row.enabled ?? true,
+        createdAt: String(row.createdAt),
+        lastRequest: row.lastRequest ? String(row.lastRequest) : null,
+        createdBy: member
+          ? {
+              userId: member.userId,
+              name: member.user.name || member.user.email,
+              email: member.user.email,
+              image: member.user.image ?? null,
+            }
+          : null,
+      };
+    })
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }

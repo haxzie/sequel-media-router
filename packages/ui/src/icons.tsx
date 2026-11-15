@@ -232,3 +232,13 @@ export function McpIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function MoreIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" className={`${base} ${className}`} aria-hidden>
+      <circle cx="8" cy="3.4" r="1.3" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="8" cy="12.6" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}

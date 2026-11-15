@@ -8,7 +8,7 @@
  * Implements: initialize, notifications/initialized, tools/list, tools/call,
  * ping. Anything else gets a proper JSON-RPC "method not found".
  */
-import { toolSchemas, type Forge } from '@sequel/core';
+import { toolSchemas, type Forge, type TaskActor } from '@sequel/core';
 import { z } from 'zod/v4';
 
 const PROTOCOL_VERSION = '2025-06-18';
@@ -59,7 +59,12 @@ function toolList() {
   }));
 }
 
-async function callTool(forge: Forge, name: string, rawArgs: unknown) {
+async function callTool(
+  forge: Forge,
+  name: string,
+  rawArgs: unknown,
+  actor: TaskActor | null,
+) {
   if (!(name in toolSchemas)) {
     return toolResult({ error: `Unknown tool "${name}"` }, true);
   }
@@ -88,8 +93,19 @@ async function callTool(forge: Forge, name: string, rawArgs: unknown) {
         return toolResult(await forge.getModelSchemas(args));
       case 'get_upload_url':
         return toolResult(await forge.getUploadUrl(args));
-      case 'run_models':
-        return toolResult(await forge.runModel(args));
+      case 'run_models': {
+        // The run records who asked, when the caller presented a credential.
+        // `args` is `never` for the shared dispatch, so the shape is restated
+        // here rather than spread.
+        const run = parsed.data as { model: string; input: unknown };
+        return toolResult(
+          await forge.runModel({
+            model: run.model,
+            input: run.input,
+            ...(actor ? { createdBy: actor } : {}),
+          }),
+        );
+      }
       case 'list_tasks':
         return toolResult(await forge.listTasks(args));
     }
@@ -102,6 +118,8 @@ async function callTool(forge: Forge, name: string, rawArgs: unknown) {
 export async function handleMcpMessage(
   forge: Forge,
   message: JsonRpcRequest,
+  /** Who the transport authenticated, if anyone. Recorded on any run. */
+  actor: TaskActor | null = null,
 ): Promise<object | null> {
   const { id, method, params } = message;
 
@@ -129,7 +147,7 @@ export async function handleMcpMessage(
       const { name, arguments: args } = (params ?? {}) as { name?: string; arguments?: unknown };
       if (!name) return failure(id, -32602, 'tools/call requires a tool name');
       await forge.ready();
-      return result(id, await callTool(forge, name, args));
+      return result(id, await callTool(forge, name, args, actor));
     }
 
     default:

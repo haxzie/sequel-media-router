@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Avatar } from '@sequel/ui';
 import { formatUsd } from '@sequel/core/pricing';
 import { TaskPanel, type TaskSummary } from './task-panel';
 import { Card, PageHeader, Segmented, StatusDot } from '@sequel/ui';
@@ -114,12 +115,12 @@ export function TaskList() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--color-line)]">
-                {['Status', 'Prompt', 'Model', 'Cost', 'When', ''].map((heading, index) => (
+                {['Status', 'Prompt', 'Model', 'By', 'Cost', 'When', ''].map((heading, index) => (
                   <th
                     key={heading || index}
                     className={[
                       'px-5 py-3 text-[12px] font-medium text-[var(--color-dim)]',
-                      index === 3 ? 'text-right' : 'text-left',
+                      index === 4 ? 'text-right' : 'text-left',
                     ].join(' ')}
                   >
                     {heading}
@@ -159,6 +160,23 @@ export function TaskList() {
                     <code className="font-mono text-[11px] text-[var(--color-dim)]">
                       {task.model}
                     </code>
+                  </td>
+
+                  <td className="whitespace-nowrap px-5 py-3.5">
+                    {task.created_by ? (
+                      <span
+                        className="inline-flex items-center"
+                        title={`${task.created_by.name} · ${task.created_by.via.replace('_', ' ')}`}
+                      >
+                        <Avatar
+                          name={task.created_by.name}
+                          src={task.created_by.image}
+                          size={22}
+                        />
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-[var(--color-dim)]">—</span>
+                    )}
                   </td>
 
                   <td className="whitespace-nowrap px-5 py-3.5 text-right">

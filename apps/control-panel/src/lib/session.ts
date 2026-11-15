@@ -35,13 +35,34 @@ export async function listOrganizations() {
   return auth.api.listOrganizations({ headers: await headers() });
 }
 
+/**
+ * The organisation the session is scoped to.
+ *
+ * A fresh session carries no active organisation — only onboarding and the
+ * switcher set one — so every returning user arrived with nothing selected and
+ * the pages that scope to an org rendered blank. If the session has no active
+ * organisation but the user belongs to one, adopt the first and persist it, so
+ * this self-corrects instead of needing a visit to the switcher.
+ */
 export async function getActiveOrganization() {
   const auth = await getAuth();
+  const requestHeaders = await headers();
   const session = await getSession();
-  const id = session?.session.activeOrganizationId;
-  if (!id) return null;
+  if (!session) return null;
+
+  let id = session.session.activeOrganizationId;
+
+  if (!id) {
+    const [first] = await auth.api.listOrganizations({ headers: requestHeaders });
+    if (!first) return null;
+    await auth.api
+      .setActiveOrganization({ headers: requestHeaders, body: { organizationId: first.id } })
+      .catch(() => undefined);
+    id = first.id;
+  }
+
   return auth.api.getFullOrganization({
-    headers: await headers(),
+    headers: requestHeaders,
     query: { organizationId: id },
   });
 }
