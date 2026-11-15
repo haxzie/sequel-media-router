@@ -43,6 +43,22 @@
    * lightness band, chroma floor, CVD separation (11.3 worst adjacent),
    * normal-vision floor (20.7), and contrast.
    */
+  /*
+   * Status. Reserved — never reused as a chart series, which is why these sit
+   * apart from the --chart-* set below.
+   *
+   * The pastels these replace were not low contrast; measured against the card
+   * they read higher (APCA Lc 80+) than any of these. They were low
+   * *identity*: three near-white tints at 6px, under a label that stayed grey
+   * whatever the status, so all four states looked the same. These are
+   * ordinary status hues at steps that hold up on the card — Lc 42 to 65 — and
+   * the label now takes the colour too, so the signal has some area.
+   */
+  --status-queued: #8b949e;
+  --status-running: #e3b341;
+  --status-done: #56d364;
+  --status-failed: #ff7b72;
+
   --chart-image: #4f80e3;
   --chart-video: #d9569b;
   --chart-audio: #bc8a38;

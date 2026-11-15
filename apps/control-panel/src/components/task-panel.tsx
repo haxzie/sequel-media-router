@@ -34,10 +34,10 @@ interface TaskDetail extends TaskSummary {
 }
 
 const STATUS_COLOR: Record<TaskSummary['status'], string> = {
-  queued: '#6b6b6b',
-  in_progress: 'var(--color-sky)',
-  completed: 'var(--color-mint)',
-  failed: 'var(--color-pink)',
+  queued: 'var(--status-queued)',
+  in_progress: 'var(--status-running)',
+  completed: 'var(--status-done)',
+  failed: 'var(--status-failed)',
 };
 
 const STATUS_LABEL: Record<TaskSummary['status'], string> = {
@@ -186,7 +186,7 @@ export function TaskPanel({ task, onClose }: { task: TaskSummary; onClose: () =>
       <aside className="fixed right-0 top-0 z-50 flex h-screen w-[420px] flex-col border-l border-[var(--color-line)] bg-[var(--color-surface)]">
         <header className="flex items-center justify-between gap-3 px-5 py-4">
           <StatusDot color={STATUS_COLOR[detail.status]}>
-            <span className="text-[13px] text-[var(--color-muted)]">
+            <span className="text-[13px]" style={{ color: STATUS_COLOR[detail.status] }}>
               {STATUS_LABEL[detail.status]}
             </span>
           </StatusDot>

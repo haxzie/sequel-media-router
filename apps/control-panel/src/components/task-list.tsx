@@ -9,10 +9,10 @@ import { Card, PageHeader, Segmented, StatusDot } from '@sequel/ui';
 type TaskRow = TaskSummary;
 
 const STATUS_COLOR: Record<TaskRow['status'], string> = {
-  queued: '#6b6b6b',
-  in_progress: 'var(--color-sky)',
-  completed: 'var(--color-mint)',
-  failed: 'var(--color-pink)',
+  queued: 'var(--status-queued)',
+  in_progress: 'var(--status-running)',
+  completed: 'var(--status-done)',
+  failed: 'var(--status-failed)',
 };
 
 const STATUS_LABEL: Record<TaskRow['status'], string> = {
@@ -141,7 +141,7 @@ export function TaskList() {
                 >
                   <td className="whitespace-nowrap px-5 py-3.5">
                     <StatusDot color={STATUS_COLOR[task.status]}>
-                      <span className="text-[var(--color-muted)]">
+                      <span style={{ color: STATUS_COLOR[task.status] }}>
                         {STATUS_LABEL[task.status]}
                       </span>
                     </StatusDot>
