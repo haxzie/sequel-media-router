@@ -236,6 +236,37 @@ export class Forge {
    * `async`, not inferred from the modality, so a fast video model could run
    * inline without changing this code.
    */
+  /**
+   * Run several models at once.
+   *
+   * Each failure is caught and reported in place, so one bad input does not
+   * take down the rest of a batch — the caller gets seven pictures and one
+   * error rather than one error.
+   */
+  async runModels(params: {
+    runs: Array<{ model: string; input: unknown }>;
+    createdBy?: TaskActor;
+  }): Promise<{ runs: Array<Record<string, unknown>> }> {
+    const runs = await Promise.all(
+      params.runs.map(async (run) => {
+        try {
+          return (await this.runModel({
+            model: run.model,
+            input: run.input,
+            ...(params.createdBy ? { createdBy: params.createdBy } : {}),
+          })) as unknown as Record<string, unknown>;
+        } catch (error) {
+          return {
+            model: run.model,
+            status: 'failed' as const,
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
+      }),
+    );
+    return { runs };
+  }
+
   async runModel(params: {
     model: string;
     input: unknown;
@@ -639,11 +670,50 @@ export const toolSchemas = {
     content_type: z.string(),
     extension: z.string().optional(),
   }),
-  run_models: z.object({
-    action_info: actionInfo,
-    model: z.string(),
-    input: z.record(z.string(), z.unknown()).default({}),
-  }),
+  /*
+   * One run, or a batch of them.
+   *
+   * `model` + `input` is the single form and the response is a single run.
+   * `runs` is the plural form the name always implied, for a set of prompts
+   * or a set of reference images, and the response is `{ runs: [...] }`.
+   * They are alternatives, not a shorthand for each other, so a caller never
+   * has to guess which shape comes back.
+   */
+  run_models: z
+    .object({
+      action_info: actionInfo,
+      model: z.string().optional(),
+      input: z.record(z.string(), z.unknown()).optional(),
+      prompts: z
+        .array(z.string().min(1))
+        .min(1)
+        .max(8)
+        .optional()
+        .describe(
+          'Shorthand for a batch of one model: one run per prompt, each merged ' +
+            'over whatever is in input, so shared settings are written once. ' +
+            'Prefer this over runs when only the prompt differs — it is a ' +
+            'fraction of the JSON and far less likely to be truncated.',
+        ),
+      runs: z
+        .array(
+          z.object({
+            model: z.string(),
+            input: z.record(z.string(), z.unknown()).default({}),
+          }),
+        )
+        .min(1)
+        .max(8)
+        .optional()
+        .describe(
+          'Several runs at once, each with its own model and input. They go in ' +
+            'parallel and are reported together, one entry per run in the same order. ' +
+            'A run that fails does not stop the others. Cap is 8.',
+        ),
+    })
+    .refine((value) => Boolean(value.model) !== Boolean(value.runs), {
+      message: 'Pass either model (with input) for one run, or runs for a batch — not both.',
+    }),
   list_tasks: z.object({
     action_info: actionInfo,
     task_ids: z.array(z.string()).optional(),

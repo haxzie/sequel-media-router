@@ -34,6 +34,17 @@ you. Follow this order:
 3. run_models to generate. Pass the person's intent as the prompt, improved
    where it is vague, but never contradicting what they asked for.
 
+When someone asks for more than one thing — several variations, several
+prompts, the same prompt at different sizes — send them as a single
+run_models call, not one call each. They go in parallel and appear together
+as a grid.
+
+Use "prompts" for this almost always: one "model", one "input" for the
+shared settings, and a "prompts" array of the bits that differ. It is a
+fraction of the JSON of a "runs" array, and a long "runs" array gets
+truncated mid-string and fails. Reach for "runs" only when the batch needs
+genuinely different models. Keep each prompt short.
+
 If the person attached files, their URLs are listed at the end of their
 message. To use one as a reference or to edit it:
 

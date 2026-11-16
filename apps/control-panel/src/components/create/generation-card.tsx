@@ -49,8 +49,11 @@ function DotWave() {
 
 export function GenerationPending({
   input,
+  inGrid,
 }: {
   input: Record<string, unknown> | undefined;
+  /** Inside a batch grid: the cell sets the width, so drop the cap. */
+  inGrid?: boolean;
 }) {
   const model = typeof input?.model === 'string' ? input.model : 'a model';
   const prompt =
@@ -61,15 +64,21 @@ export function GenerationPending({
   const ratio = aspect(input?.input as Record<string, unknown>);
 
   return (
-    <div className="mt-2 max-w-[360px]">
+    <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
       <div
         className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
         style={{ aspectRatio: ratio }}
       >
         <DotWave />
       </div>
+      {/* In a grid the model line would repeat identically under every cell,
+          so only the prompt, which is what differs between them. */}
       <div className="mt-2 text-[12px] text-[var(--color-dim)]">
-        Generating with <code className="font-mono">{model}</code>
+        {!inGrid && (
+          <>
+            Generating with <code className="font-mono">{model}</code>
+          </>
+        )}
         {prompt && <span className="block truncate">{prompt}</span>}
       </div>
     </div>
@@ -79,16 +88,23 @@ export function GenerationPending({
 export function GenerationResult({
   result,
   input,
+  inGrid,
 }: {
   result: RunResult;
   /** The run_models arguments, so the viewer can show what produced this. */
   input?: Record<string, unknown>;
+  /** Inside a batch grid: the cell sets the width, so drop the cap. */
+  inGrid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
   if (result.error) {
     return (
-      <div className="mt-2 rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]">
+      <div
+        className={`rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)] ${
+          inGrid ? '' : 'mt-2'
+        }`}
+      >
         {result.error}
       </div>
     );
@@ -101,7 +117,7 @@ export function GenerationResult({
   // rendering an empty frame.
   if (!url) {
     return (
-      <div className="mt-2 max-w-[360px]">
+      <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
         <div
           className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
           style={{ aspectRatio: '16 / 9' }}
@@ -121,7 +137,7 @@ export function GenerationResult({
   const isAudio = asset?.mime?.startsWith('audio/');
 
   return (
-    <div className="mt-2 max-w-[360px]">
+    <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
       {isVideo ? (
         /*
          * Video and audio keep their own controls and are opened from the

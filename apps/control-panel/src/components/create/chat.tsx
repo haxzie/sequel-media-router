@@ -66,15 +66,17 @@ const SUGGESTIONS = [
  * because our tools declare no output schema. Parse it here rather than make
  * every caller know that.
  */
-function readToolOutput(output: unknown): RunResult | null {
-  if (!output || typeof output !== 'object') return null;
+function readToolOutput(output: unknown): RunResult[] {
+  if (!output || typeof output !== 'object') return [];
   const content = (output as { content?: Array<{ type: string; text?: string }> }).content;
   const text = content?.find((part) => part.type === 'text')?.text;
-  if (!text) return null;
+  if (!text) return [];
   try {
-    return JSON.parse(text) as RunResult;
+    const parsed = JSON.parse(text) as RunResult & { runs?: RunResult[] };
+    // A batch answers with `runs`; a single run answers with itself.
+    return Array.isArray(parsed.runs) ? parsed.runs : [parsed];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -361,20 +363,95 @@ function Message({ message, streaming }: { message: UIMessage; streaming?: boole
   );
 }
 
-function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
-  if (part.state === 'output-available') {
-    const result = readToolOutput(part.output);
-    return result ? (
-      <GenerationResult
-        result={result}
-        input={part.input as Record<string, unknown> | undefined}
-      />
-    ) : null;
+/**
+ * Lay a batch out as a grid, a single run full width.
+ *
+ * Two columns from two runs up, three from five, which keeps a pair large
+ * and stops a set of eight becoming a column you have to scroll.
+ */
+function Grid({ count, children }: { count: number; children: React.ReactNode }) {
+  if (count < 2) return <>{children}</>;
+  return (
+    <div
+      className="mt-2 grid gap-2"
+      style={{ gridTemplateColumns: `repeat(${count >= 5 ? 3 : 2}, minmax(0, 1fr))` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** The per-run arguments, whether this was one run or a batch of them. */
+function runInputs(input: unknown): Array<Record<string, unknown>> {
+  const args = input as
+    | {
+        runs?: Array<Record<string, unknown>>;
+        prompts?: string[];
+        input?: Record<string, unknown>;
+        model?: string;
+      }
+    | undefined;
+
+  if (Array.isArray(args?.runs)) return args.runs;
+
+  // The prompts shorthand: one frame per prompt, sharing the rest.
+  if (Array.isArray(args?.prompts)) {
+    return args.prompts.map((prompt) => ({
+      model: args.model,
+      input: { ...(args.input ?? {}), prompt },
+    }));
   }
+
+  return args ? [args as Record<string, unknown>] : [{}];
+}
+
+/**
+ * Shorten a tool error to something a person can read.
+ *
+ * When the model truncates its own tool call, the SDK reports the failure by
+ * quoting every byte it did manage to emit — which for a batch is hundreds
+ * of words of broken JSON filling the conversation. The payload is already
+ * in the trace if anyone wants it; what belongs here is what went wrong.
+ */
+function toolErrorText(raw: string | undefined): string {
+  const text = raw ?? 'The tool call failed.';
+
+  if (/Unterminated string|Unexpected end of JSON|Expected double-quoted/i.test(text)) {
+    return 'The model cut its own tool call off mid-JSON — it tried to send too much at once. Asking for fewer at a time usually gets through.';
+  }
+
+  // Drop the quoted payload between 'Text:' and the actual message.
+  const trimmed = text.replace(/Text:[\s\S]*?Error message:/, '').trim();
+  return trimmed.length > 240 ? `${trimmed.slice(0, 237)}…` : trimmed;
+}
+
+function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
+  const inputs = runInputs(part.input);
+
+  if (part.state === 'output-available') {
+    const results = readToolOutput(part.output);
+    if (results.length === 0) return null;
+    return (
+      <Grid count={results.length}>
+        {results.map((result, index) => (
+          <GenerationResult
+            key={index}
+            result={result}
+            input={inputs[index] ?? inputs[0]}
+            inGrid={results.length > 1}
+          />
+        ))}
+      </Grid>
+    );
+  }
+
   if (part.state === 'output-error') {
     return (
-      <div className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]">
-        {part.errorText}
+      <div
+        className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]"
+        title={part.errorText}
+      >
+        {toolErrorText(part.errorText)}
       </div>
     );
   }
@@ -391,7 +468,15 @@ function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }
     );
   }
 
-  return <GenerationPending input={part.input as Record<string, unknown> | undefined} />;
+  // One placeholder per run, so a batch of six reserves six frames rather
+  // than one that later multiplies.
+  return (
+    <Grid count={inputs.length}>
+      {inputs.map((args, index) => (
+        <GenerationPending key={index} input={args} inGrid={inputs.length > 1} />
+      ))}
+    </Grid>
+  );
 }
 
 type Block =

@@ -184,13 +184,13 @@ body {
   background-size: 260% 260%;
   animation: sequel-dot-wave 3s linear infinite;
 
-  /* 1.1px dots on a 4px pitch. Shrink the pitch for denser, raise the radius
-     for heavier — they are independent. */
-  --sequel-dot: radial-gradient(circle at center, #000 1.1px, transparent 1.4px);
+  /* Small dots, well apart: 1.1px on an 18px pitch. Radius and pitch are
+     independent, so the spacing opens up without the dots growing. */
+  --sequel-dot: radial-gradient(circle at center, #000 1.1px, transparent 1.5px);
   -webkit-mask-image: var(--sequel-dot);
   mask-image: var(--sequel-dot);
-  -webkit-mask-size: 4px 4px;
-  mask-size: 4px 4px;
+  -webkit-mask-size: 18px 18px;
+  mask-size: 18px 18px;
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
 }

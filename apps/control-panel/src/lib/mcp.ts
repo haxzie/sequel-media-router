@@ -103,10 +103,43 @@ async function callTool(
         // The run records who asked, when the caller presented a credential.
         // `args` is `never` for the shared dispatch, so the shape is restated
         // here rather than spread.
-        const run = rest as { model: string; input: unknown };
+        const run = rest as {
+          model?: string;
+          input?: unknown;
+          prompts?: string[];
+          runs?: Array<{ model: string; input: unknown }>;
+        };
+
+        /*
+         * The prompts shorthand expands here rather than in forge, so the
+         * batch path downstream only ever sees one shape.
+         */
+        if (run.prompts?.length && run.model) {
+          const shared = (run.input ?? {}) as Record<string, unknown>;
+          return toolResult(
+            await forge.runModels({
+              runs: run.prompts.map((prompt) => ({
+                model: run.model as string,
+                input: { ...shared, prompt },
+              })),
+              ...(actor ? { createdBy: actor } : {}),
+            }),
+          );
+        }
+
+        // The schema already guarantees exactly one of the two is present.
+        if (run.runs) {
+          return toolResult(
+            await forge.runModels({
+              runs: run.runs,
+              ...(actor ? { createdBy: actor } : {}),
+            }),
+          );
+        }
+
         return toolResult(
           await forge.runModel({
-            model: run.model,
+            model: run.model as string,
             input: run.input,
             ...(actor ? { createdBy: actor } : {}),
           }),
