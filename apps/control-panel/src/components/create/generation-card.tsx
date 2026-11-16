@@ -47,6 +47,24 @@ function DotWave() {
   return <div className="dot-wave" />;
 }
 
+/**
+ * The box every state of a generation lives in.
+ *
+ * One component rather than matching classes in two places: the placeholder
+ * and the finished image have to agree on size exactly, and the moment they
+ * are written separately they drift and the image jumps when it lands.
+ */
+function Frame({ ratio, children }: { ratio: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
+      style={{ aspectRatio: ratio }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function GenerationPending({
   input,
   inGrid,
@@ -55,32 +73,17 @@ export function GenerationPending({
   /** Inside a batch grid: the cell sets the width, so drop the cap. */
   inGrid?: boolean;
 }) {
-  const model = typeof input?.model === 'string' ? input.model : 'a model';
-  const prompt =
-    typeof (input?.input as Record<string, unknown> | undefined)?.prompt === 'string'
-      ? ((input!.input as Record<string, unknown>).prompt as string)
-      : null;
-
-  const ratio = aspect(input?.input as Record<string, unknown>);
-
+  /*
+   * No caption. It used to name the model and echo the prompt, which the
+   * trace above now says better — and because the finished image carries no
+   * caption either, those two lines were a step change in height at the
+   * exact moment the image appeared.
+   */
   return (
     <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
-      <div
-        className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
-        style={{ aspectRatio: ratio }}
-      >
+      <Frame ratio={aspect(input?.input as Record<string, unknown>)}>
         <DotWave />
-      </div>
-      {/* In a grid the model line would repeat identically under every cell,
-          so only the prompt, which is what differs between them. */}
-      <div className="mt-2 text-[12px] text-[var(--color-dim)]">
-        {!inGrid && (
-          <>
-            Generating with <code className="font-mono">{model}</code>
-          </>
-        )}
-        {prompt && <span className="block truncate">{prompt}</span>}
-      </div>
+      </Frame>
     </div>
   );
 }
@@ -118,12 +121,9 @@ export function GenerationResult({
   if (!url) {
     return (
       <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
-        <div
-          className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
-          style={{ aspectRatio: '16 / 9' }}
-        >
+        <Frame ratio="16 / 9">
           <DotWave />
-        </div>
+        </Frame>
         <div className="mt-2 text-[12px] text-[var(--color-dim)]">
           {result.status === 'in_progress'
             ? `Running${result.eta_seconds ? ` · about ${result.eta_seconds}s` : ''} — it will appear in Tasks.`
@@ -135,6 +135,9 @@ export function GenerationResult({
 
   const isVideo = asset?.mime?.startsWith('video/');
   const isAudio = asset?.mime?.startsWith('audio/');
+  // The same ratio the placeholder reserved, so the frame does not resize
+  // underneath the image as it decodes.
+  const ratio = aspect(input?.input as Record<string, unknown>);
 
   return (
     <div className={inGrid ? '' : 'mt-2 max-w-[360px]'}>
@@ -144,7 +147,15 @@ export function GenerationResult({
          * caption instead — a click on a player is a click on play, and
          * hijacking it to open a dialog would break the obvious thing.
          */
-        <video src={url} controls playsInline preload="metadata" className="w-full rounded-xl bg-black" />
+        <Frame ratio={ratio}>
+          <video
+            src={url}
+            controls
+            playsInline
+            preload="metadata"
+            className="h-full w-full bg-black object-contain"
+          />
+        </Frame>
       ) : isAudio ? (
         <div className="rounded-xl bg-[var(--color-card)] px-4 py-4">
           <audio src={url} controls preload="metadata" className="w-full" />
@@ -154,10 +165,18 @@ export function GenerationResult({
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open generation"
-          className="block w-full cursor-zoom-in overflow-hidden rounded-xl transition-opacity hover:opacity-90"
+          className="block w-full cursor-zoom-in transition-opacity hover:opacity-90"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="w-full bg-[var(--color-card)]" />
+          <Frame ratio={ratio}>
+            {/*
+              * contain, not cover: the ratio is what we asked the model for
+              * rather than what it returned, and the two can disagree —
+              * letterboxing against the card is honest where silently
+              * cropping someone's generation is not.
+              */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="h-full w-full object-contain" />
+          </Frame>
         </button>
       )}
 

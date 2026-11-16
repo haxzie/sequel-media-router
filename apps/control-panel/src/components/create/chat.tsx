@@ -426,6 +426,17 @@ function toolErrorText(raw: string | undefined): string {
 }
 
 function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
+  /*
+   * Nothing until the arguments are complete.
+   *
+   * While they stream in, a `prompts` array grows an entry at a time, so the
+   * grid would render one frame at full width, then two at half, then three
+   * — resizing itself underneath you before a single pixel of image exists.
+   * The chat-level indicator already shows the turn is live, so there is
+   * nothing to cover here but a short gap.
+   */
+  if (part.state === 'input-streaming') return null;
+
   const inputs = runInputs(part.input);
 
   if (part.state === 'output-available') {
