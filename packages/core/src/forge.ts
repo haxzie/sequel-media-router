@@ -597,9 +597,32 @@ export class Forge {
   }
 }
 
+/**
+ * A one-line statement of intent, carried by every tool.
+ *
+ * Purely for display: it is stripped before the call runs and changes
+ * nothing about what happens. A trace of `search_models`, `get_model_schemas`,
+ * `run_models` tells you the shape of the work but not the point of it, and
+ * the caller is the only party that knows the point.
+ *
+ * Optional, because a client that omits it should still work; the UI falls
+ * back to the tool name.
+ */
+const actionInfo = z
+  .string()
+  .max(80)
+  .optional()
+  .describe(
+    'A short phrase, under about eight words, saying what you are doing and why, ' +
+      'shown to the person watching: "Finding a cheap image model", ' +
+      '"Checking the edit parameters", "Generating the scarf". ' +
+      'Write it in the present tense. Do not restate the arguments.',
+  );
+
 /** Zod schemas for the five tools, shared by the MCP endpoint and the REST routes. */
 export const toolSchemas = {
   search_models: z.object({
+    action_info: actionInfo,
     type: z.enum(['image', 'video', 'audio']).optional(),
     query: z.string().optional(),
     limit: z
@@ -610,16 +633,19 @@ export const toolSchemas = {
       .optional()
       .describe('Default 10. Raise it to browse the catalog; the cap is 200.'),
   }),
-  get_model_schemas: z.object({ model: z.string() }),
+  get_model_schemas: z.object({ action_info: actionInfo, model: z.string() }),
   get_upload_url: z.object({
+    action_info: actionInfo,
     content_type: z.string(),
     extension: z.string().optional(),
   }),
   run_models: z.object({
+    action_info: actionInfo,
     model: z.string(),
     input: z.record(z.string(), z.unknown()).default({}),
   }),
   list_tasks: z.object({
+    action_info: actionInfo,
     task_ids: z.array(z.string()).optional(),
     status: z.array(z.enum(['queued', 'in_progress', 'completed', 'failed'])).optional(),
     limit: z.number().int().min(1).max(200).optional(),

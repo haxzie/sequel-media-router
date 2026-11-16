@@ -32,6 +32,82 @@ function isTool(part: TracePart): part is ToolPart {
   return part.type === 'dynamic-tool';
 }
 
+/**
+ * What the caller said it was doing, if it said.
+ *
+ * Every tool takes an optional action_info for exactly this. A trace reading
+ * search_models / get_model_schemas / run_models describes the shape of the
+ * work but not its point, and only the caller knows the point.
+ */
+function actionInfo(part: ToolPart): string | null {
+  const input = part.input as { action_info?: unknown } | undefined;
+  const value = input?.action_info;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+/**
+ * One glyph per tool, in place of a status dot.
+ *
+ * The dot said only 'this finished', which the timing beside it already
+ * said. The icon says which of five things happened, so a trace can be read
+ * at a glance rather than word by word.
+ */
+function ToolIcon({ name }: { name: string }) {
+  const common = {
+    viewBox: '0 0 16 16',
+    fill: 'none',
+    className: 'h-full w-full',
+    'aria-hidden': true,
+    stroke: 'currentColor',
+    strokeWidth: 1.4,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+
+  switch (name) {
+    case 'search_models':
+      return (
+        <svg {...common}>
+          <circle cx="7.2" cy="7.2" r="4" />
+          <path d="M10.2 10.2L13.5 13.5" />
+        </svg>
+      );
+    case 'get_model_schemas':
+      return (
+        <svg {...common}>
+          <path d="M6 2.5C4.6 2.5 4.5 3.4 4.5 5c0 1.6-.6 2.4-1.8 3 1.2.6 1.8 1.4 1.8 3 0 1.6.1 2.5 1.5 2.5" />
+          <path d="M10 2.5c1.4 0 1.5.9 1.5 2.5 0 1.6.6 2.4 1.8 3-1.2.6-1.8 1.4-1.8 3 0 1.6-.1 2.5-1.5 2.5" />
+        </svg>
+      );
+    case 'get_upload_url':
+      return (
+        <svg {...common}>
+          <path d="M8 11V3m0 0L5 6m3-3l3 3" />
+          <path d="M2.8 10.5v1.7c0 .6.5 1.1 1.1 1.1h8.2c.6 0 1.1-.5 1.1-1.1v-1.7" />
+        </svg>
+      );
+    case 'run_models':
+      return (
+        <svg {...common}>
+          <path d="M8 2.2l1.5 3.6 3.6 1.5-3.6 1.5L8 12.4 6.5 8.8 2.9 7.3l3.6-1.5L8 2.2z" />
+        </svg>
+      );
+    case 'list_tasks':
+      return (
+        <svg {...common}>
+          <path d="M6.5 4.5h7M6.5 8h7M6.5 11.5h7" />
+          <path d="M2.8 4.5h.01M2.8 8h.01M2.8 11.5h.01" />
+        </svg>
+      );
+    default:
+      return (
+        <svg {...common}>
+          <circle cx="8" cy="8" r="4.2" />
+        </svg>
+      );
+  }
+}
+
 /** Server-measured timings, attached to the assistant message at finish. */
 export interface ChatMetadata {
   totalMs?: number;
@@ -198,7 +274,12 @@ export function ToolTimeline({
           <span className="spin-slow h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[var(--color-line-strong)] border-t-[var(--status-running)]" />
         )}
 
-        <span className={running ? 'text-[var(--color-text)]' : 'text-[var(--color-muted)]'}>
+        {/* Tabular figures: this ticks every 100ms while a turn is open, and
+            proportional digits make it and everything after it jitter
+            sideways on each frame. */}
+        <span
+          className={`nums ${running ? 'text-[var(--color-text)]' : 'text-[var(--color-muted)]'}`}
+        >
           {label}
         </span>
         <span className="text-[var(--color-dim)]">·</span>
@@ -282,32 +363,51 @@ export function ToolTimeline({
               const cut = !done && !running;
               const ms = elapsed(part);
               const isOpen = expanded === part.toolCallId;
+              const info = actionInfo(part);
 
               return (
                 <li key={part.toolCallId} className="relative pl-6">
+                  {/* Colour still carries the status, now on the glyph rather
+                      than beside it. The background ring punches a hole in the
+                      rail so the icon sits on the line, not over it. */}
                   <span
-                    className="absolute left-[2px] top-[13px] h-[7px] w-[7px] rounded-full ring-[3px] ring-[var(--color-bg)]"
+                    className="absolute left-0 top-[9px] h-[11px] w-[11px] bg-[var(--color-bg)] px-px"
                     style={{
-                      background: failed
+                      color: failed
                         ? 'var(--status-failed)'
-                        : done
-                          ? 'var(--status-done)'
-                          : cut
-                            ? 'var(--status-queued)'
+                        : cut
+                          ? 'var(--status-queued)'
+                          : done
+                            ? 'var(--color-muted)'
                             : 'var(--status-running)',
                     }}
                     aria-hidden
-                  />
+                  >
+                    <ToolIcon name={part.toolName} />
+                  </span>
 
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : part.toolCallId)}
-                    className="nav-item flex items-center gap-2 py-2 text-left"
+                    className="nav-item flex min-w-0 items-center gap-2 py-2 text-left"
                   >
-                    <span className="font-mono text-[12.5px] text-[var(--color-text)]">
+                    {/* What it said it was doing, where it said. The tool name
+                        stays alongside either way — it is the thing you scan
+                        for when you are reading the trace as a sequence of
+                        calls rather than a story. */}
+                    {info && (
+                      <span className="truncate text-[12.5px] text-[var(--color-text)]">
+                        {info}
+                      </span>
+                    )}
+                    <span
+                      className={`shrink-0 font-mono text-[12.5px] ${
+                        info ? 'text-[var(--color-dim)]' : 'text-[var(--color-text)]'
+                      }`}
+                    >
                       {part.toolName}
                     </span>
-                    <span className="font-mono text-[11.5px] text-[var(--color-dim)]">
+                    <span className="shrink-0 font-mono text-[11.5px] text-[var(--color-dim)]">
                       {cut ? 'interrupted' : ms === null ? '' : duration(ms)}
                     </span>
                     <svg

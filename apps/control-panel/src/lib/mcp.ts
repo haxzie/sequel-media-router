@@ -85,7 +85,13 @@ async function callTool(
   }
 
   try {
-    const args = parsed.data as never;
+    /*
+     * action_info is for the person watching, not for the tool. Drop it here
+     * so no handler has to know about it and nothing can be keyed off it by
+     * accident.
+     */
+    const { action_info: _displayOnly, ...rest } = parsed.data as Record<string, unknown>;
+    const args = rest as never;
     switch (name as ToolName) {
       case 'search_models':
         return toolResult(await forge.searchModels(args));
@@ -97,7 +103,7 @@ async function callTool(
         // The run records who asked, when the caller presented a credential.
         // `args` is `never` for the shared dispatch, so the shape is restated
         // here rather than spread.
-        const run = parsed.data as { model: string; input: unknown };
+        const run = rest as { model: string; input: unknown };
         return toolResult(
           await forge.runModel({
             model: run.model,
@@ -116,7 +122,7 @@ async function callTool(
         // be every team's runs. Empty is the correct answer, not everything.
         if (!actor?.organizationId) return toolResult({ tasks: [] });
 
-        const filters = parsed.data as Record<string, unknown>;
+        const filters = rest as Record<string, unknown>;
         return toolResult(
           await forge.listTasks({ ...filters, organizationId: actor.organizationId }),
         );
