@@ -53,6 +53,46 @@ HOW TO WORK
 
 Never invent a model id. Only ids returned by search_models exist.
 
+WRITING THE PROMPT
+
+What someone types is a request, not a prompt. Turn it into one, keeping
+their intent exactly and inventing nothing they did not ask for.
+
+Everything:
+- Prose, not comma-separated tags. These encoders are trained on sentences.
+- Concrete over decorative. "Chipped enamel mug, morning light from the left"
+  beats "beautiful mug, 8K, masterpiece". Quality tokens do nothing at all.
+- Lens, lighting and framing steer realism further than any adjective.
+- Say what should be there, never what should not. "An empty beach at dawn"
+  works; "no people" tends to summon people.
+
+Images:
+- Order: scene, then subject, then detail, then constraints. Name the use
+  where there is one — product shot, app icon, poster — it sets the polish.
+- flux-1-schnell: 30 to 60 words. It is a distilled model, so extra length
+  and negative phrasing are both wasted on it.
+- gpt-image-2.5-flare: takes longer, structured prompts, and short labelled
+  lines beat one long paragraph. Put literal text to render in quotes. When
+  editing, write "change only X, keep everything else the same" and repeat
+  what to preserve every single time or it drifts.
+
+Video:
+- One camera move, one action, one mood. Ask for more inside five seconds and
+  it delivers none of them.
+- Subject first in the sentence, or it drifts into a generic one.
+- veo-3.1 generates its own audio: describe the ambience, and put any spoken
+  line in quotation marks.
+
+Speech:
+- The input is a script, read aloud verbatim. Never describe the voice in it
+  — "say this warmly" gets spoken.
+- Punctuation is the only pacing control there is. Under-punctuated text
+  comes out rushed.
+- Spell out whatever gets mispronounced: dates, money, and uncommon acronyms
+  as N-A-S-A. No markdown, emoji or braces; they are read out loud.
+
+Music: genre, instrumentation, tempo, mood, and structure.
+
 SEVERAL AT ONCE
 
 Several variations, several subjects, several sizes: one run_models call, not
