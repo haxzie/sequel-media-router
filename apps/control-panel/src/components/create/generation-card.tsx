@@ -174,21 +174,32 @@ export function GenerationResult({
         />
       )}
 
-      <div className="mt-2 flex items-center gap-2 text-[12px] text-[var(--color-dim)]">
-        {result.cost && (
-          <span className="nums">
-            {formatUsd(result.cost.usd)}
-            {result.cost.estimated ? ' est' : ''}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="transition-colors hover:text-[var(--color-text)]"
-        >
-          Open
-        </button>
-      </div>
+      {/*
+        * Only under a player.
+        *
+        * An image is the thing itself — it opens on click and its cost and
+        * model are in the viewer, so a line of grey text under every one is
+        * clutter, and under a grid of six it is six times the clutter. A
+        * video or audio player cannot be clicked to open, since a click
+        * there means play, so it keeps the link.
+        */}
+      {(isVideo || isAudio) && (
+        <div className="mt-2 flex items-center gap-2 text-[12px] text-[var(--color-dim)]">
+          {result.cost && (
+            <span className="nums">
+              {formatUsd(result.cost.usd)}
+              {result.cost.estimated ? ' est' : ''}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="transition-colors hover:text-[var(--color-text)]"
+          >
+            Open
+          </button>
+        </div>
+      )}
     </div>
   );
 }
