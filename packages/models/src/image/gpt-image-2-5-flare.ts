@@ -48,6 +48,13 @@ export const gptImage25Flare = createImageModel({
         'Images to edit or use as reference: a URL, a data: URI, or raw base64. ' +
           'URLs are fetched and inlined for you. Omit for pure text-to-image.',
       ),
+    background: z
+      .enum(['transparent', 'opaque', 'auto'])
+      .default('auto')
+      .describe(
+        'Set transparent to cut the subject out of its background. The output ' +
+          'format must be png or webp for the alpha channel to survive.',
+      ),
     quality: z.enum(['low', 'medium', 'high', 'auto']).default('auto'),
     size: z.enum(['1024x1024', '1536x1024', '1024x1536', 'auto']).default('auto'),
     output_format: z.enum(['png', 'jpeg', 'webp']).default('png'),

@@ -6,6 +6,7 @@ import { PageHeader } from '@sequel/ui';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useEffect, useRef, useState } from 'react';
 import { Streamdown } from 'streamdown';
+import { ChatActionsProvider, type EditRequest } from './chat-actions';
 import { Composer, type Attachment } from './composer';
 import { GenerationPending, GenerationResult, type RunResult } from './generation-card';
 import { duration, ToolTimeline, type ToolPart, type TracePart } from './tool-timeline';
@@ -164,6 +165,51 @@ export function CreateChat({
     setAttachments([]);
   }
 
+  /** Send a message carrying one already-hosted file. */
+  function sendWithFile(text: string, file: Attachment) {
+    setStartedAt(Date.now());
+    void sendMessage({
+      text:
+        text +
+        ATTACHMENT_NOTE +
+        `- ${file.name} (${file.mime}): ${file.url}`,
+      files: [
+        { type: 'file' as const, url: file.url, mediaType: file.mime, filename: file.name },
+      ],
+    });
+  }
+
+  /*
+   * An edit started from the image viewer.
+   *
+   * Anything drawn arrives as a data URL and has to be hosted before a model
+   * can fetch it, so it goes through the same upload the paperclip uses and
+   * lands in the same chatFile table.
+   */
+  async function submitEdit(request: EditRequest) {
+    if (busy) return;
+
+    if (request.dataUrl) {
+      const blob = await (await fetch(request.dataUrl)).blob();
+      const body = new FormData();
+      body.append('file', new File([blob], 'edit.png', { type: blob.type || 'image/png' }));
+      const response = await fetch(`/api/chat/${chatId}/files`, { method: 'POST', body });
+      if (!response.ok) throw new Error('Could not upload the edited image.');
+      sendWithFile(request.text, (await response.json()) as Attachment);
+      return;
+    }
+
+    if (!request.url) return;
+    // Already hosted — Remove BG and Resize act on the generation as it is.
+    sendWithFile(request.text, {
+      id: request.url,
+      name: 'image',
+      mime: request.mime ?? 'image/png',
+      bytes: 0,
+      url: request.url,
+    });
+  }
+
   const composer = {
     value: input,
     onChange: setInput,
@@ -214,7 +260,8 @@ export function CreateChat({
      * point it detaches and the gap vanishes. The negative margin eats the
      * layout's bottom padding so the height can account for only the top.
      */
-    <div className="mx-auto -mb-8 flex min-h-[calc(100vh-2rem)] max-w-3xl flex-col">
+    <ChatActionsProvider value={{ chatId, submitEdit }}>
+      <div className="mx-auto -mb-8 flex min-h-[calc(100vh-2rem)] max-w-3xl flex-col">
       <div className="flex-1 space-y-6 py-2">
         {messages.map((message, index) => (
           <Message
@@ -236,10 +283,11 @@ export function CreateChat({
         <div ref={bottom} />
       </div>
 
-      <div className="sticky bottom-0 bg-[var(--color-bg)] pb-6 pt-3">
-        <Composer {...composer} />
+        <div className="sticky bottom-0 bg-[var(--color-bg)] pb-6 pt-3">
+          <Composer {...composer} />
+        </div>
       </div>
-    </div>
+    </ChatActionsProvider>
   );
 }
 
