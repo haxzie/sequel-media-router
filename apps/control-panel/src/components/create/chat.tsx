@@ -155,7 +155,17 @@ export function CreateChat({
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col">
+    /*
+     * Reaches the bottom of the window, not the bottom of the layout's
+     * padding.
+     *
+     * The dashboard's main element is py-8, so a column sized to
+     * 100vh-4rem stops 2rem short and the sticky composer rests on that
+     * shelf — until the conversation is long enough to scroll, at which
+     * point it detaches and the gap vanishes. The negative margin eats the
+     * layout's bottom padding so the height can account for only the top.
+     */
+    <div className="mx-auto -mb-8 flex min-h-[calc(100vh-2rem)] max-w-3xl flex-col">
       <div className="flex-1 space-y-6 py-2">
         {messages.map((message, index) => (
           <Message
