@@ -145,59 +145,61 @@ body {
 }
 
 /*
- * Generation placeholder: a field of dots with a wave running through it.
+ * Generation placeholder: a dense dot field with a wave of colour crossing it.
  *
- * Every dot runs the same animation; the only difference is a negative delay
- * set from its position, so the field is already mid-wave on the first frame
- * rather than cascading in from a corner. Because the keyframes move colour
- * as well as size, the delay carries the colour across too — the bands are
- * the same wave seen in hue.
+ * One element, not a grid of them. The dots are a repeating radial-gradient
+ * used as a mask, and what moves underneath is a single wide linear gradient
+ * — so the wave is the gradient sliding past a stationary mask. At this
+ * density a real grid would be thousands of separately animated nodes, which
+ * is a lot of compositing for a placeholder.
  *
  * The palette is the modality one from the usage chart, so a generation in
- * flight is tinted the same blue/pink/amber the finished run is counted in.
+ * flight is tinted the blue, pink and amber its finished run is counted in.
  */
 @keyframes sequel-dot-wave {
-  0%,
-  100% {
-    transform: scale(0.45);
-    background-color: var(--chart-image);
-    opacity: 0.22;
+  from {
+    background-position: 0% 50%;
   }
-  30% {
-    transform: scale(1);
-    background-color: var(--chart-video);
-    opacity: 0.95;
-  }
-  60% {
-    transform: scale(0.75);
-    background-color: var(--chart-audio);
-    opacity: 0.55;
+  to {
+    background-position: 200% 50%;
   }
 }
 
 .dot-wave {
-  display: grid;
   width: 100%;
   height: 100%;
-  /* Stretch across, centre down: the dot fills its column and stays centred
-     in a row that is taller than it. place-items:center would shrink-wrap it
-     instead, and `width:100%` of an auto width collapses to nothing. */
-  justify-items: stretch;
-  align-items: center;
-  /* Fixed, not a percentage — grid gaps resolve against the container, so
-     `6%` of a 360px box is a 22px gutter between 20px dots. */
-  gap: 3px;
-  padding: 6%;
+  /* Card colour as the trough: the field dims to the background between
+     crests rather than cycling endlessly through saturated hues. */
+  background-image: linear-gradient(
+    115deg,
+    var(--color-card) 0%,
+    var(--color-card-hover) 10%,
+    var(--chart-image) 24%,
+    var(--chart-video) 38%,
+    var(--chart-audio) 50%,
+    var(--color-card-hover) 64%,
+    var(--color-card) 78%,
+    var(--color-card) 100%
+  );
+  background-size: 260% 260%;
+  animation: sequel-dot-wave 3s linear infinite;
+
+  /* 1.1px dots on a 4px pitch. Shrink the pitch for denser, raise the radius
+     for heavier — they are independent. */
+  --sequel-dot: radial-gradient(circle at center, #000 1.1px, transparent 1.4px);
+  -webkit-mask-image: var(--sequel-dot);
+  mask-image: var(--sequel-dot);
+  -webkit-mask-size: 4px 4px;
+  mask-size: 4px 4px;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
 }
 
-.dot-wave > span {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  background-color: var(--chart-image);
-  animation: sequel-dot-wave 2.4s ease-in-out infinite;
-  /* Promoted once rather than per frame: this is a few hundred nodes. */
-  will-change: transform, opacity;
+@media (prefers-reduced-motion: reduce) {
+  .dot-wave {
+    animation: none;
+    background-image: linear-gradient(115deg, var(--color-card-hover), var(--chart-image));
+  }
 }
 
 /*
@@ -237,14 +239,6 @@ body {
   .dot-pulse > span {
     animation: none;
     opacity: 0.55;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dot-wave > span {
-    animation: none;
-    opacity: 0.4;
-    transform: scale(0.7);
   }
 }
 

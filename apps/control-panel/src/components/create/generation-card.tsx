@@ -38,34 +38,13 @@ function aspect(input: Record<string, unknown> | undefined): string {
 }
 
 /**
- * The dot field, sized so the cells come out roughly square.
+ * The dot field.
  *
- * Columns are fixed and rows follow the aspect ratio, which keeps the dots
- * round in a 16:9 frame as well as a 1:1 one. The delay runs along the
- * diagonal, so one wavefront crosses the field per cycle.
+ * No props and no children: density, dot size and the wave all live in CSS
+ * now, because the field is a masked gradient rather than a grid of nodes.
  */
-function DotWave({ ratio }: { ratio: string }) {
-  const [w = 1, h = 1] = ratio.split('/').map((part) => Number(part.trim()) || 1);
-  const cols = 14;
-  const rows = Math.max(6, Math.min(24, Math.round((cols * h) / w)));
-
-  const dots: React.ReactNode[] = [];
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      dots.push(
-        <span
-          key={`${row}-${col}`}
-          style={{ animationDelay: `-${((col + row) * 0.09).toFixed(2)}s` }}
-        />,
-      );
-    }
-  }
-
-  return (
-    <div className="dot-wave" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {dots}
-    </div>
-  );
+function DotWave() {
+  return <div className="dot-wave" />;
 }
 
 export function GenerationPending({
@@ -87,7 +66,7 @@ export function GenerationPending({
         className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
         style={{ aspectRatio: ratio }}
       >
-        <DotWave ratio={ratio} />
+        <DotWave />
       </div>
       <div className="mt-2 text-[12px] text-[var(--color-dim)]">
         Generating with <code className="font-mono">{model}</code>
@@ -127,7 +106,7 @@ export function GenerationResult({
           className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
           style={{ aspectRatio: '16 / 9' }}
         >
-          <DotWave ratio="16 / 9" />
+          <DotWave />
         </div>
         <div className="mt-2 text-[12px] text-[var(--color-dim)]">
           {result.status === 'in_progress'
