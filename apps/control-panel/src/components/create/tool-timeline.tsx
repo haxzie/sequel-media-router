@@ -46,6 +46,37 @@ function actionInfo(part: ToolPart): string | null {
 }
 
 /**
+ * A stylised brain: two lobes, a fissure, and one fold each side.
+ *
+ * Two earlier attempts drew the bumpy outline a brain actually has, with
+ * arcs and then with beziers, and both rasterised to a plain circle — at
+ * 15px a bulge of 0.7 units in a 16-unit box is about 0.65px on screen and
+ * simply disappears. The folds survive because they are interior strokes
+ * with clear space around them, so they are what carries the meaning here.
+ */
+function BrainIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+      className="h-full w-full"
+      stroke="currentColor"
+      strokeWidth={1.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Wider than tall, which is the one proportion that reads as a brain
+          and not a head. */}
+      <ellipse cx="8" cy="8" rx="5.9" ry="5.2" />
+      <path d="M8 2.8v10.4" />
+      <path d="M5.3 5.5c1.4.4 2 1.4 1.8 2.9" />
+      <path d="M10.7 5.5c-1.4.4-2 1.4-1.8 2.9" />
+    </svg>
+  );
+}
+
+/**
  * One glyph per tool, in place of a status dot.
  *
  * The dot said only 'this finished', which the timing beside it already
@@ -128,7 +159,7 @@ function isDone(state: string) {
  * Tenths matter when a call takes two seconds and read like noise when it
  * takes ninety.
  */
-function duration(ms: number): string {
+export function duration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 10_000) return `${(ms / 1000).toFixed(1)}s`;
   if (ms < 60_000) return `${Math.round(ms / 1000)}s`;
@@ -307,12 +338,7 @@ export function ToolTimeline({
         <div className="pt-1">
           {/* The rail is one continuous line behind the dots, so the calls
               read as a sequence rather than a list of unrelated rows. */}
-          <ol className="relative">
-            <span
-              className="absolute left-[5px] top-3 bottom-3 w-px bg-[var(--color-line)]"
-              aria-hidden
-            />
-
+          <ol>
             {parts.map((part, position) => {
               if (!isTool(part)) {
                 const key = `reasoning-${position}`;
@@ -320,14 +346,15 @@ export function ToolTimeline({
                 return (
                   <li key={key} className="relative pl-6">
                     <span
-                      className="absolute left-[2px] top-[13px] h-[7px] w-[7px] rounded-full ring-[3px] ring-[var(--color-bg)]"
-                      style={{ background: 'var(--color-line-strong)' }}
+                      className="absolute -left-[2px] top-[6px] h-[15px] w-[15px] text-[var(--color-line-strong)]"
                       aria-hidden
-                    />
+                    >
+                      <BrainIcon />
+                    </span>
                     <button
                       type="button"
                       onClick={() => setExpanded(isOpen ? null : key)}
-                      className="nav-item flex items-center gap-2 py-2 text-left"
+                      className="nav-item flex items-center gap-2 py-1 text-left"
                     >
                       <span className="text-[12.5px] text-[var(--color-muted)]">Thought</span>
                       <svg
@@ -368,10 +395,9 @@ export function ToolTimeline({
               return (
                 <li key={part.toolCallId} className="relative pl-6">
                   {/* Colour still carries the status, now on the glyph rather
-                      than beside it. The background ring punches a hole in the
-                      rail so the icon sits on the line, not over it. */}
+                      than beside it. */}
                   <span
-                    className="absolute left-0 top-[9px] h-[11px] w-[11px] bg-[var(--color-bg)] px-px"
+                    className="absolute -left-[2px] top-[6px] h-[15px] w-[15px]"
                     style={{
                       color: failed
                         ? 'var(--status-failed)'
@@ -389,7 +415,7 @@ export function ToolTimeline({
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : part.toolCallId)}
-                    className="nav-item flex min-w-0 items-center gap-2 py-2 text-left"
+                    className="nav-item flex min-w-0 items-center gap-2 py-1 text-left"
                   >
                     {/* What it said it was doing, where it said. The tool name
                         stays alongside either way — it is the thing you scan

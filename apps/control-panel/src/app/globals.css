@@ -200,6 +200,46 @@ body {
   will-change: transform, opacity;
 }
 
+/*
+ * Streaming indicator: a 3x3 grid pulsing on a diagonal.
+ *
+ * Same idea as the generation placeholder but stripped down — no colour
+ * cycling, because this sits inline next to a running clock and a shifting
+ * hue there would pull the eye off the conversation.
+ */
+@keyframes sequel-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.65);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dot-pulse {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.dot-pulse > span {
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: sequel-dot-pulse 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-pulse > span {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dot-wave > span {
     animation: none;

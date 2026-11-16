@@ -8,7 +8,44 @@ import { useEffect, useRef, useState } from 'react';
 import { Streamdown } from 'streamdown';
 import { Composer, type Attachment } from './composer';
 import { GenerationPending, GenerationResult, type RunResult } from './generation-card';
-import { ToolTimeline, type ToolPart, type TracePart } from './tool-timeline';
+import { duration, ToolTimeline, type ToolPart, type TracePart } from './tool-timeline';
+
+/**
+ * The turn is running, and how long it has been running for.
+ *
+ * Shown from the moment you send until the stream settles, which includes
+ * the stretch before the first tool call when the model is only thinking and
+ * the trace has nothing in it yet — the gap that used to read as nothing
+ * happening.
+ */
+function StreamingIndicator({ startedAt }: { startedAt: number }) {
+  const [, tick] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => tick((n) => n + 1), 100);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2.5 text-[var(--color-muted)]">
+      <span className="dot-pulse" aria-hidden>
+        {Array.from({ length: 9 }, (_, index) => (
+          <span
+            key={index}
+            // Diagonal, so the pulse travels rather than blinking as a block.
+            style={{
+              animationDelay: `-${(((index % 3) + Math.floor(index / 3)) * 0.12).toFixed(2)}s`,
+            }}
+          />
+        ))}
+      </span>
+      <span className="nums text-[13px] text-[var(--color-dim)]">
+        {duration(Date.now() - startedAt)}
+      </span>
+      <span className="sr-only">Working</span>
+    </div>
+  );
+}
 
 /**
  * Separates what you typed from the attachment list appended for the model.
@@ -50,6 +87,9 @@ export function CreateChat({
 }) {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  // When the current turn was asked for, so the indicator can count up. Null
+  // between turns.
+  const [startedAt, setStartedAt] = useState<number | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
   /*
@@ -76,6 +116,12 @@ export function CreateChat({
     bottom.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const busyNow = status === 'submitted' || status === 'streaming';
+  useEffect(() => {
+    // Clear on settle so a finished turn does not leave a frozen clock.
+    if (!busyNow) setStartedAt(null);
+  }, [busyNow]);
+
   const busy = status === 'submitted' || status === 'streaming';
   const empty = messages.length === 0;
 
@@ -101,6 +147,7 @@ export function CreateChat({
         attachments.map((file) => `- ${file.name} (${file.mime}): ${file.url}`).join('\n')
       : '';
 
+    setStartedAt(Date.now());
     void sendMessage({
       text: trimmed + note,
       files: attachments.map((file) => ({
@@ -176,9 +223,7 @@ export function CreateChat({
           />
         ))}
 
-        {status === 'submitted' && (
-          <div className="text-[13px] text-[var(--color-dim)]">Thinking…</div>
-        )}
+        {busy && startedAt !== null && <StreamingIndicator startedAt={startedAt} />}
 
         {error && (
           <div className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]">
