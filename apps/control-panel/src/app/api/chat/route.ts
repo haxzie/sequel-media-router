@@ -152,6 +152,21 @@ export async function POST(request: Request) {
   });
   if (!chat) return Response.json({ error: 'Not found' }, { status: 404 });
 
+  /*
+   * Persist what they said before generating a reply to it.
+   *
+   * Waiting for onFinish meant a turn that never finished — a reload, a
+   * navigation, a dropped connection, a server restart — took the person's
+   * own message down with it. The chat row and its title were written here
+   * and the messages were not, so the link resolved to a titled, empty chat
+   * and looked broken.
+   *
+   * saveMessages replaces the whole conversation, so running it twice a turn
+   * is idempotent; the onFinish call supersedes this one with the reply
+   * attached.
+   */
+  await saveMessages(chatId, messages);
+
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiKey = process.env.CLOUDFLARE_API_TOKEN;
   if (!accountId || !apiKey) {
