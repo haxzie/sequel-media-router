@@ -374,7 +374,7 @@ export class Forge {
         ai: this.requireAi(),
         storeAsset: async (opts) => this.storeAsset(opts),
       };
-      const output = await model.run(input, ctx);
+      const output = await runWithFlakyFilterRetry(() => model.run(input, ctx));
       const first = output.assets[0];
 
       // A run that produced no asset has not succeeded, whatever the provider
@@ -649,6 +649,52 @@ const actionInfo = z
       '"Checking the edit parameters", "Generating the scarf". ' +
       'Write it in the present tense. Do not restate the arguments.',
   );
+
+/**
+ * Cloudflare's prompt safety classifier answers differently to the same input.
+ *
+ * Measured on 2026-11-16: the identical prompt 'A high-quality product photo
+ * of a white ceramic mug on a seamless white background, studio lighting,
+ * centered, realistic' sent eight times in one batch came back six completed
+ * and two blocked for NSFW content. Byte-identical input, two verdicts.
+ */
+const FLAKY_SAFETY_BLOCK = /Input prompt contains NSFW content/i;
+
+/** Total attempts for a run the filter blocks. At a measured ~25% block rate
+ *  this takes the chance of a spurious failure from 1 in 4 to about 1 in 60. */
+const SAFETY_ATTEMPTS = 3;
+
+/**
+ * Retry a run that the safety filter blocked, unchanged.
+ *
+ * This compensates for a flaky classifier; it does not evade one. The prompt
+ * is resent exactly as written, the filter runs again in full, and a prompt
+ * it genuinely objects to is blocked again — three times, and the failure
+ * stands and says how many attempts it took. It is the same thing a person
+ * does when they press the button again, which is the only reason the
+ * inconsistency has been survivable up to now.
+ */
+async function runWithFlakyFilterRetry<T>(run: () => Promise<T>): Promise<T> {
+  let last: unknown;
+
+  for (let attempt = 1; attempt <= SAFETY_ATTEMPTS; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      last = error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (!FLAKY_SAFETY_BLOCK.test(message)) throw error;
+
+      if (attempt === SAFETY_ATTEMPTS) {
+        throw new Error(
+          `${message} Blocked on all ${SAFETY_ATTEMPTS} attempts, so this is likely the prompt rather than the filter misfiring — try rewording it.`,
+        );
+      }
+    }
+  }
+
+  throw last;
+}
 
 /** Zod schemas for the five tools, shared by the MCP endpoint and the REST routes. */
 export const toolSchemas = {
