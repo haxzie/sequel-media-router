@@ -191,13 +191,11 @@ export function ToolTimeline({
         onClick={() => setOpen((was) => !was)}
         className="nav-item flex items-center gap-2 text-left text-[13px]"
       >
-        {running ? (
+        {/* Only while it is working. A settled turn needs no status light —
+            'Worked for 12s' already says it finished, and 'Stopped' says it
+            did not. */}
+        {running && (
           <span className="spin-slow h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[var(--color-line-strong)] border-t-[var(--status-running)]" />
-        ) : (
-          <span
-            className="h-[6px] w-[6px] shrink-0 rounded-full"
-            style={{ background: stopped ? 'var(--status-queued)' : 'var(--status-done)' }}
-          />
         )}
 
         <span className={running ? 'text-[var(--color-text)]' : 'text-[var(--color-muted)]'}>
@@ -268,16 +266,12 @@ export function ToolTimeline({
                         />
                       </svg>
                     </button>
+                    {/* Prose, not JSON — the one item in the trace written to
+                        be read, so it gets no panel around it. */}
                     {isOpen && (
-                      <div className="mb-2">
-                        {/* Prose, not JSON — it is the one item in the trace
-                            written to be read. */}
-                        <div className="overflow-hidden rounded-lg bg-[var(--color-card)]">
-                          <p className="scroll-area max-h-[180px] overflow-auto whitespace-pre-wrap px-2.5 py-2 text-[12px] leading-relaxed text-[var(--color-muted)]">
-                            {part.text}
-                          </p>
-                        </div>
-                      </div>
+                      <p className="scroll-area mb-2 max-h-[180px] overflow-auto whitespace-pre-wrap text-[12px] leading-relaxed text-[var(--color-muted)]">
+                        {part.text}
+                      </p>
                     )}
                   </li>
                 );
