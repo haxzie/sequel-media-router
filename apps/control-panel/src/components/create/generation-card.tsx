@@ -37,6 +37,37 @@ function aspect(input: Record<string, unknown> | undefined): string {
   return '1 / 1';
 }
 
+/**
+ * The dot field, sized so the cells come out roughly square.
+ *
+ * Columns are fixed and rows follow the aspect ratio, which keeps the dots
+ * round in a 16:9 frame as well as a 1:1 one. The delay runs along the
+ * diagonal, so one wavefront crosses the field per cycle.
+ */
+function DotWave({ ratio }: { ratio: string }) {
+  const [w = 1, h = 1] = ratio.split('/').map((part) => Number(part.trim()) || 1);
+  const cols = 14;
+  const rows = Math.max(6, Math.min(24, Math.round((cols * h) / w)));
+
+  const dots: React.ReactNode[] = [];
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      dots.push(
+        <span
+          key={`${row}-${col}`}
+          style={{ animationDelay: `-${((col + row) * 0.09).toFixed(2)}s` }}
+        />,
+      );
+    }
+  }
+
+  return (
+    <div className="dot-wave" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      {dots}
+    </div>
+  );
+}
+
 export function GenerationPending({
   input,
 }: {
@@ -48,12 +79,16 @@ export function GenerationPending({
       ? ((input!.input as Record<string, unknown>).prompt as string)
       : null;
 
+  const ratio = aspect(input?.input as Record<string, unknown>);
+
   return (
     <div className="mt-2 max-w-[360px]">
       <div
-        className="sheen w-full rounded-xl border border-[var(--color-line)]"
-        style={{ aspectRatio: aspect(input?.input as Record<string, unknown>) }}
-      />
+        className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
+        style={{ aspectRatio: ratio }}
+      >
+        <DotWave ratio={ratio} />
+      </div>
       <div className="mt-2 text-[12px] text-[var(--color-dim)]">
         Generating with <code className="font-mono">{model}</code>
         {prompt && <span className="block truncate">{prompt}</span>}
@@ -89,9 +124,11 @@ export function GenerationResult({
     return (
       <div className="mt-2 max-w-[360px]">
         <div
-          className="sheen w-full rounded-xl border border-[var(--color-line)]"
+          className="w-full overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-card)]"
           style={{ aspectRatio: '16 / 9' }}
-        />
+        >
+          <DotWave ratio="16 / 9" />
+        </div>
         <div className="mt-2 text-[12px] text-[var(--color-dim)]">
           {result.status === 'in_progress'
             ? `Running${result.eta_seconds ? ` · about ${result.eta_seconds}s` : ''} — it will appear in Tasks.`
