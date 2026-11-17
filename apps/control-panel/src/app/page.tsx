@@ -58,19 +58,21 @@ export default async function HomePage() {
 
         {/* Hero. Left-aligned with a long run-up, so the headline has room to
             be the only thing on screen for a moment. */}
-        <section className="pt-24 sm:pt-32">
+        <section className="pt-14 sm:pt-20">
           <Duo
             lead="Meet Sequel"
             tail="Generative media for agents"
-            className="text-[clamp(2.4rem,6vw,4rem)]"
+            className="text-[clamp(2rem,4.4vw,3rem)]"
           />
 
-          <div className="mt-10">
-            <Pill href="#install">Add to your agent</Pill>
+          <div className="mt-8">
+            <Pill href="#install" faces>
+              Add to your agent
+            </Pill>
           </div>
         </section>
 
-        <section className="grid gap-8 pb-24 pt-20 lg:grid-cols-[1.6fr_1fr] lg:items-end">
+        <section className="grid gap-8 pb-20 pt-14 lg:grid-cols-[1.6fr_1fr] lg:items-end">
           <HeroArtifact />
 
           <div className="pb-2">
@@ -211,7 +213,9 @@ export default async function HomePage() {
             className="text-[clamp(1.8rem,4vw,2.8rem)]"
           />
           <div className="mt-10">
-            <Pill href="#install">Add to your agent</Pill>
+            <Pill href="#install" faces>
+              Add to your agent
+            </Pill>
           </div>
         </section>
 
