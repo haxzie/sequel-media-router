@@ -40,13 +40,17 @@ export default async function HomePage() {
 
       <div className="mx-auto max-w-[1180px] px-6">
         <header className="flex items-center justify-between py-5">
-          <span className="text-[15px] font-medium tracking-tight">Sequel</span>
+          {/* Wordmark and links as one group on the left, the way a product
+              nav reads — the links belong to the brand, not to the gap. */}
+          <div className="flex items-center gap-8">
+            <span className="text-[15px] font-medium tracking-tight">Sequel</span>
 
-          <nav className="hidden items-center gap-7 text-[14px] text-[var(--color-muted)] md:flex">
-            <a href="#how" className="transition-colors hover:text-[var(--color-text)]">How it works</a>
-            <a href="#models" className="transition-colors hover:text-[var(--color-text)]">Models</a>
-            <a href="#install" className="transition-colors hover:text-[var(--color-text)]">Install</a>
-          </nav>
+            <nav className="hidden items-center gap-6 text-[14px] text-[var(--color-muted)] md:flex">
+              <a href="#how" className="transition-colors hover:text-[var(--color-text)]">How it works</a>
+              <a href="#models" className="transition-colors hover:text-[var(--color-text)]">Models</a>
+              <a href="#install" className="transition-colors hover:text-[var(--color-text)]">Install</a>
+            </nav>
+          </div>
 
           <div className="flex items-center gap-3">
             <Link href={home} className="text-[14px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]">
