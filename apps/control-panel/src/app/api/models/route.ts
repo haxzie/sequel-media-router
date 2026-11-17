@@ -1,4 +1,5 @@
 import { getForge } from '@/lib/forge';
+import { requireActor } from '@/lib/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,9 @@ export async function GET(request: Request) {
 
 /** Toggle a model on or off. */
 export async function PATCH(request: Request) {
+  const gate = await requireActor(request);
+  if ('response' in gate) return gate.response;
+
   const forge = getForge();
   const { id, enabled } = (await request.json()) as { id?: string; enabled?: boolean };
   if (!id || typeof enabled !== 'boolean') {

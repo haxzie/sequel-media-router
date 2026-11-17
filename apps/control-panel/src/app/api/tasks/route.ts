@@ -1,4 +1,5 @@
 import { resolveActor } from '@/lib/actor';
+import { requireActor } from '@/lib/guard';
 import { getForge } from '@/lib/forge';
 import type { TaskStatus } from '@sequel/core';
 
@@ -76,13 +77,16 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { model?: string; input?: Record<string, unknown> };
   if (!body.model) return Response.json({ error: 'model is required' }, { status: 400 });
 
+  // Running a model spends money, so it is not anonymous.
+  const gate = await requireActor(request);
+  if ('response' in gate) return gate.response;
+
   try {
-    const createdBy = await resolveActor(request);
     return Response.json(
       await forge.runModel({
         model: body.model,
         input: body.input ?? {},
-        ...(createdBy ? { createdBy } : {}),
+        createdBy: gate.actor,
       }),
     );
   } catch (error) {
