@@ -3,7 +3,7 @@ import { allModels, audioModels, imageModels, videoModels } from '@sequel/models
 import Link from 'next/link';
 import { HeroArtifact } from '@/components/landing/hero-artifact';
 import { InstallButton } from '@/components/landing/install-button';
-import { Wordmark } from '@/components/landing/mark';
+import { Arcs, Wordmark } from '@/components/landing/mark';
 import { Nav } from '@/components/landing/nav';
 import { TryIt } from '@/components/landing/try-it';
 import { Duo, Marker, Pill, Section } from '@/components/landing/parts';
@@ -11,9 +11,9 @@ import { baseUrl } from '@/lib/forge';
 import { getSession } from '@/lib/session';
 
 export const metadata = {
-  title: 'Sequel — generative media for agents',
+  title: 'Sequel — media is a tool call now',
   description:
-    'Image, video and audio models behind one MCP server. Your agent searches the catalogue, reads the schema, and generates. One connection, one bill, every run attributed.',
+    'Media is a tool call now. Image, video and audio models behind one MCP server — your agent searches the catalogue, reads the schema, and generates. One connection, one bill, every run attributed.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -56,44 +56,56 @@ export default async function HomePage() {
         </header>
 
         {/* Hero. Left-aligned with a long run-up, so the headline has room to
-            be the only thing on screen for a moment. */}
-        <section className="pt-14 sm:pt-20">
-          <Duo
-            lead="Meet Sequel"
-            tail="Generative media for agents"
-            className="text-[clamp(2rem,4.4vw,3rem)]"
-          />
+            be the only thing on screen for a moment.
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Pill href="#install" faces>
-              Add to your agent
-            </Pill>
-            <Pill href="/docs" tone="ghost">
-              Build with Sequel
-            </Pill>
-          </div>
-        </section>
+            The arcs are clipped by this box rather than by the headline's own
+            section: a quarter circle needs the height of the artifact below it
+            to read as one curve, and against the headline alone it stops in
+            mid-air. */}
+        <div className="relative overflow-hidden">
+          {/* The mark, enlarged past the point of being a logo. Three arcs
+              enter at the top and leave to the right, holding the empty half
+              of the hero without asking to be read. */}
+          <Arcs className="pointer-events-none absolute -top-[120px] right-[-170px] hidden h-[860px] w-[860px] text-[var(--color-text)] opacity-[0.07] lg:block" />
 
-        <section className="grid gap-8 pb-20 pt-14 lg:grid-cols-[1.6fr_1fr] lg:items-end">
-          <HeroArtifact />
-
-          <div className="pb-2">
+          <section className="relative pt-14 sm:pt-20">
             <Duo
-              lead="Ship generation today."
-              tail={`${COUNTS.all} models, one connection, every run accounted for.`}
-              className="text-[clamp(1.35rem,2.4vw,1.75rem)]"
+              lead="Media is a tool call now."
+              tail="Generative media stack for your agents"
+              className="text-[clamp(2rem,4.4vw,3rem)]"
             />
 
-            <p className="mt-6 text-[12px] uppercase tracking-wide text-[var(--color-dim)]">Includes</p>
-            <ul className="mt-3 space-y-2 text-[14px] text-[var(--color-muted)]">
-              {['Semantic model search', 'Schemas on demand', 'Batch generation', 'Webhooks', 'Per-run attribution'].map(
-                (item) => (
-                  <li key={item}>{item}</li>
-                ),
-              )}
-            </ul>
-          </div>
-        </section>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Pill href="#install" faces>
+                Add to your agent
+              </Pill>
+              <Pill href="/docs" tone="ghost">
+                Build with Sequel
+              </Pill>
+            </div>
+          </section>
+
+          <section className="relative grid gap-8 pb-20 pt-14 lg:grid-cols-[1.6fr_1fr] lg:items-end">
+            <HeroArtifact />
+
+            <div className="pb-2">
+              <Duo
+                lead="Ship generation today."
+                tail={`${COUNTS.all} models, one connection, every run accounted for.`}
+                className="text-[clamp(1.35rem,2.4vw,1.75rem)]"
+              />
+
+              <p className="mt-6 text-[12px] uppercase tracking-wide text-[var(--color-dim)]">Includes</p>
+              <ul className="mt-3 space-y-2 text-[14px] text-[var(--color-muted)]">
+                {['Semantic model search', 'Schemas on demand', 'Batch generation', 'Webhooks', 'Per-run attribution'].map(
+                  (item) => (
+                    <li key={item}>{item}</li>
+                  ),
+                )}
+              </ul>
+            </div>
+          </section>
+        </div>
 
         <Section id="how">
           <Marker n="01" label="Discover" />
@@ -231,10 +243,14 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <section className="border-t border-[var(--color-line)] py-24">
+        <section className="relative overflow-hidden border-t border-[var(--color-line)] py-24">
+          {/* Mirrored and entering from the left, so the page is bracketed by
+              the mark rather than wearing it twice in the same corner. */}
+          <Arcs className="pointer-events-none absolute -bottom-[280px] left-[-240px] hidden h-[720px] w-[720px] -scale-x-100 text-[var(--color-text)] opacity-[0.055] lg:block" />
+
           <Duo
             lead="One command,"
-            tail="and your agent can make things."
+            tail="and every prompt gets a sequel."
             className="text-[clamp(1.8rem,4vw,2.8rem)]"
           />
           {/* The same pair as the hero: the closing ask should offer both

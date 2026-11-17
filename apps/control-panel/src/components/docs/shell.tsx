@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Wordmark } from '@/components/landing/mark';
+import { Arcs, Wordmark } from '@/components/landing/mark';
 import { DOC_SECTIONS, href } from './nav';
 
 /**
@@ -12,7 +12,12 @@ import { DOC_SECTIONS, href } from './nav';
  */
 export function DocsShell({ slug, children }: { slug: string; children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-[1180px] px-6">
+    <div className="relative mx-auto max-w-[1180px] px-6">
+      {/* Fainter than the home page's. Docs are read rather than looked at,
+          and a texture behind a code block is a distraction with a brand
+          justification. */}
+      <Arcs className="pointer-events-none absolute -top-[180px] right-[-280px] hidden h-[720px] w-[720px] text-[var(--color-text)] opacity-[0.04] xl:block" />
+
       <header className="flex items-center justify-between border-b border-[var(--color-line)] py-5">
         <div className="flex items-center gap-8">
           <Link href="/">

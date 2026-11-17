@@ -23,48 +23,52 @@ import { Mark } from './mark';
 interface Case {
   prompt: string;
   model: string;
-  /** Drives the dot colour, matching the usage chart's modality series. */
-  modality: 'image' | 'video' | 'audio';
+  /** Slug into the vendored marks, the same key the catalogue uses. */
+  provider: string;
   cost: string;
-  basis: string;
 }
 
 const CASES: Case[] = [
   {
     prompt: 'An amber glass vase lit from above, black backdrop',
     model: 'FLUX.1 [schnell]',
-    modality: 'image',
+    provider: 'black-forest-labs',
     cost: '$0.000634',
-    basis: 'cheapest image model',
   },
   {
     prompt: 'A poster that reads SEQUEL in heavy type',
     model: 'Lucid Origin',
-    modality: 'image',
+    provider: 'leonardo',
     cost: '$0.063492',
-    basis: 'renders legible text',
   },
   {
     prompt: 'Six seconds of a desk lamp flickering on, slow push in',
     model: 'Hailuo 2.3',
-    modality: 'video',
+    provider: 'minimax',
     cost: '$0.28',
-    basis: 'video under $0.30',
   },
   {
     prompt: 'A warm lo-fi loop for a product walkthrough',
     model: 'MiniMax Music 2.6',
-    modality: 'audio',
+    provider: 'minimax',
     cost: '$0.15',
-    basis: 'instrumental track',
   },
 ];
 
-const DOT = {
-  image: 'var(--chart-image)',
-  video: 'var(--chart-video)',
-  audio: 'var(--chart-audio)',
-} as const;
+/*
+ * The same vendored marks the catalogue uses, on the same white tile — no
+ * third-party request at render time, and monochrome logos stay legible on a
+ * dark card. Leonardo has no usable asset anywhere, so it keeps the tinted
+ * monogram the model browser falls back to rather than borrowing a wrong one.
+ */
+const PROVIDER_LOGO: Record<string, string> = {
+  'black-forest-labs': '/providers/black-forest-labs.svg',
+  minimax: '/providers/minimax.svg',
+};
+
+const PROVIDER_TONE: Record<string, string> = {
+  leonardo: 'var(--color-pink)',
+};
 
 type Phase = 'typing' | 'searching' | 'picked' | 'erasing';
 
@@ -132,7 +136,8 @@ export function TryIt() {
 
   const resting = !playing;
   const text = resting ? current.prompt : typed;
-  const decided = resting || phase === 'picked' || phase === 'erasing';
+  const decided =
+    resting || phase === 'picked' || (phase === 'erasing' && typed.length > 0);
 
   return (
     <div className="relative mt-14 overflow-hidden rounded-3xl border border-[var(--color-line)]">
@@ -143,13 +148,13 @@ export function TryIt() {
         src="/landing/03.jpg"
         alt=""
         aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-90 saturate-0 brightness-[2.4] contrast-[0.8]"
+        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover saturate-0 brightness-[3.8] contrast-[0.7]"
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'linear-gradient(to bottom, color-mix(in oklab, var(--color-bg) 70%, transparent), transparent 42%, color-mix(in oklab, var(--color-bg) 85%, transparent))',
+            'linear-gradient(to bottom, color-mix(in oklab, var(--color-bg) 55%, transparent), transparent 42%, color-mix(in oklab, var(--color-bg) 70%, transparent))',
         }}
       />
 
@@ -186,13 +191,10 @@ export function TryIt() {
             <div className="mt-3 flex items-center justify-between gap-3">
               {/* Where a model picker sits in a chat composer — except the
                   catalogue fills it in, which is the whole product. */}
-              <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 py-1.5 pl-2.5 pr-3">
+              <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 py-1.5 pl-1.5 pr-3">
                 {decided ? (
                   <>
-                    <span
-                      className="h-[6px] w-[6px] shrink-0 rounded-full"
-                      style={{ background: DOT[current.modality] }}
-                    />
+                    <ProviderTile provider={current.provider} model={current.model} />
                     <span className="truncate text-[12.5px] text-[var(--color-text)]">
                       {current.model}
                     </span>
@@ -224,14 +226,34 @@ export function TryIt() {
             </div>
           </div>
         </div>
-
-        <p
-          aria-hidden
-          className="mx-auto mt-5 max-w-[600px] text-center text-[12.5px] text-[var(--color-dim)]"
-        >
-          {decided ? `Picked because it is the ${current.basis}.` : 'Searching the catalogue…'}
-        </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * The provider's mark, on the white tile the catalogue uses, sized down to sit
+ * inside a pill. A provider with no vendored mark gets its initial on a tinted
+ * tile — the same fallback the model browser makes, for the same reason.
+ */
+function ProviderTile({ provider, model }: { provider: string; model: string }) {
+  const logo = PROVIDER_LOGO[provider];
+
+  if (logo) {
+    return (
+      <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} alt="" className="h-[11px] w-[11px] object-contain" />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md text-[10px] font-semibold uppercase text-[#0a0a0a]"
+      style={{ background: PROVIDER_TONE[provider] ?? 'var(--color-muted)' }}
+    >
+      {model.slice(0, 1)}
+    </span>
   );
 }

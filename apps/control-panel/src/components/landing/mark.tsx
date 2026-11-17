@@ -22,3 +22,43 @@ export function Wordmark({ className = '' }: { className?: string }) {
     </span>
   );
 }
+
+/**
+ * The mark again, at the size of the page rather than the size of a word.
+ *
+ * Same three concentric arcs, same 11:7:3 radii, but drawn as strokes and
+ * entered from the top so they sweep out to the right of the headline. It is
+ * set low enough to be a texture rather than a second logo — if a reader
+ * notices it as a logo, it is too strong.
+ */
+export function Arcs({ className = '' }: { className?: string }) {
+  /* The mark's gaps are even, and so are these. They are closer together
+     than the mark's, because at this size the innermost ring of a 11:7:3 set
+     falls off the bottom of the frame and only two arcs ever show. */
+  const radii = [400, 300, 200];
+
+  return (
+    <svg
+      viewBox="0 0 420 420"
+      fill="none"
+      aria-hidden
+      className={className}
+      /* The arcs run past the bottom of whatever box clips them, and a
+         quarter circle cut flat across reads as a mistake. Fading them out
+         instead lets them leave the frame rather than stop in it. */
+      style={{
+        maskImage: 'linear-gradient(to bottom, #000 45%, transparent 92%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, #000 45%, transparent 92%)',
+      }}
+    >
+      {radii.map((r) => (
+        <path
+          key={r}
+          d={`M20 ${420 - r}A${r} ${r} 0 0 1 ${20 + r} 420`}
+          stroke="currentColor"
+          strokeWidth="16"
+        />
+      ))}
+    </svg>
+  );
+}
