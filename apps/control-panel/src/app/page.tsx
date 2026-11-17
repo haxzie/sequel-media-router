@@ -216,9 +216,14 @@ export default async function HomePage() {
             tail="and your agent can make things."
             className="text-[clamp(1.8rem,4vw,2.8rem)]"
           />
-          <div className="mt-10">
+          {/* The same pair as the hero: the closing ask should offer both
+              doors, not narrow to one. */}
+          <div className="mt-10 flex flex-wrap items-center gap-3">
             <Pill href="#install" faces>
               Add to your agent
+            </Pill>
+            <Pill href="/docs" tone="ghost">
+              Build with Sequel
             </Pill>
           </div>
         </section>
