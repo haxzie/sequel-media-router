@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Composio Sequel',
+  title: 'Sequel',
   description: 'One MCP server for image, video and audio generation models.',
 };
 

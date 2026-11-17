@@ -3,6 +3,7 @@ import { allModels, audioModels, imageModels, videoModels } from '@sequel/models
 import Link from 'next/link';
 import { HeroArtifact } from '@/components/landing/hero-artifact';
 import { InstallButton } from '@/components/landing/install-button';
+import { Wordmark } from '@/components/landing/mark';
 import { Nav } from '@/components/landing/nav';
 import { Duo, Marker, Pill, Section } from '@/components/landing/parts';
 import { baseUrl } from '@/lib/forge';
@@ -35,16 +36,12 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <div className="border-b border-[var(--color-line)] py-2.5 text-center text-[13px] text-[var(--color-muted)]">
-        Sequel now connects over OAuth — no API key to paste
-      </div>
-
       <div className="mx-auto max-w-[1180px] px-6">
         <header className="flex items-center justify-between py-5">
           {/* Wordmark and links as one group on the left, the way a product
               nav reads — the links belong to the brand, not to the gap. */}
           <div className="flex items-center gap-8">
-            <span className="text-[15px] font-medium tracking-tight">Sequel</span>
+            <Wordmark />
 
             <Nav />
           </div>
@@ -229,7 +226,7 @@ export default async function HomePage() {
         </section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-line)] py-8 text-[13px] text-[var(--color-dim)]">
-          <span>Sequel</span>
+          <Wordmark className="text-[var(--color-muted)]" />
           <Link href={home} className="transition-colors hover:text-[var(--color-text)]">
             {session ? 'Dashboard' : 'Sign in'}
           </Link>
