@@ -5,6 +5,7 @@ import { HeroArtifact } from '@/components/landing/hero-artifact';
 import { InstallButton } from '@/components/landing/install-button';
 import { Wordmark } from '@/components/landing/mark';
 import { Nav } from '@/components/landing/nav';
+import { TryIt } from '@/components/landing/try-it';
 import { Duo, Marker, Pill, Section } from '@/components/landing/parts';
 import { baseUrl } from '@/lib/forge';
 import { getSession } from '@/lib/session';
@@ -121,8 +122,31 @@ export default async function HomePage() {
           </div>
         </Section>
 
+        {/* The composer, on a plate of the page's own output. It sits here
+            rather than higher because the three tool calls above are what it
+            replays — the demo is unreadable before you know their names. */}
+        <Section id="try">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr] lg:gap-12">
+            <Marker n="02" label="Try it" />
+
+            <div>
+              <Duo
+                lead="Type the job"
+                tail="and the catalogue picks the model"
+                className="text-[clamp(1.6rem,3.2vw,2.3rem)]"
+              />
+              <p className="mt-5 max-w-[52ch] text-[15px] leading-relaxed text-[var(--color-muted)]">
+                No model id, no provider, no parameter names. A sentence goes in and a priced run
+                comes back — the same three calls your agent makes.
+              </p>
+            </div>
+          </div>
+
+          <TryIt />
+        </Section>
+
         <Section id="models">
-          <Marker n="02" label="Generate" />
+          <Marker n="03" label="Generate" />
           <Duo
             lead={`${COUNTS.all} models, one bill`}
             tail="image, video and audio at published prices"
@@ -168,7 +192,7 @@ export default async function HomePage() {
         </Section>
 
         <Section>
-          <Marker n="03" label="Account for it" />
+          <Marker n="04" label="Account for it" />
           <Duo
             lead="A provider key generates."
             tail="It does not do any of the rest."
@@ -191,7 +215,7 @@ export default async function HomePage() {
         </Section>
 
         <Section id="install">
-          <Marker n="04" label="Connect" />
+          <Marker n="05" label="Connect" />
           <Duo
             lead="Run it from the agent you already use"
             tail="Claude Code, Cursor, ChatGPT, and anything else over MCP"
