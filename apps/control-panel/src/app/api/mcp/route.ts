@@ -5,7 +5,10 @@
  * body; requests get 200 with the response. GET is advertised but we hold no
  * server-initiated stream, so it returns 405 as the spec allows.
  */
-import { resolveActor } from '@/lib/actor';
+import { requireMcpAuth } from '@better-auth/mcp';
+import type { TaskActor } from '@sequel/core';
+import { actorFromClaims, resolveActor } from '@/lib/actor';
+import { getAuth, mcpResource } from '@/lib/auth';
 import { getForge } from '@/lib/forge';
 import { handleMcpMessage } from '@/lib/mcp';
 
@@ -28,12 +31,26 @@ export async function GET() {
   );
 }
 
-export async function POST(request: Request) {
+/** Dispatch the message (or batch) on behalf of whoever sent it. */
+async function dispatch(body: unknown, actor: TaskActor | null) {
   const forge = getForge();
+  const messages = Array.isArray(body) ? body : [body];
+  const responses = [];
 
+  for (const message of messages) {
+    const response = await handleMcpMessage(forge, message as never, actor);
+    if (response) responses.push(response);
+  }
+
+  // Every message was a notification.
+  if (responses.length === 0) return new Response(null, { status: 202, headers: CORS });
+  return Response.json(Array.isArray(body) ? responses : responses[0], { headers: CORS });
+}
+
+export async function POST(request: Request) {
   let body: unknown;
   try {
-    body = await request.json();
+    body = await request.clone().json();
   } catch {
     return Response.json(
       { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } },
@@ -42,21 +59,42 @@ export async function POST(request: Request) {
   }
 
   /*
-   * Resolved once per request, not per message: a batch arrives on one
-   * connection with one credential. Null when the caller sent none — the
-   * endpoint is still open, so the run happens and simply carries no name.
+   * Which door this came through decides how it is authenticated.
+   *
+   * An API key or a dashboard cookie resolves directly. Anything else — a
+   * bearer token, or no credential at all — goes through the OAuth guard,
+   * which either verifies the token or answers 401 with the RFC 9728
+   * challenge naming our resource metadata. That challenge is the whole
+   * mechanism: it is how a client told nothing but a URL discovers where to
+   * authorize. Without it an MCP client fails silently and stays anonymous.
    */
-  const actor = await resolveActor(request);
+  const header = request.headers.get('authorization') ?? '';
+  const bearer = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : '';
+  const resolvesDirectly = bearer.startsWith('sk_sequel_') || Boolean(request.headers.get('cookie'));
 
-  const messages = Array.isArray(body) ? body : [body];
-  const responses = [];
-  for (const message of messages) {
-    const response = await handleMcpMessage(forge, message as never, actor);
-    if (response) responses.push(response);
+  if (resolvesDirectly) {
+    /*
+     * Resolved once per request, not per message: a batch arrives on one
+     * connection with one credential.
+     */
+    const actor = await resolveActor(request);
+    if (actor) return dispatch(body, actor);
+    // A credential that did not resolve is not anonymous, it is wrong. Fall
+    // through so the client gets a challenge rather than a silent success.
   }
 
-  // Every message was a notification.
-  if (responses.length === 0) return new Response(null, { status: 202, headers: CORS });
+  const auth = await getAuth();
+  const guard = requireMcpAuth(
+    auth,
+    async (_request, claims) => dispatch(body, await actorFromClaims(claims)),
+    /*
+     * The resource has to be stated. Left out, requireMcpAuth defaults it to
+     * the auth server's base URL, and the challenge then points clients at
+     * /.well-known/oauth-protected-resource/api/auth — a document describing
+     * the wrong resource, for a path we do not serve.
+     */
+    { resource: mcpResource(), requiredScopes: ['mcp:tools'] },
+  );
 
-  return Response.json(Array.isArray(body) ? responses : responses[0], { headers: CORS });
+  return guard(request);
 }

@@ -9,14 +9,37 @@ export const dynamic = 'force-dynamic';
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ invite?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (await getSession()) redirect('/');
+  const params = await searchParams;
+
+  /*
+   * An MCP client sent them here mid-authorization.
+   *
+   * The authorize endpoint signs its parameters and redirects here when there
+   * is no session. Those parameters are the flow — drop them and the person
+   * signs in successfully and the client is still waiting, with nothing to
+   * tell it why. So they are carried through and handed straight back to
+   * authorize, which verifies its own signature and resumes.
+   */
+  const oauth = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) for (const item of value) oauth.append(key, item);
+    else if (value !== undefined) oauth.append(key, value);
+  }
+  const resuming = Boolean(params.client_id && params.sig);
+  const authorizeURL = `/api/auth/oauth2/authorize?${oauth.toString()}`;
+
+  if (await getSession()) redirect(resuming ? authorizeURL : '/');
 
   // An invite link opened signed-out bounces through here; carry the id so the
   // person lands back on the invitation rather than on an empty dashboard.
-  const { invite } = await searchParams;
-  const callbackURL = invite ? `/invite/${encodeURIComponent(invite)}` : '/';
+  const invite = typeof params.invite === 'string' ? params.invite : undefined;
+  const callbackURL = resuming
+    ? authorizeURL
+    : invite
+      ? `/invite/${encodeURIComponent(invite)}`
+      : '/';
 
   // Rendered server-side: the client must not be able to see whether Google is
   // configured by probing, and an unconfigured button that 500s is worse than

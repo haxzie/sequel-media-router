@@ -4,12 +4,43 @@ import { getAuth } from './auth';
 /**
  * Who is making this request.
  *
- * Three doors lead to a run — the dashboard's session cookie, an API key, and
- * (once enforcement lands) an OAuth access token — and a task should say which
- * one it came through. Returns null rather than throwing: nothing is gated on
- * attribution yet, so an unauthenticated caller still gets a run, it just
- * carries no name.
+ * Three doors lead to a run — the dashboard's session cookie, an API key and
+ * an OAuth access token — and a task should say which one it came through.
+ * Returns null rather than throwing: the caller decides whether a nameless
+ * request is allowed, because the answer differs by endpoint.
  */
+/**
+ * Build an actor from a verified MCP access token.
+ *
+ * The token is already verified by the time this runs — signature, issuer,
+ * audience and scope are the resource guard's job, not this function's. All
+ * that is left is turning the subject into the person it names.
+ */
+export async function actorFromClaims(claims: { sub?: string }): Promise<TaskActor | null> {
+  if (!claims.sub) return null;
+
+  const auth = await getAuth();
+  const user = await lookupUser(auth, claims.sub);
+  if (!user) return null;
+
+  /*
+   * Same organisation rule as an API key, and the same caveat: a token is
+   * issued to a person, not to a team, so the first membership is the one it
+   * runs under. A client cannot choose a team it was never in, but someone in
+   * two teams gets whichever they joined first.
+   */
+  const organizationId = await firstOrganizationId(auth, user.id);
+
+  return {
+    userId: user.id,
+    name: user.name || user.email,
+    email: user.email,
+    image: user.image ?? null,
+    via: 'oauth',
+    ...(organizationId ? { organizationId } : {}),
+  };
+}
+
 export async function resolveActor(request: Request): Promise<TaskActor | null> {
   const auth = await getAuth();
   const header = request.headers.get('authorization') ?? '';

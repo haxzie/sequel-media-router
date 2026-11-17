@@ -83,14 +83,14 @@ export function ApiKeysPanel({ keys }: { keys: ApiKeyView[] }) {
       </div>
 
       {/*
-        Said plainly because a key that looks real and protects nothing is
-        worse than no key at all. /api/mcp is still open.
+        What a key does and does not cover, since the two endpoints no longer
+        behave the same way.
       */}
       <div className="mb-5">
         <Alert tone="info">
-          Nothing gates access on these yet — the MCP endpoint and REST API still answer
-          without one. A key does work for attribution though: a run made with it is recorded
-          against whoever created the key.
+          The MCP endpoint now requires a credential: a key here, or an OAuth connection
+          made from the client itself. The REST API still answers without one. Either way a
+          run is recorded against whoever the credential belongs to.
         </Alert>
       </div>
 
