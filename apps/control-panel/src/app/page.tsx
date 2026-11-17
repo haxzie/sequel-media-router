@@ -3,6 +3,7 @@ import { allModels, audioModels, imageModels, videoModels } from '@sequel/models
 import Link from 'next/link';
 import { HeroArtifact } from '@/components/landing/hero-artifact';
 import { InstallButton } from '@/components/landing/install-button';
+import { Nav } from '@/components/landing/nav';
 import { Duo, Marker, Pill, Section } from '@/components/landing/parts';
 import { baseUrl } from '@/lib/forge';
 import { getSession } from '@/lib/session';
@@ -45,11 +46,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-8">
             <span className="text-[15px] font-medium tracking-tight">Sequel</span>
 
-            <nav className="hidden items-center gap-6 text-[14px] text-[var(--color-muted)] md:flex">
-              <a href="#how" className="transition-colors hover:text-[var(--color-text)]">How it works</a>
-              <a href="#models" className="transition-colors hover:text-[var(--color-text)]">Models</a>
-              <a href="#install" className="transition-colors hover:text-[var(--color-text)]">Install</a>
-            </nav>
+            <Nav />
           </div>
 
           <div className="flex items-center gap-3">
@@ -69,9 +66,12 @@ export default async function HomePage() {
             className="text-[clamp(2rem,4.4vw,3rem)]"
           />
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Pill href="#install" faces>
               Add to your agent
+            </Pill>
+            <Pill href="/docs" tone="ghost">
+              Build with Sequel
             </Pill>
           </div>
         </section>
