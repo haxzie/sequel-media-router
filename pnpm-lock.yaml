@@ -135,6 +135,34 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  packages/sdk-ai-sdk:
+    dependencies:
+      '@sequelsh/core':
+        specifier: workspace:*
+        version: link:../sdk-core
+      ai:
+        specifier: ^7.0.0
+        version: 7.0.173(zod@3.25.76)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/sdk-core:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/ui:
     devDependencies:
       '@types/react':
