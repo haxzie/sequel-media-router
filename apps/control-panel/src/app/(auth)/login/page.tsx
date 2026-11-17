@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/auth/login-form';
 import { EMAIL_IS_CONSOLE_ONLY } from '@/lib/email';
-import { getSession } from '@/lib/session';
+import { getSession, homePath } from '@/lib/session';
 
 export const metadata = { title: 'Sign in — Sequel' };
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,7 @@ export default async function LoginPage({
   const resuming = Boolean(params.client_id && params.sig);
   const authorizeURL = `/api/auth/oauth2/authorize?${oauth.toString()}`;
 
-  if (await getSession()) redirect(resuming ? authorizeURL : '/');
+  if (await getSession()) redirect(resuming ? authorizeURL : await homePath());
 
   // An invite link opened signed-out bounces through here; carry the id so the
   // person lands back on the invitation rather than on an empty dashboard.
@@ -39,7 +39,7 @@ export default async function LoginPage({
     ? authorizeURL
     : invite
       ? `/invite/${encodeURIComponent(invite)}`
-      : '/';
+      : await homePath();
 
   // Rendered server-side: the client must not be able to see whether Google is
   // configured by probing, and an unconfigured button that 500s is worse than

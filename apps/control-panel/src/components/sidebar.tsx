@@ -15,13 +15,14 @@ import { OrgSwitcher } from './org-switcher';
 import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
 
+/** Paths relative to the team, since every one of these lives under it. */
 const NAV = [
-  { href: '/', label: 'Create', icon: PlusIcon },
-  { href: '/mcp', label: 'MCP Server', icon: McpIcon },
-  { href: '/models', label: 'Models', icon: LayersIcon },
-  { href: '/tasks', label: 'Tasks', icon: TasksIcon },
-  { href: '/usage', label: 'Usage', icon: ChartIcon },
-  { href: '/settings', label: 'Settings', icon: SettingsIcon },
+  { path: '', label: 'Create', icon: PlusIcon },
+  { path: '/mcp', label: 'MCP Server', icon: McpIcon },
+  { path: '/models', label: 'Models', icon: LayersIcon },
+  { path: '/tasks', label: 'Tasks', icon: TasksIcon },
+  { path: '/usage', label: 'Usage', icon: ChartIcon },
+  { path: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export interface SidebarUser {
@@ -37,10 +38,13 @@ export interface SidebarOrg {
 }
 
 export function Sidebar({
+  team,
   user,
   organizations,
   activeOrganizationId,
 }: {
+  /** Slug of the team in the URL. Every nav link hangs off it. */
+  team: string;
   user: SidebarUser;
   organizations: SidebarOrg[];
   activeOrganizationId: string | null;
@@ -57,16 +61,17 @@ export function Sidebar({
 
         <nav className="space-y-0.5">
           {NAV.map((item) => {
+            const href = `/${team}${item.path}`;
             // Settings lives under /settings/<tab>, so an exact match would
             // unlight the item the moment you land on one. Create is the
-            // exception: '/' prefixes every path, so it needs an exact match.
-            const active =
-              item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+            // exception: the team root prefixes every path under it, so it
+            // needs an exact match.
+            const active = item.path === '' ? pathname === href : pathname.startsWith(href);
             const Icon = item.icon;
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.path}
+                href={href}
                 className={[
                   'nav-item flex items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] transition-colors',
                   active

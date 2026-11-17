@@ -1,5 +1,7 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import { useChat } from '@ai-sdk/react';
 import { newId } from '@sequel/core/ids';
 import { PageHeader } from '@sequel/ui';
@@ -88,6 +90,7 @@ export function CreateChat({
   chatId?: string;
   initialMessages?: UIMessage[];
 }) {
+  const { team } = useParams<{ team: string }>();
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // When the current turn was asked for, so the indicator can count up. Null
@@ -98,7 +101,7 @@ export function CreateChat({
   /*
    * The id is minted here, before the first message exists.
    *
-   * It lets the URL become /c/<id> the instant you hit send, with
+   * It lets the URL become /<team>/c/<id> the instant you hit send, with
    * replaceState rather than a navigation — a route change would tear down
    * the component and with it the open stream.
    */
@@ -133,7 +136,7 @@ export function CreateChat({
     if (!trimmed || busy) return;
 
     if (!existingChatId && messages.length === 0) {
-      window.history.replaceState(null, '', `/c/${chatId}`);
+      window.history.replaceState(null, '', `/${team}/c/${chatId}`);
     }
 
     /*

@@ -44,13 +44,20 @@ export function OrgSwitcher({
   const active = organizations.find((org) => org.id === activeId) ?? organizations[0];
   if (!active) return null;
 
-  async function select(id: string) {
+  /*
+   * Switching teams is a navigation now, not a state change.
+   *
+   * The team lives in the URL, so the layout sets the active organisation
+   * from the path on arrival. Calling setActive here as well would be a
+   * second source of truth that the next page load would overwrite anyway.
+   */
+  function select(id: string) {
     if (id === activeId) return setOpen(false);
+    const next = organizations.find((org) => org.id === id);
+    if (!next) return setOpen(false);
     setBusy(true);
-    await authClient.organization.setActive({ organizationId: id });
     setOpen(false);
-    setBusy(false);
-    router.refresh();
+    router.push(`/${next.slug}`);
   }
 
   return (

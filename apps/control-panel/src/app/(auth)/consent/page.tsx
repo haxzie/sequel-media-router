@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ConsentForm } from '@/components/auth/consent-form';
 import { getAuth } from '@/lib/auth';
-import { getSession } from '@/lib/session';
+import { getSession, homePath } from '@/lib/session';
 
 export const metadata = { title: 'Authorize — Sequel' };
 export const dynamic = 'force-dynamic';
@@ -41,7 +41,7 @@ export default async function ConsentPage({
 
   // Signed out, or arrived here directly — authorize is the only legitimate
   // way in, and it is the thing that can mint a valid query.
-  if (!clientId || !params.sig) redirect('/');
+  if (!clientId || !params.sig) redirect(await homePath());
   const session = await getSession();
   if (!session) redirect(`/login?${oauthQuery}`);
 

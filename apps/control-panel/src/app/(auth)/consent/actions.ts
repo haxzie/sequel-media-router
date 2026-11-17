@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
+import { homePath } from '@/lib/session';
 
 /**
  * Record the decision and go where the provider says.
@@ -22,5 +23,5 @@ export async function decide(accept: boolean, oauthQuery: string) {
   // A denial redirects too — back to the client with access_denied, which is
   // the answer it is entitled to.
   if (result?.url) redirect(result.url);
-  redirect('/');
+  redirect(await homePath());
 }

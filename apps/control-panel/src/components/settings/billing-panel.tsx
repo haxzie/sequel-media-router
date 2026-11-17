@@ -1,5 +1,7 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import { formatUsd } from '@sequel/core/pricing';
 import { Avatar, Card, ChevronRightIcon } from '@sequel/ui';
 import Link from 'next/link';
@@ -43,6 +45,7 @@ export function BillingPanel({
   availableUsd: string;
   spentUsd: string;
 }) {
+  const { team } = useParams<{ team: string }>();
   const [openId, setOpenId] = useState<string | null>(null);
   const open = credits.find((credit) => credit.id === openId) ?? null;
 
@@ -64,7 +67,7 @@ export function BillingPanel({
           <div className="text-[14px] text-[var(--color-text)]">No recharges yet</div>
           <div className="mt-2 text-[13px] text-[var(--color-muted)]">
             Add funds from{' '}
-            <Link href="/usage" className="text-[var(--color-text)] underline underline-offset-2">
+            <Link href={`/${team}/usage`} className="text-[var(--color-text)] underline underline-offset-2">
               Usage
             </Link>
             .

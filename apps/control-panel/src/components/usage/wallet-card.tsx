@@ -1,5 +1,7 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import { formatUsd, formatUsdRounded } from '@sequel/core/pricing';
 import { Alert, Card, Eyebrow, Field, Modal, PrefixedInput, SubmitButton } from '@sequel/ui';
 import Link from 'next/link';
@@ -14,6 +16,7 @@ interface Wallet {
 const PRESETS = ['10', '25', '100'];
 
 export function WalletCard() {
+  const { team } = useParams<{ team: string }>();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -63,7 +66,7 @@ export function WalletCard() {
           Add funds
         </button>
         <Link
-          href="/settings/billing"
+          href={`/${team}/settings/billing`}
           className="block w-full rounded-full border border-[var(--color-line-strong)] px-4 py-2 text-center text-[13px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
         >
           Billing

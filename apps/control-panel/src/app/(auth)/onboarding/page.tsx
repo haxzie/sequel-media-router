@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { OnboardingForm } from '@/components/auth/onboarding-form';
-import { listOrganizations, requireSession } from '@/lib/session';
+import { homePath, listOrganizations, requireSession } from '@/lib/session';
 
 export const metadata = { title: 'Welcome — Sequel' };
 export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPage() {
   const session = await requireSession();
-  if (session.user.onboardedAt) redirect('/');
+  if (session.user.onboardedAt) redirect(await homePath());
 
   /*
    * Someone who arrived through an invitation already has an organization by

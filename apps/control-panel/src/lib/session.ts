@@ -66,3 +66,16 @@ export async function getActiveOrganization() {
     query: { organizationId: id },
   });
 }
+
+/**
+ * Where a signed-in person belongs: the first team they are a member of.
+ *
+ * The dashboard lives under a team now, so '/' is the public page and there
+ * is no generic signed-in landing spot to send anyone to. Someone in no team
+ * at all goes to onboarding, which is the only thing that can fix that.
+ */
+export async function homePath(): Promise<string> {
+  const organizations = await listOrganizations().catch(() => []);
+  const first = organizations[0];
+  return first ? `/${first.slug}` : '/onboarding';
+}
