@@ -10,13 +10,14 @@ import {
   FileStore,
   Forge,
   LocalUploads,
-  MemoryStore,
   R2Uploads,
   createRegistry,
   type Store,
   type Uploads,
 } from '@sequel/core';
 import { allModels } from '@sequel/models';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { D1Store } from './d1-store';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -57,8 +58,30 @@ const ON_WORKERS =
   typeof navigator !== 'undefined' && navigator.userAgent === 'Cloudflare-Workers';
 
 function buildStore(): Store {
-  // The Workers runtime has no writable filesystem; fall back to memory there.
-  return ON_WORKERS ? new MemoryStore() : new FileStore('.data/store.json');
+  /*
+   * D1 wherever a binding exists, which is both production and `next dev`
+   * (miniflare provides one). The file driver stays for the case it was
+   * written for: a clone with no Cloudflare account at all, where `pnpm dev`
+   * should still run.
+   */
+  return hasD1() ? new D1Store() : new FileStore('.data/store.json');
+}
+
+/**
+ * Is there a D1 binding to use?
+ *
+ * `getCloudflareContext` is async and this is not, so the question is asked
+ * the other way round: on Workers there is always one, and off Workers there
+ * is one exactly when the dev server is running under miniflare — which is
+ * what `next dev` does here, and what a bare `node` script does not.
+ */
+function hasD1(): boolean {
+  if (ON_WORKERS) return true;
+  try {
+    return Boolean(getCloudflareContext().env.DB);
+  } catch {
+    return false;
+  }
 }
 
 function buildUploads(): Uploads {
