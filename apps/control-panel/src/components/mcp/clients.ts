@@ -88,7 +88,7 @@ export const MCP_CLIENTS: McpClient[] = [
     tone: '#000000',
     name: 'Grok Bot',
     method: 'Ask the bot',
-    logo: '/clients/grok.svg',
+    logo: '/clients/grok-bot.svg',
     /* The only client here with no settings screen: a Bot takes a server by
        being told about one in chat, then lists it under Connect apps. */
     target: 'Say this to your bot',

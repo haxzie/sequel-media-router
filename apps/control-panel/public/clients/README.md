@@ -18,10 +18,13 @@ the marks themselves remain trademarks), retrieved 2026-11-15.
 | `bun.svg` | `bun` (2026-11-18) |
 | `nextjs.svg` | `nextdotjs` (2026-11-18) |
 
-`codex.svg`, `grok.svg` and `muse.svg` come from LobeHub's static icon set
-(`@lobehub/icons-static-svg`, retrieved 2026-11-19). Simple Icons carries none
-of the three: it has no Codex entry, no Grok or xAI mark, and no Muse mark —
-and OpenAI's logo is the wrong mark for Codex.
+`codex.svg` and `muse.svg` come from LobeHub's static icon set
+(`@lobehub/icons-static-svg`, retrieved 2026-11-19); Simple Icons has no entry
+for either, and OpenAI's logo is the wrong mark for Codex.
+
+`grok-bot.svg` was supplied directly (2026-11-19). It is a filled disc with
+the glyph cut out of it, so unlike the others it reads as a light avatar on
+the tile rather than a glyph on a brand colour.
 
 Claude Code has its own mark now; it was sharing Claude's.
 
