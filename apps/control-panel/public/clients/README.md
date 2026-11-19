@@ -14,14 +14,14 @@ the marks themselves remain trademarks), retrieved 2026-11-15.
 | `vscode.svg` | `visualstudiocode` |
 | `chatgpt.svg` | `openai` |
 | `gemini.svg` | `googlegemini` |
-| `windsurf.svg` | `windsurf` |
-| `zed.svg` | `zedindustries` |
 | `typescript.svg` | `typescript` (2026-11-18) |
 | `bun.svg` | `bun` (2026-11-18) |
 | `nextjs.svg` | `nextdotjs` (2026-11-18) |
 
-`codex.svg` is LobeHub's Codex mark, supplied directly — Simple Icons has no
-Codex entry, and OpenAI's logo is the wrong mark for it.
+`codex.svg`, `grok.svg` and `muse.svg` come from LobeHub's static icon set
+(`@lobehub/icons-static-svg`, retrieved 2026-11-19). Simple Icons carries none
+of the three: it has no Codex entry, no Grok or xAI mark, and no Muse mark —
+and OpenAI's logo is the wrong mark for Codex.
 
 Claude Code has its own mark now; it was sharing Claude's.
 

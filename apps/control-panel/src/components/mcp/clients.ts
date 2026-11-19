@@ -3,9 +3,9 @@
  *
  * `deepLink` opens the client and prefills the server where one supports it;
  * everything else gets the exact command or config file to paste. The shapes
- * differ more than you would expect — Windsurf wants `serverUrl` rather than
- * `url`, Zed nests headers under `settings`, VS Code uses `servers` not
- * `mcpServers` — so each entry carries its own snippet rather than a template.
+ * differ more than you would expect — VS Code uses `servers` where everyone
+ * else uses `mcpServers`, Cursor base64s its whole config into a deep link —
+ * so each entry carries its own snippet rather than filling a template.
  */
 export interface McpClient {
   id: string;
@@ -84,6 +84,35 @@ export const MCP_CLIENTS: McpClient[] = [
       JSON.stringify({ mcpServers: { sequel: { url } } }, null, 2),
   },
   {
+    id: 'grok-bot',
+    tone: '#000000',
+    name: 'Grok Bot',
+    method: 'Ask the bot',
+    logo: '/clients/grok.svg',
+    /* The only client here with no settings screen: a Bot takes a server by
+       being told about one in chat, then lists it under Connect apps. */
+    target: 'Say this to your bot',
+    snippet: (url) => `Add this MCP server:\n${url}`,
+    note: 'The bot confirms the details with you, then lists Sequel under Connect apps.',
+  },
+  {
+    id: 'muse',
+    tone: '#0064E0',
+    name: 'Muse',
+    method: 'Config file',
+    logo: '/clients/muse.svg',
+    target: '~/.config/muse/settings.json',
+    snippet: (url) =>
+      JSON.stringify(
+        {
+          mcp_servers: { sequel: { transport: 'streamable_http', url, enabled: true } },
+        },
+        null,
+        2,
+      ),
+    note: 'Muse Code reads this file. The Muse app connects through custom connectors instead.',
+  },
+  {
     id: 'cursor',
     tone: '#000000',
     name: 'Cursor',
@@ -110,26 +139,5 @@ export const MCP_CLIENTS: McpClient[] = [
     target: '.vscode/mcp.json',
     snippet: (url) =>
       JSON.stringify({ servers: { sequel: { type: 'http', url } } }, null, 2),
-  },
-  {
-    id: 'windsurf',
-    tone: '#0B100F',
-    name: 'Windsurf',
-    method: 'Config file',
-    logo: '/clients/windsurf.svg',
-    target: '~/.codeium/windsurf/mcp_config.json',
-    snippet: (url) =>
-      JSON.stringify({ mcpServers: { sequel: { serverUrl: url } } }, null, 2),
-    note: 'Windsurf uses serverUrl, not url.',
-  },
-  {
-    id: 'zed',
-    tone: '#084CCF',
-    name: 'Zed',
-    method: 'Config file',
-    logo: '/clients/zed.svg',
-    target: '~/.config/zed/settings.json',
-    snippet: (url) =>
-      JSON.stringify({ context_servers: { sequel: { url } } }, null, 2),
   },
 ];

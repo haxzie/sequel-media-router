@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Arcs, Wordmark } from '@/components/landing/mark';
+import { Arcs } from '@/components/landing/mark';
+import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
 import { Duo } from '@/components/landing/parts';
 import { allPosts, formatDate } from '@/lib/blog';
@@ -71,14 +72,7 @@ export default function BlogIndex() {
           ))}
         </section>
 
-        <footer className="flex items-center justify-between border-t border-[var(--color-line)] py-8 text-[13px] text-[var(--color-dim)]">
-          <Link href="/">
-            <Wordmark className="text-[var(--color-muted)]" />
-          </Link>
-          <Link href="/docs" className="transition-colors hover:text-[var(--color-text)]">
-            Docs
-          </Link>
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );

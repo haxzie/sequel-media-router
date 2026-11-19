@@ -4,13 +4,13 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { HeroArtifact } from '@/components/landing/hero-artifact';
 import { InstallPill } from '@/components/landing/install-modal';
-import { AccountLink } from '@/components/landing/account-link';
-import { Arcs, Wordmark } from '@/components/landing/mark';
+import { Arcs } from '@/components/landing/mark';
 import { ModelMarquee } from '@/components/landing/model-marquee';
 import { Duo, Pill, Section } from '@/components/landing/parts';
 import { Plate } from '@/components/landing/plate';
 import { ProviderMark } from '@/components/landing/provider-mark';
 import { AuditShot, PayloadShot, PriceShot, TaskShot } from '@/components/landing/shots';
+import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
 import { TryIt } from '@/components/landing/try-it';
 import { WalletCard } from '@/components/landing/wallet-card';
@@ -49,6 +49,57 @@ const SEARCH_RESULTS = [
  * video and audio rather than a row of near-identical speech models.
  */
 const MARQUEE_ROWS = [0, 1, 2].map((row) => allModels.filter((_, index) => index % 3 === row));
+
+/**
+ * The pricing points, with a drawn mark each.
+ *
+ * A bullet list of three dots asks the eye to read before it can tell the
+ * items apart. These three are different in kind — a wallet, money going
+ * in, a figure per run — so each gets the object it is about.
+ */
+const PRICING_POINTS = [
+  {
+    title: 'One wallet',
+    body: 'Image, video and audio draw from the same balance, whichever model the catalogue picks.',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+        <path
+          d="M3 6.5A2.5 2.5 0 015.5 4h8A1.5 1.5 0 0115 5.5V7"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <rect x="3" y="6.5" width="14" height="9.5" rx="2.5" stroke="currentColor" strokeWidth="1.4" />
+        <circle cx="13.5" cy="11.25" r="1.1" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Nothing to forecast',
+    body: 'Add funds when you want them. What you do not spend stays where it is.',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+        <circle cx="10" cy="10" r="6.5" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M10 6.8v6.4M6.8 10h6.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Costed per run',
+    body: 'Every run carries an estimate before it starts and a final figure when it lands.',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+        <path
+          d="M5 3.5h10v13l-2-1.4-1.7 1.4-1.3-1.4-1.3 1.4L7 15.1 5 16.5z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path d="M8 7.5h4M8 10.5h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
 
 /**
  * One cell of the bento.
@@ -360,26 +411,18 @@ export default function HomePage() {
                 tail="one balance, whichever model runs"
                 className="text-[clamp(1.6rem,3.2vw,2.3rem)]"
               />
-              <p className="mt-5 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-muted)]">
-                Top it up, spend it anywhere in the catalogue. No seat count, no monthly
-                commitment, and no separate account to open with every provider your agent
-                decides to use.
-              </p>
-
-              <ul className="mt-8 space-y-3">
-                {[
-                  ['One wallet', 'Image, video and audio draw from the same balance, whichever model the catalogue picks.'],
-                  ['Nothing to forecast', 'Add funds when you want them. What you do not spend stays where it is.'],
-                  ['Costed per run', 'Every run carries an estimate before it starts and a final figure when it lands.'],
-                ].map(([title, body]) => (
-                  <li key={title} className="flex gap-3">
+              <ul className="mt-8 space-y-5">
+                {PRICING_POINTS.map(({ icon, title, body }) => (
+                  <li key={title} className="flex gap-3.5">
                     <span
-                      className="mt-[7px] h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--status-done)]"
+                      className="mt-[2px] flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--color-line)] bg-[var(--color-card)] text-[var(--color-text)]"
                       aria-hidden
-                    />
+                    >
+                      {icon}
+                    </span>
                     <span>
                       <span className="text-[14.5px] text-[var(--color-text)]">{title}</span>
-                      <span className="mt-1 block text-[13.5px] leading-relaxed text-[var(--color-muted)]">
+                      <span className="mt-1 block max-w-[46ch] text-[13.5px] leading-relaxed text-[var(--color-muted)]">
                         {body}
                       </span>
                     </span>
@@ -387,8 +430,7 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <div className="mt-9 flex flex-wrap items-center gap-3">
-                <InstallPill url={url} />
+              <div className="mt-9">
                 <Pill href="/models" tone="ghost">
                   See what runs cost
                 </Pill>
@@ -415,10 +457,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="flex items-center justify-between border-t border-[var(--color-line)] py-8 text-[13px] text-[var(--color-dim)]">
-          <Wordmark className="text-[var(--color-muted)]" />
-          <AccountLink className="transition-colors hover:text-[var(--color-text)]" />
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );
