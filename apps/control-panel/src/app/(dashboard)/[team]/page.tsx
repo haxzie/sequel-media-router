@@ -9,12 +9,14 @@ export default async function CreatePage() {
   await requireOnboarded();
 
   /*
-   * Scoped to the team from the session, never from the URL. Six is what
-   * fits under the composer without the page needing to scroll to show the
-   * thing it is actually for.
+   * Scoped to the team from the session, never from the URL.
+   *
+   * Twenty, which is a history rather than a glimpse of one, and still a
+   * bounded list: it sits under the composer, so the screen opens on the
+   * empty box either way.
    */
   const org = await getActiveOrganization();
-  const recent = org ? (await listChats(org.id, 6)).filter((chat) => chat.title) : [];
+  const recent = org ? (await listChats(org.id, 20)).filter((chat) => chat.title) : [];
 
   return (
     <CreateChat

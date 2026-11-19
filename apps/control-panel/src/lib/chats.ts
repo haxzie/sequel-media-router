@@ -120,6 +120,41 @@ export async function listChats(organizationId: string, limit = 50): Promise<Cha
 }
 
 /**
+ * Delete a chat, scoped to the organisation that owns it.
+ *
+ * Messages and attachment rows go with it — declared as ON DELETE CASCADE,
+ * but stated here as well, because D1 only enforces foreign keys when the
+ * connection has them switched on and an orphaned message table is not
+ * something to discover later.
+ *
+ * The organisation is part of the WHERE rather than checked first: a
+ * mismatch deletes nothing and reports nothing, which is what someone
+ * guessing at ids should get.
+ */
+export async function deleteChat(params: {
+  chatId: string;
+  organizationId: string;
+}): Promise<boolean> {
+  const connection = await db();
+
+  const owned = await connection
+    .prepare('SELECT id FROM chat WHERE id = ? AND organizationId = ?')
+    .bind(params.chatId, params.organizationId)
+    .first<{ id: string }>();
+  if (!owned) return false;
+
+  await connection.batch([
+    connection.prepare('DELETE FROM chatFile WHERE chatId = ?').bind(params.chatId),
+    connection.prepare('DELETE FROM chatMessage WHERE chatId = ?').bind(params.chatId),
+    connection
+      .prepare('DELETE FROM chat WHERE id = ? AND organizationId = ?')
+      .bind(params.chatId, params.organizationId),
+  ]);
+
+  return true;
+}
+
+/**
  * Replace the chat's messages with the current set.
  *
  * A delete-and-insert rather than an append: the assistant's message is only

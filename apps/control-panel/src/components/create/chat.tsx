@@ -133,6 +133,10 @@ export function CreateChat({
 }) {
   const { team } = useParams<{ team: string }>();
   const [input, setInput] = useState('');
+  /* Removed here the moment the server confirms, rather than by refreshing
+     the page: this list sits under a composer that may already have text in
+     it, and a refresh would take that with it. */
+  const [deleted, setDeleted] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // When the current turn was asked for, so the indicator can count up. Null
   // between turns.
@@ -301,6 +305,8 @@ export function CreateChat({
       setAttachments((files) => files.filter((file) => file.id !== id)),
   };
 
+  const visibleRecent = recent.filter((chat) => !deleted.includes(chat.id));
+
   if (empty) {
     return (
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col justify-center pb-10">
@@ -328,29 +334,21 @@ export function CreateChat({
         {/* Below the composer, not above it: the point of this screen is the
             empty box, and a list of what you did yesterday should not be the
             first thing competing with it. */}
-        {recent.length > 0 && (
+        {visibleRecent.length > 0 && (
           <div className="mt-12">
             <div className="mb-2.5 text-[11px] uppercase tracking-wide text-[var(--color-dim)]">
               Recent
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-[var(--color-line)]">
-              {recent.map((chat, index) => (
-                <Link
+              {visibleRecent.map((chat, index) => (
+                <RecentRow
                   key={chat.id}
+                  chat={chat}
                   href={teamPath(team, `/c/${chat.id}`)}
-                  className={[
-                    'flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-card-hover)]',
-                    index > 0 ? 'border-t border-[var(--color-line)]' : '',
-                  ].join(' ')}
-                >
-                  <span className="min-w-0 flex-1 truncate text-[13.5px] text-[var(--color-text)]">
-                    {chat.title ?? 'Untitled'}
-                  </span>
-                  <span className="nums shrink-0 text-[12px] text-[var(--color-dim)]">
-                    {when(chat.updatedAt)}
-                  </span>
-                </Link>
+                  first={index === 0}
+                  onDeleted={() => setDeleted((ids) => [...ids, chat.id])}
+                />
               ))}
             </div>
           </div>
@@ -765,4 +763,96 @@ function blocks(message: UIMessage): Block[] {
   }
 
   return out;
+}
+
+/**
+ * One line of the recent list, with the way to get rid of it.
+ *
+ * The delete control is a button inside the row rather than a link beside
+ * it, so the whole row stays clickable; it appears on hover on a pointer
+ * device and is always there on a touch one, where there is no hover to
+ * reveal it.
+ *
+ * It asks once. A modal for a chat is too much ceremony, and no
+ * confirmation at all is wrong for something that cannot be undone — so the
+ * first click turns the button into the confirmation, and anything else
+ * (leaving the row, pressing Escape) puts it back.
+ */
+function RecentRow({
+  chat,
+  href,
+  first,
+  onDeleted,
+}: {
+  chat: RecentChat;
+  href: string;
+  first: boolean;
+  onDeleted: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function remove() {
+    setBusy(true);
+    const response = await fetch(`/api/chat/${encodeURIComponent(chat.id)}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      setBusy(false);
+      setConfirming(false);
+      return;
+    }
+    onDeleted();
+  }
+
+  return (
+    <div
+      onMouseLeave={() => setConfirming(false)}
+      className={[
+        'group relative flex items-center gap-3 transition-colors hover:bg-[var(--color-card-hover)]',
+        first ? '' : 'border-t border-[var(--color-line)]',
+      ].join(' ')}
+    >
+      <Link href={href} className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-[var(--color-text)]">
+          {chat.title ?? 'Untitled'}
+        </span>
+        <span className="nums shrink-0 text-[12px] text-[var(--color-dim)]">
+          {when(chat.updatedAt)}
+        </span>
+      </Link>
+
+      <div className="shrink-0 pr-3">
+        {confirming ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void remove()}
+            onKeyDown={(event) => event.key === 'Escape' && setConfirming(false)}
+            autoFocus
+            className="rounded-full bg-[var(--status-failed)]/15 px-2.5 py-1 text-[12px] text-[var(--status-failed)] transition-opacity hover:opacity-80 disabled:opacity-50"
+          >
+            {busy ? 'Deleting…' : 'Delete'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label={`Delete ${chat.title ?? 'this chat'}`}
+            onClick={() => setConfirming(true)}
+            className="rounded-lg p-1.5 text-[var(--color-dim)] opacity-0 transition-all hover:bg-[var(--color-card)] hover:text-[var(--color-text)] focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100"
+          >
+            <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4" aria-hidden>
+              <path
+                d="M3 4.5h10M6.5 4.5V3.2a.7.7 0 01.7-.7h1.6a.7.7 0 01.7.7v1.3M4.4 4.5l.5 8a1 1 0 001 .9h4.2a1 1 0 001-.9l.5-8"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
