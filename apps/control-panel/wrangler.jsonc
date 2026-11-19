@@ -10,17 +10,32 @@
   },
   "observability": { "enabled": true },
 
-  // Auth lives in D1. Locally this is a miniflare-backed SQLite file under
-  // .wrangler/state; `database_id` only matters once a remote database exists.
+  // The apex, attached as a Custom Domain: Cloudflare issues the certificate
+  // and writes the DNS record itself, so there is no A record to keep in step
+  // with the Worker. Everything the product quotes — the MCP server URL, the
+  // OAuth callback, the canonical links — is built from this origin.
+  "routes": [{ "pattern": "sequelmcp.com", "custom_domain": true }],
+
+  // Public, in the sense that they are already visible in the HTML the Worker
+  // serves. Credentials live in secrets; see DEPLOY.md for the list.
+  "vars": {
+    "NEXT_PUBLIC_BASE_URL": "https://sequelmcp.com",
+    "BETTER_AUTH_URL": "https://sequelmcp.com",
+    "R2_BUCKET": "sequel-media"
+  },
+
+  // Auth, wallet, tasks and chats. Locally this is a miniflare-backed SQLite
+  // file under .wrangler/state; the id is the production database.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "sequel",
-      "database_id": "local",
+      "database_id": "f1e2aeeb-e949-4188-bcbf-c1c813d10d21",
       "migrations_dir": "migrations"
     }
   ]
 
-  // Add the R2 binding here when moving media off the local file store:
-  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sequel-media" }]
+  // Media goes to the sequel-media bucket over the S3 API rather than a
+  // binding, because the same uploader runs outside Workers in the SDK and
+  // in scripts. R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are secrets.
 }

@@ -1,0 +1,84 @@
+# Deploys the control panel to Cloudflare Workers on every push to main.
+#
+# The build is where the content is baked: the blog and the docs read their
+# sources with node:fs, and a Worker has no filesystem, so anything that is
+# not generated here does not exist in production. NEXT_PUBLIC_BASE_URL is
+# inlined into the client bundle at this point too — it cannot be fixed up
+# afterwards with a secret.
+#
+# Secrets the Worker needs at runtime (auth, provider keys, R2) are set once
+# with `wrangler secret put` and are not touched by this workflow; only
+# CLOUDFLARE_API_TOKEN lives in GitHub.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/control-panel/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+# One deploy at a time, and let a newer commit win rather than queueing a
+# stale one behind it.
+concurrency:
+  group: deploy-control-panel
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://sequelmcp.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --filter @sequel/control-panel typecheck
+
+      # Append-only, and idempotent: a migration already applied is skipped.
+      - name: Apply D1 migrations
+        working-directory: apps/control-panel
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler d1 migrations apply sequel --remote
+
+      - name: Build
+        working-directory: apps/control-panel
+        env:
+          NEXT_PUBLIC_BASE_URL: https://sequelmcp.com
+          BETTER_AUTH_URL: https://sequelmcp.com
+        run: pnpm exec opennextjs-cloudflare build
+
+      - name: Deploy
+        working-directory: apps/control-panel
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy
+
+      # A deploy that returns 500 on the pages people actually land on is not
+      # a deploy. These are the two that broke when the cache was missing.
+      - name: Smoke test
+        run: |
+          for path in / /models /docs /blog /about; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://sequelmcp.com$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
