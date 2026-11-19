@@ -48,6 +48,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # cloudflare-env.d.ts is generated from wrangler.jsonc and gitignored,
+      # so the bindings have no types until this runs. Needs no credentials.
+      - name: Generate binding types
+        working-directory: apps/control-panel
+        run: pnpm exec wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts
+
       - name: Typecheck
         run: pnpm --filter @sequel/control-panel typecheck
 
