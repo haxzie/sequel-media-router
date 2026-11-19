@@ -286,6 +286,8 @@ export async function POST(request: Request) {
     try {
       const { text: title } = await generateText({
         model: workersai(CHAT_MODEL),
+        // Three to six words, and the reasoning that precedes them.
+        maxOutputTokens: 256,
         prompt:
           'Write a title of three to six words for a chat that began with the request below. ' +
           'Name the thing being made, not the act of making it. No quotes, no trailing period, ' +
@@ -311,6 +313,17 @@ export async function POST(request: Request) {
     system: SYSTEM,
     messages: await convertToModelMessages(forModel),
     tools,
+    /*
+     * Stated, because Workers AI's default is small and the thing that
+     * overruns it is a tool call rather than a sentence.
+     *
+     * An image prompt written properly is a few hundred tokens of JSON
+     * arguments, and the cap does not stop at a message boundary: it cut one
+     * mid-string, so the chat reported `AI_JSONParseError: Unterminated
+     * string in JSON at position 103` and the person saw a failed step for
+     * what was a perfectly good prompt.
+     */
+    maxOutputTokens: 2048,
     // Search, then maybe a schema, then run, then summarise. Four is the
     // shortest path that completes; eight leaves room for one retry.
     stopWhen: stepCountIs(8),

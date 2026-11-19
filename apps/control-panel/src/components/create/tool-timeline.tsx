@@ -290,6 +290,9 @@ export function ToolTimeline({
       ? `Stopped${spent === null ? '' : ` after ${duration(spent)}`}`
       : `Worked for ${spent === null ? 'a moment' : duration(spent)}`;
   const count = `${tools.length} tool call${tools.length === 1 ? '' : 's'}`;
+  /* Failures are summarised here and detailed inside, so a turn that limped
+     to a good answer still says so — without three red boxes in the reply. */
+  const failures = tools.filter((part) => part.state === 'output-error').length;
 
   return (
     <div>
@@ -315,6 +318,12 @@ export function ToolTimeline({
         </span>
         <span className="text-[var(--color-dim)]">·</span>
         <span className="text-[var(--color-dim)]">{count}</span>
+        {failures > 0 && (
+          <>
+            <span className="text-[var(--color-dim)]">·</span>
+            <span className="text-[var(--status-failed)]">{failures} failed</span>
+          </>
+        )}
 
         <svg
           viewBox="0 0 16 16"
@@ -461,7 +470,7 @@ export function ToolTimeline({
                         label={failed ? 'Error' : 'Output'}
                         body={
                           failed
-                            ? (part.errorText ?? 'Failed.')
+                            ? explainToolError(part.errorText)
                             : cut
                               ? 'Interrupted before this call returned.'
                               : readOutput(part.output)
@@ -478,6 +487,27 @@ export function ToolTimeline({
       )}
     </div>
   );
+}
+
+
+/**
+ * What went wrong, in a sentence, with the raw text underneath it.
+ *
+ * These used to be rendered in the reply itself, which meant a turn that
+ * failed twice and then succeeded showed two red boxes above the picture it
+ * eventually made. A failure is a detail of how the work went, so it belongs
+ * in the trace with the rest of it — and the count in the header is what
+ * says it happened at all.
+ */
+function explainToolError(raw: string | undefined): string {
+  const text = raw ?? 'The tool call failed.';
+
+  if (/Unterminated string|Unexpected end of JSON|Expected double-quoted/i.test(text)) {
+    return `The model cut its own tool call off mid-JSON — it tried to send too much at once.\n\n${text}`;
+  }
+
+  // Drop the quoted payload between 'Text:' and the actual message.
+  return text.replace(/Text:[\s\S]*?Error message:/, '').trim();
 }
 
 /*

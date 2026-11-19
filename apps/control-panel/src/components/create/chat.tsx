@@ -669,17 +669,6 @@ function runInputs(input: unknown): Array<Record<string, unknown>> {
  * of words of broken JSON filling the conversation. The payload is already
  * in the trace if anyone wants it; what belongs here is what went wrong.
  */
-function toolErrorText(raw: string | undefined): string {
-  const text = raw ?? 'The tool call failed.';
-
-  if (/Unterminated string|Unexpected end of JSON|Expected double-quoted/i.test(text)) {
-    return 'The model cut its own tool call off mid-JSON — it tried to send too much at once. Asking for fewer at a time usually gets through.';
-  }
-
-  // Drop the quoted payload between 'Text:' and the actual message.
-  const trimmed = text.replace(/Text:[\s\S]*?Error message:/, '').trim();
-  return trimmed.length > 240 ? `${trimmed.slice(0, 237)}…` : trimmed;
-}
 
 function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }) {
   /*
@@ -712,16 +701,13 @@ function Generation({ part, streaming }: { part: ToolPart; streaming?: boolean }
     );
   }
 
-  if (part.state === 'output-error') {
-    return (
-      <div
-        className="rounded-xl bg-[var(--color-card)] px-3.5 py-3 text-[13px] text-[var(--color-pink)]"
-        title={part.errorText}
-      >
-        {toolErrorText(part.errorText)}
-      </div>
-    );
-  }
+  /*
+   * Nothing. A failed call is reported by the trace above — its header
+   * counts the failures and its row carries the message — so repeating it
+   * here put red boxes in the middle of a reply that often succeeded on the
+   * next attempt anyway.
+   */
+  if (part.state === 'output-error') return null;
 
   /*
    * Unfinished and nothing streaming means the run was cut off, not that it
