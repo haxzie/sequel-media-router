@@ -23,16 +23,6 @@ export function Duo({
   );
 }
 
-/** Numbered section marker, as 01 Meter anything. */
-export function Marker({ n, label }: { n: string; label: string }) {
-  return (
-    <div className="mb-6 flex items-center gap-2.5 text-[13px]">
-      <span className="text-[var(--color-dim)]">{n}</span>
-      <span className="text-[var(--color-muted)]">{label}</span>
-    </div>
-  );
-}
-
 /**
  * Clients shown on the button itself.
  *
@@ -51,7 +41,9 @@ export function Faces() {
       {FACES.map((face) => (
         <span
           key={face.id}
-          className="flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-white"
+          /* relative: see MarkRow — otherwise the glyph of one face lands
+             on the fill of the next. */
+          className="relative flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-white"
           style={{ background: face.tone }}
         >
           <span
@@ -85,9 +77,10 @@ export function Pill({
   /** Show the client marks ahead of the label. */
   faces?: boolean;
 }) {
+  /* The secondary action is the raised chip: a drawn border next to a solid
+     white button read as a hole rather than as a control. */
   const solid = 'bg-white text-[#0a0a0a] hover:opacity-90';
-  const ghost =
-    'border border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-line-strong)] hover:text-[var(--color-text)]';
+  const ghost = 'chip';
 
   return (
     <a
@@ -118,5 +111,41 @@ export function Section({
     <section id={id} className={`scroll-mt-20 border-t border-[var(--color-line)] py-20 ${className}`}>
       {children}
     </section>
+  );
+}
+
+/**
+ * The breadcrumb pill, as the dashboard draws it — same card fill, same
+ * slash separators, same weights. Here the crumbs are links, because on a
+ * marketing page the trail is the only way back; in the app it sits under a
+ * sidebar that already offers one.
+ */
+export function Crumbs({ trail }: { trail: Array<{ label: string; href?: string }> }) {
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-card)] px-3.5 py-1.5 text-[13px]"
+    >
+      {trail.map((crumb, index) => {
+        const last = index === trail.length - 1;
+        return (
+          <span key={crumb.label} className="flex items-center gap-1.5">
+            {index > 0 && <span className="text-[var(--color-dim)]">/</span>}
+            {crumb.href && !last ? (
+              <a
+                href={crumb.href}
+                className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
+              >
+                {crumb.label}
+              </a>
+            ) : (
+              <span className={last ? 'text-[var(--color-text)]' : 'text-[var(--color-muted)]'}>
+                {crumb.label}
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </nav>
   );
 }

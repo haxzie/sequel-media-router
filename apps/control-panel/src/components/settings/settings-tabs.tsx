@@ -10,6 +10,7 @@ import {
   WebhookIcon,
 } from '@sequel/ui';
 import Link from 'next/link';
+import { useTeamPath } from '@/lib/use-team-path';
 import { SETTINGS_TABS, type SettingsTab } from './tabs';
 
 const ICONS = {
@@ -25,6 +26,8 @@ const ICONS = {
  * copied link and the back button — none of which a click handler gives you.
  */
 export function SettingsTabs({ active }: { active: SettingsTab }) {
+  const path = useTeamPath();
+
   return (
     <TabStrip>
       {SETTINGS_TABS.map((tab) => {
@@ -32,7 +35,7 @@ export function SettingsTabs({ active }: { active: SettingsTab }) {
         return (
           <Link
             key={tab.value}
-            href={`/settings/${tab.value}`}
+            href={path(`/settings/${tab.value}`)}
             aria-current={tab.value === active ? 'page' : undefined}
             className={tabItemClass(tab.value === active)}
           >

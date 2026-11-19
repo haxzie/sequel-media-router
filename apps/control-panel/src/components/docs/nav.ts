@@ -1,6 +1,12 @@
+import type { IconName } from './icons';
+
 export interface DocPage {
   slug: string;
   title: string;
+  icon: IconName;
+  /** The exported component that renders it, so its headings can be read
+   *  out of the source at build time. See lib/docs-headings.ts. */
+  component: string;
 }
 
 export interface DocSection {
@@ -13,25 +19,27 @@ export const DOC_SECTIONS: DocSection[] = [
   {
     title: 'Start here',
     pages: [
-      { slug: '', title: 'Getting started' },
-      { slug: 'concepts', title: 'Concepts' },
+      { icon: 'start', slug: '', component: 'GettingStarted', title: 'Getting started' },
+      { icon: 'creators', slug: 'creators', component: 'ForCreators', title: 'For creators' },
+      { icon: 'developers', slug: 'developers', component: 'ForDevelopers', title: 'For developers' },
+      { icon: 'concepts', slug: 'concepts', component: 'Concepts', title: 'Concepts' },
     ],
   },
   {
     title: 'Guides',
     pages: [
-      { slug: 'search', title: 'Search' },
-      { slug: 'generate', title: 'Generate' },
-      { slug: 'tasks', title: 'Tasks' },
-      { slug: 'files', title: 'Files' },
+      { icon: 'search', slug: 'search', component: 'Search', title: 'Search' },
+      { icon: 'generate', slug: 'generate', component: 'Generate', title: 'Generate' },
+      { icon: 'tasks', slug: 'tasks', component: 'Tasks', title: 'Tasks' },
+      { icon: 'files', slug: 'files', component: 'Files', title: 'Files' },
     ],
   },
   {
     title: 'Reference',
     pages: [
-      { slug: 'sdk', title: 'SDK reference' },
-      { slug: 'api', title: 'API reference' },
-      { slug: 'mcp', title: 'MCP tools' },
+      { icon: 'sdk', slug: 'sdk', component: 'SdkReference', title: 'SDK reference' },
+      { icon: 'api', slug: 'api', component: 'ApiReference', title: 'API reference' },
+      { icon: 'mcp', slug: 'mcp', component: 'McpReference', title: 'MCP tools' },
     ],
   },
 ];

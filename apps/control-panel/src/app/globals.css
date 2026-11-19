@@ -1,6 +1,13 @@
 @import 'tailwindcss';
 
 /*
+ * Base layout for assistant markdown, from the renderer that produces it.
+ * Everything in it is keyed on `[data-markdown]`, which `.chat-prose` below
+ * outranks — so this sets the structure and that sets the palette.
+ */
+@import '@pierre/words/styles.css';
+
+/*
  * Tailwind auto-detects sources from this app's root, which stops at the app
  * boundary. Without this, any utility used only inside the shared package is
  * never generated — the class lands in the markup and does nothing. That is
@@ -8,6 +15,40 @@
  * below the fold.
  */
 @source '../../../../packages/ui/src';
+
+/*
+ * Syntax palette: Night Owl, read by sugar-high through the inline
+ * `var(--sh-*)` it puts on every token. Declared here rather than in
+ * `@theme`, which only emits names that fall into one of its namespaces and
+ * silently drops the rest.
+ *
+ * This replaced a set drawn from the page's own pastels, which were the
+ * right idea and the wrong values: at that chroma every token was a
+ * near-white with a faint cast, so the block read as grey text that someone
+ * had breathed on. Syntax colour has to survive 12.5px on a dark card, and
+ * that needs saturation, not a tint.
+ *
+ * Sarah Drasner's values mapped onto sugar-high's nine tokens. It has fewer
+ * scopes than a TextMate grammar, so two pairs collapse: keywords and
+ * operators share the purple, which Night Owl already does, and identifiers
+ * take the foreground rather than the function blue, since sugar-high cannot
+ * tell a call from a variable. The background stays this site's near-black
+ * rather than Night Owl's navy — a code block is a card on this page, not a
+ * window into an editor.
+ */
+:root {
+  --sh-keyword: #c792ea;
+  --sh-string: #ecc48d;
+  --sh-class: #ffcb8b;
+  --sh-property: #80cbc4;
+  --sh-entity: #82aaff;
+  --sh-jsxliterals: #c792ea;
+  --sh-identifier: #d6deeb;
+  --sh-sign: #7fdbca;
+  --sh-comment: #637777;
+  --sh-space: #d6deeb;
+}
+
 
 /**
  * Design tokens.
@@ -104,9 +145,18 @@ body {
  * Inner scroll areas keep their own overscroll to themselves. Without this,
  * reaching the bottom of the sidebar, the task panel or a modal hands the
  * remaining scroll to the page behind it, which then moves under the pointer.
+ *
+ * On the x axis only. `contain` on both axes dead-stops the page whenever the
+ * pointer is over one of these — and a code block is one of these, because
+ * `overflow-x: auto` forces the y axis to `auto` as well, making a container
+ * with nothing to scroll vertically that still refuses to pass the wheel on.
+ * Horizontal containment is the part that was ever wanted: it stops a swipe
+ * inside a code block from yanking the page sideways or triggering a
+ * back-navigation gesture.
  */
 .scroll-area {
-  overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
 }
 
 /*
@@ -264,43 +314,68 @@ body {
 }
 
 /*
- * Markdown from the assistant. Streamdown ships unstyled on purpose, so the
- * surrounding type scale has to be stated here rather than inherited.
+ * Markdown from the assistant: the palette only.
+ *
+ * Structure — spacing, lists, tables, the code block and its header — comes
+ * from `@pierre/words/styles.css`, imported at the top of this file. What is
+ * left here is what that stylesheet deliberately does not know: this app's
+ * surfaces and type. It works in `currentColor` mixes so that it lands
+ * somewhere reasonable on any background, and those mixes read as grey on
+ * ours.
  */
-.chat-prose > * + * {
-  margin-top: 0.75em;
+.chat-prose [data-markdown='root'] {
+  line-height: inherit;
 }
 
-.chat-prose ul,
-.chat-prose ol {
-  padding-left: 1.25em;
-  list-style: revert;
-}
-
-.chat-prose code {
+.chat-prose :is([data-markdown='code'], [data-markdown='code-block']) {
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.9em;
+}
+
+.chat-prose [data-markdown='code'] {
   background: var(--color-card);
-  padding: 0.1em 0.35em;
   border-radius: 5px;
+  padding: 0.1em 0.35em;
 }
 
-.chat-prose pre {
+.chat-prose [data-markdown='code-block'] {
   background: var(--color-card);
+  border: 1px solid var(--color-line);
   border-radius: 12px;
-  padding: 0.9em 1em;
-  overflow-x: auto;
 }
 
-.chat-prose pre code {
+.chat-prose [data-markdown='code-header'] {
+  border-bottom-color: var(--color-line);
+  color: var(--color-dim);
+}
+
+.chat-prose [data-markdown='code-header'] button:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+/*
+ * The theme paints the tokens, but it also carries Night Owl's navy page
+ * colour. A code block here is a card on a near-black page, not a window into
+ * an editor, so the background is dropped and the block keeps this app's
+ * surface — the same decision the `--sh-*` palette above records for docs.
+ */
+.chat-prose [data-markdown='code-block'] :is(pre, code) {
   background: none;
-  padding: 0;
 }
 
-.chat-prose a {
+.chat-prose [data-markdown='a'] {
   color: var(--color-text);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.chat-prose [data-markdown='blockquote'] {
+  border-inline-start-color: var(--color-line-strong);
+  opacity: 1;
+  color: var(--color-muted);
+}
+
+.chat-prose :is(th, td) {
+  border-color: var(--color-line);
 }
 
 .chat-prose strong {
@@ -408,6 +483,187 @@ body {
   text-decoration-color: var(--color-line-strong);
 }
 
+/* A card that happens to be a link is not a link in prose: the underline
+   lands on its title and on every bullet inside it. */
+.doc a.no-underline,
+.doc a.no-underline:hover {
+  text-decoration: none;
+}
+
 .doc a:hover {
   text-decoration-color: var(--color-text);
+}
+
+/*
+ * Catalogue marquee.
+ *
+ * Each row holds its models twice and travels exactly half its own width, so
+ * the second copy lands where the first began and the loop has no seam.
+ * Rows alternate direction; the duration is set per row from the number of
+ * cards, so every row moves at the same speed rather than in the same time.
+ *
+ * Transform only, so this composites on the GPU and never lays out — a
+ * marquee animating `left` on a page this long is a scroll-jank machine.
+ */
+@keyframes sequel-marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes sequel-marquee-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.marquee-left,
+.marquee-right {
+  animation-name: sequel-marquee-left;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.marquee-right {
+  animation-name: sequel-marquee-right;
+}
+
+/* Hovering holds the row still, so a card can actually be read. */
+.sequel-marquee:hover .marquee-left,
+.sequel-marquee:hover .marquee-right {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-left,
+  .marquee-right {
+    animation: none;
+  }
+}
+
+/*
+ * Raised chip.
+ *
+ * Lifted from the Copy-prompt button on libraries.dev/gooey, values measured
+ * off its computed style rather than guessed: a barely-there white fill, a
+ * hairline ring drawn as an inset shadow instead of a border (so it costs no
+ * layout and never doubles up against a neighbour), a one-pixel highlight on
+ * the top edge, and a soft drop shadow under it. That stack is what makes a
+ * dark control look raised rather than drawn.
+ *
+ * Only `background` transitions, at 0.14s — the ring and the lift stay put,
+ * so a hover reads as the surface brightening, not as the control moving.
+ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 0.14s;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chip:disabled,
+.chip[aria-disabled='true'] {
+  opacity: 0.45;
+}
+
+/*
+ * The segmented row the same page uses for its tabs: a 3px gutter around
+ * pills that carry no fill of their own, so the group reads as one control.
+ */
+.chip-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 48px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/*
+ * Article body.
+ *
+ * The docs' `.doc` rules already set headings, lists, code and links; this
+ * only widens the measure and opens the rhythm, because a post is read
+ * start to finish and reference pages are scanned.
+ */
+.article {
+  max-width: 42rem;
+}
+
+.article p {
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.article h2 {
+  margin-top: 2.75em;
+}
+
+.article h3 {
+  margin-top: 2em;
+}
+
+.article > div > p:first-of-type {
+  font-size: 17px;
+}
+
+/* The disclosure arrow is drawn by the border, not by a marker glyph. */
+.article details summary::-webkit-details-marker {
+  display: none;
+}
+
+.article details[open] summary {
+  color: var(--color-text);
+}
+
+/*
+ * Code in an article. The same chrome as the docs blocks, without the copy
+ * button: a post is static HTML, and shipping a client component per snippet
+ * to put a button on it is a poor trade.
+ */
+.article .code-block {
+  margin: 1.75em 0;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-card);
+}
+
+.article .code-block figcaption {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--color-line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-dim);
+}
+
+.article .code-block pre {
+  overscroll-behavior-x: contain;
+  overflow-x: auto;
+  margin: 0;
+  padding: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--color-muted);
 }

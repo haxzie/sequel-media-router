@@ -141,7 +141,7 @@ function build(d1: D1Database) {
  */
 export function mcpResource(): string {
   const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3317';
-  return `${base.replace(/\/$/, '')}/api/mcp`;
+  return `${base.replace(/\/$/, '')}/mcp`;
 }
 
 export async function getAuth() {

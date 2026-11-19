@@ -80,7 +80,7 @@ const sequel = new Sequel({ apiKey, toolset: new AISDKToolset() });
 await sequel.tools();
 // search_models, get_model_schemas, run_models — constant prompt cost
 
-await sequel.tools({ models: ['@cf/black-forest-labs/flux-1-schnell'], mode: 'per-model' });
+await sequel.tools({ models: ['black-forest-labs/flux-1-schnell'], mode: 'per-model' });
 // generate_cf_black_forest_labs_flux_1_schnell, with that model's schema`}</Code>
       <p>
         Discovery unless the model list is short and fixed. Per-model puts every schema in the
@@ -139,7 +139,7 @@ export function ApiReference() {
   -H "authorization: Bearer sk_sequel_…" \\
   -H "content-type: application/json" \\
   -d '{
-    "model": "@cf/black-forest-labs/flux-1-schnell",
+    "model": "black-forest-labs/flux-1-schnell",
     "input": { "prompt": "a ceramic mug on seamless white" }
   }'`}</Code>
       <p>
@@ -203,7 +203,7 @@ export function McpReference({ url }: { url: string }) {
         mid-string by smaller models.
       </p>
       <Code lang="json">{`{
-  "model": "@cf/black-forest-labs/flux-1-schnell",
+  "model": "black-forest-labs/flux-1-schnell",
   "input": { "steps": 8 },
   "prompts": ["a ceramic mug", "a leather wallet", "sunglasses"]
 }`}</Code>

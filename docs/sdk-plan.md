@@ -28,7 +28,7 @@ GET  /api/models  (no credential)   → 200
 ```
 
 An SDK whose first constructor argument is `apiKey` must be sending it
-somewhere that checks it. Today it would be decoration. `/api/mcp` already
+somewhere that checks it. Today it would be decoration. `/mcp` already
 enforces credentials; the REST routes need the same `resolveActor` gate, with
 the same 401 on failure. This is phase 0 and nothing else should start first.
 

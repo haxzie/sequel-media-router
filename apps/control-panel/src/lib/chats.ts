@@ -216,3 +216,47 @@ export async function listChatFiles(
     .all<ChatFile>();
   return results ?? [];
 }
+
+/**
+ * Give a chat a better name once the first turn is done.
+ *
+ * The row is created the moment the first message arrives, and at that point
+ * the only title available is the prompt itself, truncated — which for
+ * "Create 4 images of plushy toy of different animals in white background"
+ * is a sentence, not a name. This replaces it once there is something to
+ * summarise.
+ *
+ * Writes only when the stored title is still the derived one, so a title a
+ * person set by hand is never overwritten by a model.
+ */
+export async function renameChat(params: {
+  chatId: string;
+  organizationId: string;
+  title: string;
+  /** Only rename if the current title still equals this. */
+  ifStillTitled: string | null;
+}): Promise<void> {
+  const title = params.title.trim().replace(/^["'“”]+|["'“”.]+$/g, '');
+  if (!title) return;
+
+  const handle = await db();
+  await handle
+    .prepare(
+      `UPDATE chat SET title = ?, updatedAt = ?
+       WHERE id = ? AND organizationId = ? AND (title IS ? OR title = ?)`,
+    )
+    .bind(
+      title.length > 70 ? `${title.slice(0, 69)}…` : title,
+      new Date().toISOString(),
+      params.chatId,
+      params.organizationId,
+      params.ifStillTitled,
+      params.ifStillTitled,
+    )
+    .run();
+}
+
+/** The fallback title a new row gets, exported so the rename can match it. */
+export function derivedTitle(messages: UIMessage[]): string | null {
+  return titleFrom(messages);
+}

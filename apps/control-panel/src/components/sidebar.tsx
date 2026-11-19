@@ -11,6 +11,7 @@ import {
 } from '@sequel/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { teamPath } from '@/lib/team-path';
 import { OrgSwitcher } from './org-switcher';
 import { UserMenu } from './user-menu';
 import { UsageCard } from './usage-card';
@@ -61,7 +62,7 @@ export function Sidebar({
 
         <nav className="space-y-0.5">
           {NAV.map((item) => {
-            const href = `/${team}${item.path}`;
+            const href = teamPath(team, item.path);
             // Settings lives under /settings/<tab>, so an exact match would
             // unlight the item the moment you land on one. Create is the
             // exception: the team root prefixes every path under it, so it

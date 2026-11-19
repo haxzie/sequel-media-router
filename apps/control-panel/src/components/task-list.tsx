@@ -42,6 +42,10 @@ const WINDOWS = [
   { value: '30', label: 'Last 30 days' },
 ];
 
+/** Rows per page. Twenty-five fills a laptop screen without a scrollbar of
+ *  its own — the window does the scrolling. */
+const PER_PAGE = 25;
+
 const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'in_progress', label: 'Running' },
@@ -74,6 +78,14 @@ export function TaskList() {
   }, []);
   const [loaded, setLoaded] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  /* Any change to what is being listed starts at the first page: staying on
+     page 4 of a filter that now has two pages shows an empty table. */
+  useEffect(() => {
+    setPage(1);
+  }, [days, member, models, filter]);
 
   useEffect(() => {
     setLoaded(false);
@@ -82,7 +94,7 @@ export function TaskList() {
       // Only `start` is sent. Leaving `end` open is what keeps the list live:
       // a run that finishes between polls appears without the window moving.
       const start = new Date(Date.now() - Number(days) * 86_400_000).toISOString();
-      const query = new URLSearchParams({ start });
+      const query = new URLSearchParams({ start, page: String(page), per_page: String(PER_PAGE) });
       if (member !== 'all') query.set('user_id', member);
       for (const model of models) query.append('model', model);
 
@@ -91,11 +103,13 @@ export function TaskList() {
           (r) =>
             r.json() as Promise<{
               tasks: TaskRow[];
+              total: number;
               modelFacets: Array<{ model: string; count: number }>;
             }>,
         )
         .then((data) => {
           setTasks(data.tasks ?? []);
+          setTotal(data.total ?? 0);
           setModelFacets(data.modelFacets ?? []);
         })
         .catch(() => undefined)
@@ -106,7 +120,7 @@ export function TaskList() {
     // Video takes a minute or two; poll so running rows settle on their own.
     const timer = setInterval(load, 4000);
     return () => clearInterval(timer);
-  }, [days, member, models]);
+  }, [days, member, models, page]);
 
   const visible = useMemo(
     () => (filter === 'all' ? tasks : tasks.filter((t) => t.status === filter)),
@@ -119,6 +133,18 @@ export function TaskList() {
     () => tasks.find((t) => t.task_id === openId) ?? null,
     [tasks, openId],
   );
+
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+
+  /*
+   * Turning a page scrolls the window back to the top of the list. The page
+   * scrolls with the window rather than inside a pane, so without this you
+   * land on row 26 looking at the middle of the table.
+   */
+  function turn(next: number) {
+    setPage(Math.min(Math.max(next, 1), pages));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   const spend = useMemo(
     () =>
@@ -135,7 +161,7 @@ export function TaskList() {
         title="Tasks"
         meta={
           <>
-            {tasks.length} run{tasks.length === 1 ? '' : 's'} · {formatUsd(spend)} estimated ·
+            {total} run{total === 1 ? '' : 's'} · {formatUsd(spend)} estimated on this page ·
             running rows refresh automatically
           </>
         }
@@ -293,6 +319,36 @@ export function TaskList() {
             </tbody>
           </table>
         </Card>
+      )}
+
+      {pages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="nums text-[12.5px] text-[var(--color-dim)]">
+            {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, total)} of {total}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => turn(page - 1)}
+              disabled={page === 1}
+              className="chip h-8 px-3.5 text-[13px] disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="nums px-1 text-[12.5px] text-[var(--color-muted)]">
+              {page} / {pages}
+            </span>
+            <button
+              type="button"
+              onClick={() => turn(page + 1)}
+              disabled={page === pages}
+              className="chip h-8 px-3.5 text-[13px] disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
 
       {open && <TaskPanel task={open} onClose={() => setOpenId(null)} />}

@@ -15,6 +15,10 @@ export interface TaskFilter {
   ids?: string[];
   status?: TaskStatus[];
   limit?: number;
+  /** Rows to skip before `limit`. Paging is offset-based: the list is sorted
+   *  newest-first and a new run shifts it, which a cursor would hide rather
+   *  than fix. Page 1 is always current; later pages may repeat a row. */
+  offset?: number;
   /**
    * Scope to one organisation. Omitted means unscoped, which only the
    * dashboard's own maintenance paths should ever want.
@@ -99,7 +103,8 @@ abstract class BaseStore implements Store {
       const want = new Set(filter.status);
       out = out.filter((t) => want.has(t.status));
     }
-    return filter?.limit ? out.slice(0, filter.limit) : out;
+    const from = filter?.offset ?? 0;
+    return filter?.limit ? out.slice(from, from + filter.limit) : out.slice(from);
   }
 
   async getTask(id: string): Promise<Task | undefined> {

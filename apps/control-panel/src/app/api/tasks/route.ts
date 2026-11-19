@@ -52,9 +52,15 @@ export async function GET(request: Request) {
     .map(([model, count]) => ({ model, count }))
     .sort((a, b) => b.count - a.count || a.model.localeCompare(b.model));
 
+  /* Clamped: a page size is a hint from the client, not an instruction to
+     serialise the whole table. */
+  const perPage = Math.min(Math.max(Number(url.searchParams.get('per_page')) || 25, 1), 100);
+  const pageNumber = Math.max(Number(url.searchParams.get('page')) || 1, 1);
+
   const page = await forge.listTasks({
     status: status.length ? status : undefined,
-    limit: 100,
+    limit: perPage,
+    offset: (pageNumber - 1) * perPage,
     organizationId: actor.organizationId,
     ...(start ? { start } : {}),
     ...(end ? { end } : {}),
@@ -62,7 +68,7 @@ export async function GET(request: Request) {
     ...(models.length ? { models } : {}),
   });
 
-  return Response.json({ ...page, modelFacets });
+  return Response.json({ ...page, modelFacets, page: pageNumber, perPage });
 }
 
 function isoOrUndefined(value: string | null): string | undefined {

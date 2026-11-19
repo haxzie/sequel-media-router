@@ -83,13 +83,13 @@ The dashboard shows the endpoint, the model counts and the tool list at
 Connect it:
 
 ```bash
-claude mcp add --transport http sequel http://localhost:3000/api/mcp
+claude mcp add --transport http sequel http://localhost:3000/mcp
 ```
 
 Or call it directly — it is stateless JSON-RPC over Streamable HTTP:
 
 ```bash
-curl -s localhost:3000/api/mcp -H 'content-type: application/json' \
+curl -s localhost:3000/mcp -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
         "name":"search_models",
         "arguments":{"type":"video","query":"cheap vertical clip with sound"}}}'
@@ -173,7 +173,7 @@ not claimed falls back to Better Auth's own generator rather than getting a
 prefix we invented.
 
 Settings lives at `/settings` with three tabs: Members, API Keys and
-Organisation. **API keys are not checked by anything yet** — `/api/mcp` and the
+Organisation. **API keys are not checked by anything yet** — `/mcp` and the
 REST routes are still unauthenticated, and the UI says so rather than implying
 a key protects something.
 

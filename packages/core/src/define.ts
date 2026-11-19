@@ -35,6 +35,18 @@ export interface RunContext {
 export interface ModelDefinition<S extends z.ZodType, O extends ModelOutput> {
   /** Canonical id. `@cf/...` for Workers AI, `vendor/slug` for AI Gateway partners. */
   id: string;
+  /**
+   * The public id: what search returns, what the docs print, what a caller
+   * types. Defaults to the canonical id with the runtime prefix stripped, so
+   * `@cf/black-forest-labs/flux-1-schnell` is published as
+   * `black-forest-labs/flux-1-schnell`.
+   *
+   * Set it by hand only when the derived one is wrong. The point is that
+   * `@cf/` is a routing detail of ours — which substrate serves a model is
+   * not something a caller should have to know, write down, or migrate off
+   * when it changes.
+   */
+  alias?: string;
   provider: string;
   name: string;
   /** One sentence. This is the "rough outline" `search_models` returns. */
@@ -78,6 +90,8 @@ export interface Model<
   O extends ModelOutput = ModelOutput,
 > extends ModelDefinition<S, O> {
   modality: Modality;
+  /** Always set, derived from `id` when the definition does not give one. */
+  alias: string;
   /** Validate and coerce. Throws `z.ZodError` on bad input — callers map it to a 400. */
   parse(raw: unknown): z.infer<S>;
   /** JSON Schema for the MCP tool surface and the control panel's forms. */
@@ -126,6 +140,11 @@ function parseStrict(schema: z.ZodType, raw: unknown): unknown {
   return schema.parse(raw);
 }
 
+/** Strips the runtime prefix. `@cf/vendor/slug` → `vendor/slug`. */
+export function publicId(id: string): string {
+  return id.replace(/^@cf\//, '');
+}
+
 function build<S extends z.ZodType, O extends ModelOutput>(
   modality: Modality,
   def: ModelDefinition<S, O>,
@@ -135,6 +154,7 @@ function build<S extends z.ZodType, O extends ModelOutput>(
   return {
     ...def,
     modality,
+    alias: def.alias ?? publicId(def.id),
     parse: (raw) => parseStrict(def.input, raw) as z.infer<S>,
     jsonSchema: () => (cachedSchema ??= toJsonSchema(def.input)),
     searchText: () =>

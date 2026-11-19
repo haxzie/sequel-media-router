@@ -43,9 +43,8 @@ const TABS: Array<{ value: Modality; label: string }> = [
  * request at render time. Monochrome marks sit on a white tile the way the
  * reference does, which is also what makes them legible on a dark page.
  *
- * Leonardo has no mark here: its site 404s every icon path and rate-limits the
- * app subdomain. It falls through to the tinted monogram below, which is the
- * honest outcome rather than a wrong logo.
+ * A provider with no mark falls through to the tinted monogram below, which
+ * is the honest outcome rather than a wrong logo.
  */
 const PROVIDER_LOGO: Record<string, string> = {
   google: '/providers/google.svg',
@@ -56,7 +55,12 @@ const PROVIDER_LOGO: Record<string, string> = {
   minimax: '/providers/minimax.svg',
   'black-forest-labs': '/providers/black-forest-labs.svg',
   xai: '/providers/xai.png',
+  leonardo: '/providers/leonardo.png',
 };
+
+/* Leonardo ships its mark light-on-black; inverting puts it on the white
+   tile the others use. See provider-mark.tsx for the long version. */
+const INVERTED = new Set(['leonardo']);
 
 /** Fallback tint for a provider we have no mark for. */
 const PROVIDER_TONE: Record<string, string> = {
@@ -104,7 +108,11 @@ function ProviderTile({ provider }: { provider: string }) {
     return (
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} alt="" className="h-[18px] w-[18px] object-contain" />
+        <img
+          src={logo}
+          alt=""
+          className={`h-[18px] w-[18px] object-contain ${INVERTED.has(provider) ? 'invert' : ''}`}
+        />
       </div>
     );
   }

@@ -7,6 +7,7 @@ import { Avatar, Card, ChevronRightIcon } from '@sequel/ui';
 import Link from 'next/link';
 import { useState } from 'react';
 import { CreditPanel } from './credit-panel';
+import { teamPath } from '@/lib/team-path';
 
 export interface CreditRow {
   id: string;
@@ -67,7 +68,7 @@ export function BillingPanel({
           <div className="text-[14px] text-[var(--color-text)]">No recharges yet</div>
           <div className="mt-2 text-[13px] text-[var(--color-muted)]">
             Add funds from{' '}
-            <Link href={`/${team}/usage`} className="text-[var(--color-text)] underline underline-offset-2">
+            <Link href={teamPath(team, '/usage')} className="text-[var(--color-text)] underline underline-offset-2">
               Usage
             </Link>
             .

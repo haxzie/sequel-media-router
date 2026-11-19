@@ -6,7 +6,7 @@ export const metadata = { title: 'MCP Server — Sequel' };
 export const dynamic = 'force-dynamic';
 
 export default function McpPage() {
-  const url = `${baseUrl()}/api/mcp`;
+  const url = `${baseUrl()}/mcp`;
 
   return (
     <div className="mx-auto max-w-4xl">

@@ -53,6 +53,7 @@ function shortId(): string {
 
 /** A model as `search_models` reports it. */
 export interface ModelSummary {
+  /** The public id — an alias. Callers pass this straight back to run. */
   id: string;
   name: string;
   provider: string;
@@ -146,7 +147,7 @@ export class Forge {
   private async summarise(model: AnyModel, score?: number): Promise<ModelSummary> {
     const enabled = (await this.enabledIds()).has(model.id);
     return {
-      id: model.id,
+      id: model.alias,
       name: model.name,
       provider: model.provider,
       modality: model.modality,
@@ -198,7 +199,7 @@ export class Forge {
   }> {
     const model = this.opts.registry.require(params.model);
     return {
-      id: model.id,
+      id: model.alias,
       modality: model.modality,
       capabilities: model.capabilities,
       inputSchema: model.jsonSchema(),
@@ -440,6 +441,8 @@ export class Forge {
     task_ids?: string[];
     status?: TaskStatus[];
     limit?: number;
+    /** Rows to skip. Returned `total` is the count before limit and offset. */
+    offset?: number;
     include_raw?: boolean;
     /** Inclusive ISO bounds. Either may be omitted; see TaskFilter. */
     start?: string;
@@ -454,10 +457,26 @@ export class Forge {
      */
     organizationId?: string;
   }) {
+    /*
+     * Counted on the filtered set rather than estimated: the store filters an
+     * already-loaded snapshot, so the extra pass is cheap and a pager needs a
+     * real total to know whether there is a next page.
+     */
+    const matching = await this.opts.store.listTasks({
+      ids: params.task_ids,
+      status: params.status,
+      ...(params.organizationId ? { organizationId: params.organizationId } : {}),
+      ...(params.start ? { createdAfter: params.start } : {}),
+      ...(params.end ? { createdBefore: params.end } : {}),
+      ...(params.user_id ? { createdByUserId: params.user_id } : {}),
+      ...(params.models?.length ? { models: params.models } : {}),
+    });
+
     const tasks = await this.opts.store.listTasks({
       ids: params.task_ids,
       status: params.status,
       limit: params.limit ?? 50,
+      ...(params.offset ? { offset: params.offset } : {}),
       ...(params.organizationId ? { organizationId: params.organizationId } : {}),
       ...(params.start ? { createdAfter: params.start } : {}),
       ...(params.end ? { createdBefore: params.end } : {}),
@@ -480,6 +499,7 @@ export class Forge {
         completed_at: t.completedAt,
         ...(params.include_raw ? { raw: t.raw } : {}),
       })),
+      total: matching.length,
     };
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Mark } from './mark';
+import { Plate } from './plate';
 
 /**
  * The composer, playing by itself, on a plate of the page's own output.
@@ -140,25 +141,8 @@ export function TryIt() {
     resting || phase === 'picked' || (phase === 'erasing' && typed.length > 0);
 
   return (
-    <div className="relative mt-14 overflow-hidden rounded-3xl border border-[var(--color-line)]">
-      {/* The plate. One of this page's own generations, pushed to grey so it
-          is a surface rather than a second picture competing with the card. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/landing/03.jpg"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover saturate-0 brightness-[3.8] contrast-[0.7]"
-      />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(to bottom, color-mix(in oklab, var(--color-bg) 55%, transparent), transparent 42%, color-mix(in oklab, var(--color-bg) 70%, transparent))',
-        }}
-      />
-
-      <div className="relative px-4 py-14 sm:px-8 sm:py-20">
+    <Plate className="mt-14">
+      <div className="px-4 py-14 sm:px-8 sm:py-20">
         {/* Decorative: a screen reader gets the sentence below instead of a
             prompt that rewrites itself four times a minute. */}
         <p className="sr-only">
@@ -227,7 +211,7 @@ export function TryIt() {
           </div>
         </div>
       </div>
-    </div>
+    </Plate>
   );
 }
 

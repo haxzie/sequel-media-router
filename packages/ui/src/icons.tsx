@@ -65,15 +65,19 @@ export function ExternalIcon({ className = '' }: IconProps) {
 }
 
 /**
- * The Sequel mark. Solid rather than stroked, and sized by the caller — it is a
- * logo, not part of the 16px nav icon set.
+ * The Sequel mark: three concentric arcs. Solid rather than stroked, and
+ * sized by the caller — it is a logo, not part of the 16px nav icon set.
+ *
+ * This was still drawing the anvil from the Forge era, under a comment that
+ * said it was the Sequel mark. The path is the same one the marketing site
+ * uses, so the dashboard and the landing page are now the same logo.
  */
-export function AnvilIcon({ className = '' }: IconProps) {
+export function SequelMark({ className = '' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={`shrink-0 ${className}`} aria-hidden>
       <path
         fill="currentColor"
-        d="M9 5v5c4.03 2.47-.56 4.97-3 6v3h15v-3c-6.41-2.73-3.53-7 1-8V5zM2 6c.81 2.13 2.42 3.5 5 4V6z"
+        d="M12 4c6.075 0 11 4.925 11 11v5h-2v-5a9 9 0 0 0-8.735-8.996L12 6a9 9 0 0 0-8.996 8.735L3 15v5H1v-5C1 8.925 5.925 4 12 4m0 4a7 7 0 0 1 7 7v5h-2v-5a5 5 0 0 0-4.783-4.995L12 10a5 5 0 0 0-4.995 4.783L7 15v5H5v-5a7 7 0 0 1 7-7m0 4a3 3 0 0 1 3 3v5h-2v-5a1 1 0 0 0-.883-.993L12 14a1 1 0 0 0-.993.883L11 15v5H9v-5a3 3 0 0 1 3-3"
       />
     </svg>
   );

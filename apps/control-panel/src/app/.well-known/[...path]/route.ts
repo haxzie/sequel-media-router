@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * at /api/auth/[...all], so in Next those requests 404 long before the hook
  * can see them. This route exists only to put them back in front of it.
  *
- * Without it an MCP client gets a 401 from /api/mcp, looks for the document
+ * Without it an MCP client gets a 401 from /mcp, looks for the document
  * that would tell it which authorization server to use, finds nothing, and
  * stops. Everything else about the OAuth flow can be correct and the client
  * still cannot begin.

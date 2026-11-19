@@ -121,7 +121,16 @@ export function Composer({
         event.preventDefault();
         void upload(event.dataTransfer.files);
       }}
-      className="rounded-[22px] border border-[var(--color-line)] bg-[var(--color-card)] px-3 pb-2 pt-3 transition-colors focus-within:border-[var(--color-line-strong)]"
+      /* Frosted rather than filled: in a chat it sits over the conversation,
+         and an opaque panel there reads as the page ending. The blur is what
+         makes the content behind it legible as "underneath" rather than
+         "cut off".
+
+         The fill is --color-card (#1a1a1a) at 55%, not the page black: at
+         near-black the panel disappeared into the background and read as a
+         hole rather than a surface. Legibility comes from the blur, so the
+         grey can stay this light. */
+      className="rounded-[22px] border border-white/10 bg-[#1a1a1a]/55 px-3 pb-2 pt-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.95)] backdrop-blur-2xl transition-colors focus-within:border-white/20"
     >
       {(attachments.length > 0 || pending.length > 0) && (
         <div className="mb-2 flex flex-wrap gap-1.5">

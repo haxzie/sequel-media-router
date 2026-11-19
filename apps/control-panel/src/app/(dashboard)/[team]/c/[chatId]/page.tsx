@@ -34,5 +34,7 @@ export default async function ChatPage({ params }: { params: Promise<{ chatId: s
     return <CreateChat chatId={chatId} />;
   }
 
-  return <CreateChat chatId={chatId} initialMessages={loaded.messages} />;
+  return (
+    <CreateChat chatId={chatId} initialMessages={loaded.messages} title={loaded.chat.title} />
+  );
 }

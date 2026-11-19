@@ -1,9 +1,9 @@
 import { createMCPClient } from '@ai-sdk/mcp';
-import { convertToModelMessages, streamText, stepCountIs, type UIMessage } from 'ai';
+import { convertToModelMessages, generateText, streamText, stepCountIs, type UIMessage } from 'ai';
 import { headers } from 'next/headers';
 import { createWorkersAI } from 'workers-ai-provider';
 import { resolveActor } from '@/lib/actor';
-import { ensureChat, saveMessages } from '@/lib/chats';
+import { derivedTitle, ensureChat, renameChat, saveMessages } from '@/lib/chats';
 import { baseUrl } from '@/lib/forge';
 
 export const dynamic = 'force-dynamic';
@@ -191,7 +191,7 @@ export async function POST(request: Request) {
   const mcp = await createMCPClient({
     transport: {
       type: 'http',
-      url: `${baseUrl()}/api/mcp`,
+      url: `${baseUrl()}/mcp`,
       headers: { cookie },
     },
   });
@@ -243,6 +243,52 @@ export async function POST(request: Request) {
     parts: message.parts.filter((part) => part.type !== 'file'),
   }));
 
+  /*
+   * A new chat is titled with the prompt itself, truncated, because that is
+   * all there is when the row is written. Once the turn has finished there
+   * is something to summarise, so the first turn — and only the first —
+   * earns a real name.
+   */
+  const firstTurn = messages.filter((message) => message.role === 'user').length === 1;
+
+  async function retitle(finished: UIMessage[]) {
+    /* Captured rather than read through `actor?.` at the call: the narrowing
+       does not survive the awaits in between. */
+    const organizationId = actor?.organizationId;
+    const id = chatId;
+    if (!firstTurn || !organizationId || !id) return;
+
+    const asked = finished.find((message) => message.role === 'user');
+    const text = asked?.parts
+      .filter((part) => part.type === 'text')
+      .map((part) => (part as { text: string }).text)
+      .join(' ')
+      .slice(0, 500);
+    if (!text) return;
+
+    try {
+      const { text: title } = await generateText({
+        model: workersai(CHAT_MODEL),
+        prompt:
+          'Write a title of three to six words for a chat that began with the request below. ' +
+          'Name the thing being made, not the act of making it. No quotes, no trailing period, ' +
+          'no words like "request" or "chat".\n\n' +
+          text,
+      });
+
+      await renameChat({
+        chatId: id,
+        organizationId,
+        title: (title.split('\n')[0] ?? '').trim(),
+        // Only if nobody has touched it since; see renameChat.
+        ifStillTitled: derivedTitle(messages),
+      });
+    } catch {
+      // A chat keeps its truncated prompt as a name. Never worth failing a
+      // turn that already produced what the person asked for.
+    }
+  }
+
   const result = streamText({
     model: workersai(CHAT_MODEL),
     system: SYSTEM,
@@ -270,6 +316,7 @@ export async function POST(request: Request) {
     // half a tool call.
     onFinish: async ({ messages: finished }) => {
       await saveMessages(chatId, finished);
+      await retitle(finished);
     },
   });
 }

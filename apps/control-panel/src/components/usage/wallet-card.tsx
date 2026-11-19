@@ -6,6 +6,7 @@ import { formatUsd, formatUsdRounded } from '@sequel/core/pricing';
 import { Alert, Card, Eyebrow, Field, Modal, PrefixedInput, SubmitButton } from '@sequel/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { teamPath } from '@/lib/team-path';
 
 interface Wallet {
   creditedUsd: string;
@@ -66,7 +67,7 @@ export function WalletCard() {
           Add funds
         </button>
         <Link
-          href={`/${team}/settings/billing`}
+          href={teamPath(team, '/settings/billing')}
           className="block w-full rounded-full border border-[var(--color-line-strong)] px-4 py-2 text-center text-[13px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)]"
         >
           Billing

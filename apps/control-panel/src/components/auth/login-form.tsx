@@ -1,7 +1,8 @@
 'use client';
 
-import { AnvilIcon, Alert, Field, Input, SubmitButton } from '@sequel/ui';
+import { Alert, Field, Input, SubmitButton } from '@sequel/ui';
 import { useState } from 'react';
+import { Wordmark } from '@/components/landing/mark';
 import { authClient } from '@/lib/auth-client';
 import { GoogleMark } from './google-mark';
 
@@ -43,15 +44,15 @@ export function LoginForm({
 
   if (stage === 'sent') {
     return (
-      <div className="text-center">
-        <Mark />
+      <div>
+        <Wordmark />
         <h1 className="mt-6 text-[22px] font-medium tracking-tight">Check your email</h1>
         <p className="mt-2 text-[14px] leading-relaxed text-[var(--color-muted)]">
           We sent a sign-in link to <span className="text-[var(--color-text)]">{email}</span>. It
           expires in 15 minutes.
         </p>
         {consoleOnlyEmail && (
-          <div className="mt-5 text-left">
+          <div className="mt-5">
             <Alert tone="info">
               No email provider is configured yet, so nothing was actually sent — the link was
               printed to the dev server console. Open it from there.
@@ -69,15 +70,19 @@ export function LoginForm({
     );
   }
 
+  /*
+   * Left aligned, and the brand is the wordmark rather than an app icon in a
+   * tile: this is a page, not a launcher. Ranged left, the mark, the heading,
+   * the buttons and the fields all start on the same edge, so the eye runs
+   * down one line instead of re-centring on every block.
+   */
   return (
     <div>
-      <div className="text-center">
-        <Mark />
-        <h1 className="mt-6 text-[22px] font-medium tracking-tight">Sign in to Sequel</h1>
-        <p className="mt-2 text-[14px] text-[var(--color-muted)]">
-          One MCP server for every media model.
-        </p>
-      </div>
+      <Wordmark />
+      <h1 className="mt-6 text-[22px] font-medium tracking-tight">Continue to Sequel</h1>
+      <p className="mt-2 text-[14px] text-[var(--color-muted)]">
+        One MCP server for every media model.
+      </p>
 
       {googleEnabled ? (
         <button
@@ -122,17 +127,9 @@ export function LoginForm({
         </SubmitButton>
       </form>
 
-      <p className="mt-6 text-center text-[12px] leading-relaxed text-[var(--color-dim)]">
+      <p className="mt-6 text-[12px] leading-relaxed text-[var(--color-dim)]">
         No account needed — signing in with a new address creates one.
       </p>
-    </div>
-  );
-}
-
-function Mark() {
-  return (
-    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#0a0a0a]">
-      <AnvilIcon className="h-6 w-6" />
     </div>
   );
 }

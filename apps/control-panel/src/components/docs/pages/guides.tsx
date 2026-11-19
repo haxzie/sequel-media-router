@@ -9,7 +9,7 @@ export function Concepts() {
       <h2 id="model">Model</h2>
       <p>
         A generator with an id, a modality and its own input schema. Ids are the provider&rsquo;s
-        own — <code>@cf/black-forest-labs/flux-1-schnell</code>, <code>google/veo-3.1</code> — so
+        own — <code>black-forest-labs/flux-1-schnell</code>, <code>google/veo-3.1</code> — so
         they are recognisable and never invented by us.
       </p>
       <p>
@@ -75,7 +75,7 @@ await sequel.search({ type: 'audio' }); // just audio`}</Code>
         Search tells you a model exists. The schema tells you what it takes — call it before a
         run whenever you are unsure of a field name, rather than guessing and reading the error.
       </p>
-      <Code>{`const schema = await sequel.schema('@cf/black-forest-labs/flux-1-schnell');
+      <Code>{`const schema = await sequel.schema('black-forest-labs/flux-1-schnell');
 Object.keys(schema.inputSchema.properties); // ['prompt', 'steps']`}</Code>
 
       <h2 id="open">No key needed</h2>
@@ -96,7 +96,7 @@ export function Generate() {
       </p>
 
       <Code>{`const handle = await sequel.run({
-  model: '@cf/black-forest-labs/flux-1-schnell',
+  model: 'black-forest-labs/flux-1-schnell',
   params: { prompt: 'a ceramic mug on seamless white', steps: 8 },
 });
 
@@ -109,7 +109,7 @@ handle.task.assets?.[0]?.url;`}</Code>
         <code>params</code> rather than replacing it.
       </p>
       <Code>{`await sequel.run({ model: 'openai/gpt-image-2.5-flare', prompt: 'a mug' });
-await sequel.run({ model: '@cf/deepgram/aura-1', params: { text: 'Your order is on its way' } });`}</Code>
+await sequel.run({ model: 'deepgram/aura-1', params: { text: 'Your order is on its way' } });`}</Code>
 
       <h2 id="batch">Several at once</h2>
       <p>They go in parallel. One failure does not take down the others.</p>
@@ -176,7 +176,7 @@ const done = await handle.wait({ timeout: 300_000 });`}</Code>
 
 await sequel.tasks.list({
   status: ['completed'],
-  models: ['@cf/black-forest-labs/flux-1-schnell'],
+  models: ['black-forest-labs/flux-1-schnell'],
 });`}</Code>
       <p>
         Lists are scoped to the organisation your credential belongs to — never to a parameter,

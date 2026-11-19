@@ -1,89 +1,75 @@
-import { InstallButton } from '@/components/landing/install-button';
-import { Code, SystemPrompt } from '../parts';
-import { BUILD_PROMPT, GENERATE_PROMPT } from './system-prompts';
+import { PathCard, Paths } from '../parts';
+
+/*
+ * The clients a creator already has open, and the stack the SDK is written
+ * for. Tones are each brand's own, except Bun's — its cream is a background
+ * colour, not a tile colour, and a white glyph on it would vanish.
+ */
+const AGENTS = [
+  { id: 'claude', logo: '/clients/claude.svg', tone: '#D97757' },
+  { id: 'chatgpt', logo: '/clients/chatgpt.svg', tone: '#10A37F' },
+  { id: 'gemini', logo: '/clients/gemini.svg', tone: '#4285F4' },
+];
+
+const STACK = [
+  { id: 'typescript', logo: '/clients/typescript.svg', tone: '#3178C6' },
+  { id: 'bun', logo: '/clients/bun.svg', tone: '#1c1a17' },
+  { id: 'nextjs', logo: '/clients/nextjs.svg', tone: '#0a0a0a' },
+];
 
 /**
  * Two audiences arrive here and they want opposite things.
  *
  * One wants their agent to make a picture in the next minute. The other
- * wants to write software that makes pictures. Sending both down one path
- * loses whichever it was not written for, so the page splits immediately
- * and each half ends in something you can paste.
+ * wants to write software that makes pictures. This page used to try to
+ * serve both in sequence, which meant each reader scrolled past half a page
+ * written for someone else. Now it asks one question and gets out of the
+ * way; each door opens on a page that ends where its reader is done.
  */
-export function GettingStarted({ mcpUrl }: { mcpUrl: string }) {
+export function GettingStarted() {
   return (
     <>
       <h1>Getting started</h1>
       <p className="lead">
-        Sequel puts {''}
-        image, video and audio models behind one connection. There are two ways in: give your
-        agent the ability to generate, or build on the SDK yourself.
+        Sequel puts image, video and audio models behind one connection. There are two ways in —
+        pick the one that sounds like you.
       </p>
 
-      <h2 id="generate">Generate with your agent</h2>
+      <Paths>
+        <PathCard
+          label="MCP"
+          marks={AGENTS}
+          title="For creators"
+          body="Give the agent you already use the ability to generate. One command, no API key."
+          points={[
+            'Works in Claude Code, Cursor and ChatGPT',
+            'A system prompt that makes it choose well',
+            'Describe the job, not the model',
+          ]}
+          href="/docs/creators"
+          cta="Connect your agent"
+        />
+
+        <PathCard
+          label="SDK and API"
+          marks={STACK}
+          title="For developers"
+          body="The same catalogue over plain HTTP, for when generation is part of your product."
+          points={[
+            'npm i @sequelsh/core, then one call',
+            'A system prompt for your coding agent',
+            'Keys, tasks, webhooks and assets',
+          ]}
+          href="/docs/developers"
+          cta="Build with the SDK"
+        />
+      </Paths>
+
+      <h2 id="either">Either way</h2>
       <p>
-        Connect Sequel to Claude Code, Cursor, ChatGPT or anything else that speaks MCP. Your
-        agent searches the catalogue, reads a model&rsquo;s schema and generates — with nothing
-        for you to integrate.
+        It is one account and one bill. Every run is priced before it starts and attributed after
+        it finishes — whether it came from an agent over MCP or from your own code over HTTP.
       </p>
-
-      <div className="my-6 max-w-[520px]">
-        <InstallButton url={mcpUrl} />
-      </div>
-
-      <p>
-        There is no API key in that command. Your client opens a browser, you sign in and
-        approve it there, and the token goes to the client rather than through your clipboard.
-      </p>
-
-      <p>Paste this into your agent so it uses the tools well:</p>
-      <SystemPrompt>{GENERATE_PROMPT}</SystemPrompt>
-
-      <h2 id="build">Build with Sequel</h2>
-      <p>
-        The SDK is the same catalogue over plain HTTP, for when generation is part of your
-        product rather than part of your chat.
-      </p>
-
-      <Code lang="bash">{`npm i @sequelsh/core`}</Code>
-
-      <Code>{`import { Sequel } from '@sequelsh/core';
-
-const sequel = new Sequel({ apiKey: process.env.SEQUEL_API_KEY });
-
-const task = await sequel.run({
-  model: '@cf/black-forest-labs/flux-1-schnell',
-  prompt: 'a ceramic mug on seamless white',
-});
-
-console.log(task.task.assets?.[0]?.url);`}</Code>
-
-      <p>
-        Create a key in <strong>Settings → API Keys</strong>. The SDK reads{' '}
-        <code>SEQUEL_API_KEY</code> when you do not pass one.
-      </p>
-
-      <p>
-        And paste this into whichever agent is writing the code, so it stops guessing at
-        parameter names:
-      </p>
-      <SystemPrompt>{BUILD_PROMPT}</SystemPrompt>
-
-      <h2 id="next">Where to go next</h2>
-      <ul>
-        <li>
-          <a href="/docs/concepts">Concepts</a> — models, tasks, assets and cost.
-        </li>
-        <li>
-          <a href="/docs/search">Search</a> — finding a model by use case.
-        </li>
-        <li>
-          <a href="/docs/generate">Generate</a> — single runs, batches and reference images.
-        </li>
-        <li>
-          <a href="/docs/sdk">SDK reference</a> and <a href="/docs/api">API reference</a>.
-        </li>
-      </ul>
     </>
   );
 }

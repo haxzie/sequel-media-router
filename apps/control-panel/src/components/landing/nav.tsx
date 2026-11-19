@@ -25,9 +25,10 @@ const USE_CASES = [
 ];
 
 const LINKS = [
-  { href: '/#models', label: 'Models' },
+  { href: '/models', label: 'Models' },
   { href: '/docs', label: 'Docs' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/#pricing', label: 'Pricing' },
 ];
 
 /**
