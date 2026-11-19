@@ -40,14 +40,43 @@ export function baseUrl(): string {
 /** Local-disk root for the fallback file driver. */
 export const LOCAL_FILE_DIR = '.data/files';
 
+/**
+ * Are we inside a Worker?
+ *
+ * This used to ask whether `process.versions.node` was missing, which is the
+ * right question for a bare Worker and the wrong one for ours: `nodejs_compat`
+ * polyfills `process`, so the check said 'Node' in production, the file driver
+ * was chosen, and every write hit a read-only filesystem. What reached the
+ * chat was three grey boxes reading 'operation not permitted' — EPERM, with
+ * no hint of where from.
+ *
+ * The user-agent string is set by the runtime itself and survives whatever
+ * compatibility flags are on.
+ */
+const ON_WORKERS =
+  typeof navigator !== 'undefined' && navigator.userAgent === 'Cloudflare-Workers';
+
 function buildStore(): Store {
   // The Workers runtime has no writable filesystem; fall back to memory there.
-  const onWorkers = typeof process === 'undefined' || !process.versions?.node;
-  return onWorkers ? new MemoryStore() : new FileStore('.data/store.json');
+  return ON_WORKERS ? new MemoryStore() : new FileStore('.data/store.json');
 }
 
 function buildUploads(): Uploads {
-  return R2Uploads.fromEnv() ?? new LocalUploads(LOCAL_FILE_DIR, baseUrl());
+  const r2 = R2Uploads.fromEnv();
+  if (r2) return r2;
+
+  /*
+   * Local disk is the no-account fallback for `pnpm dev`, and it cannot work
+   * here. Failing loudly at construction beats writing to a filesystem that
+   * rejects it once per generated asset.
+   */
+  if (ON_WORKERS) {
+    throw new Error(
+      'Uploads need R2 on Workers: set R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY.',
+    );
+  }
+
+  return new LocalUploads(LOCAL_FILE_DIR, baseUrl());
 }
 
 export function getForge(): Forge {
