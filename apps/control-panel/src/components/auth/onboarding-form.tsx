@@ -90,7 +90,7 @@ export function OnboardingForm({
     }
 
     // Replace, not push: onboarding must not be reachable with the back button.
-    router.replace('/');
+    router.replace('/continue');
     router.refresh();
   }
 

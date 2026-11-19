@@ -5,6 +5,7 @@ import { createWorkersAI } from 'workers-ai-provider';
 import { resolveActor } from '@/lib/actor';
 import { derivedTitle, ensureChat, renameChat, saveMessages } from '@/lib/chats';
 import { baseUrl } from '@/lib/forge';
+import { POST as mcpEndpoint } from '@/app/mcp/route';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -177,15 +178,23 @@ export async function POST(request: Request) {
   }
 
   /*
-   * The model reaches our own MCP endpoint rather than calling Forge directly.
+   * The model goes through our own MCP endpoint rather than calling Forge
+   * directly, so the chat uses exactly the tool surface an outside agent
+   * uses — same scoping, same attribution. A second, privileged path into
+   * the same functions is how the two drift apart.
    *
-   * It is a round trip to ourselves, which is not free — but it means the
-   * chat uses exactly the tool surface an outside agent uses, including its
-   * scoping and its attribution. A second, privileged path into the same
-   * functions is how the two drift apart.
+   * What it does not do any more is go out to the network to get there. On
+   * Cloudflare that request leaves the isolate, comes back through the edge
+   * to the same Worker, and in production it never arrived: the MCP client
+   * treated the failure as 'unauthenticated', started the OAuth dance, and
+   * died on `redirect: 'error'`, which Workers' fetch does not implement.
+   * The chat broke with a TypeError about redirect values and no mention of
+   * any of this.
    *
-   * The session cookie goes with it, so runs are filed under this person and
-   * this organisation like any other.
+   * So the transport's fetch calls the route handler in the same isolate
+   * instead. It is still an HTTP request object carrying the session cookie,
+   * still answered by the handler every external client talks to — it just
+   * does not go anywhere. No loopback, no OAuth, no round trip to pay for.
    */
   const cookie = (await headers()).get('cookie') ?? '';
   const mcp = await createMCPClient({
@@ -193,6 +202,14 @@ export async function POST(request: Request) {
       type: 'http',
       url: `${baseUrl()}/mcp`,
       headers: { cookie },
+      fetch: async (input, init) =>
+        mcpEndpoint(
+          new Request(typeof input === 'string' ? input : input.toString(), {
+            ...init,
+            // Workers' fetch rejects 'error'; nothing here redirects anyway.
+            redirect: 'follow',
+          }),
+        ),
     },
   });
 

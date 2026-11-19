@@ -26,7 +26,7 @@ export function AcceptInvite({ invitationId }: { invitationId: string }) {
       return;
     }
 
-    router.replace('/');
+    router.replace('/continue');
     router.refresh();
   }
 

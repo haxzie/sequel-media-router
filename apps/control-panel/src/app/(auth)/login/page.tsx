@@ -35,11 +35,16 @@ export default async function LoginPage({
   // An invite link opened signed-out bounces through here; carry the id so the
   // person lands back on the invitation rather than on an empty dashboard.
   const invite = typeof params.invite === 'string' ? params.invite : undefined;
+  /*
+   * '/continue' rather than a resolved path: at this point the person may
+   * not have an account yet, let alone an organisation, so the dashboard URL
+   * does not exist until the callback has already happened.
+   */
   const callbackURL = resuming
     ? authorizeURL
     : invite
       ? `/invite/${encodeURIComponent(invite)}`
-      : await homePath();
+      : '/continue';
 
   // Rendered server-side: the client must not be able to see whether Google is
   // configured by probing, and an unconfigured button that 500s is worse than
