@@ -1,6 +1,6 @@
 import { createVideoModel } from '@sequel/core';
 import { z } from 'zod/v4';
-import { collectAssets, partnerSchemaUrl } from '../_shared';
+import { adoptOrCollect, partnerSchemaUrl } from '../_shared';
 
 /** xAI Grok Imagine — cheapest video on the platform, with native audio. */
 export const grokImagineVideo = createVideoModel({
@@ -44,6 +44,19 @@ export const grokImagineVideo = createVideoModel({
   }),
   run: async (input, ctx) => {
     const { image_url, ...rest } = input;
+
+    /*
+     * xAI will not keep the clip for us.
+     *
+     * With zero data retention on the account, this model answers `Zero Data
+     * Retention teams must provide output.upload_url for video generation`
+     * and runs nothing. So it is given somewhere to write: a presigned PUT
+     * into our own bucket, which is where the bytes were headed anyway. The
+     * field is nested inside `input`, beside the prompt, rather than beside
+     * it at the top of the body.
+     */
+    const target = await ctx.outputTarget({ contentType: 'video/mp4', extension: 'mp4' });
+
     const result = await ctx.ai.run({
       model: 'xai/grok-imagine-video',
       runtime: 'ai-gateway',
@@ -52,12 +65,17 @@ export const grokImagineVideo = createVideoModel({
         // `edit` operates on an existing video and requires a `video` field;
         // animating a still is still a `generate`.
         _operation: 'generate',
+        output: { upload_url: target.uploadUrl },
         ...(image_url ? { image: { url: image_url } } : {}),
       },
     });
     return {
       kind: 'video',
-      assets: await collectAssets(result, ctx, { mime: 'video/mp4', ext: 'mp4' }),
+      assets: await adoptOrCollect(result, ctx, {
+        key: target.key,
+        mime: 'video/mp4',
+        ext: 'mp4',
+      }),
       raw: result.json ?? null,
     };
   },

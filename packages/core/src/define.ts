@@ -28,6 +28,22 @@ export interface RunContext {
    * back binary rather than a link, so every task ends with a fetchable asset.
    */
   storeAsset(input: { bytes: ArrayBuffer; mime: string; ext: string }): Promise<Asset>;
+  /**
+   * A place for a provider to put the result itself.
+   *
+   * Some video providers will not hold the output at all — an account with
+   * zero data retention gets `Zero Data Retention teams must provide
+   * output.upload_url for video generation` instead of a clip. This hands
+   * back a presigned PUT into our own storage, which is where the bytes were
+   * going to end up anyway: the provider writes once, and nothing is copied
+   * out of a CDN afterwards.
+   */
+  outputTarget(input: { contentType: string; extension?: string }): Promise<{
+    uploadUrl: string;
+    key: string;
+  }>;
+  /** Register a key the provider has already written to as an asset. */
+  adoptAsset(input: { key: string; mime: string }): Promise<Asset>;
   signal?: AbortSignal;
 }
 

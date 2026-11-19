@@ -374,6 +374,12 @@ export class Forge {
       const ctx: RunContext = {
         ai: this.requireAi(),
         storeAsset: async (opts) => this.storeAsset(opts),
+        outputTarget: async (opts) => {
+          const target = await this.opts.uploads.createUploadUrl(opts);
+          return { uploadUrl: target.uploadUrl, key: target.key };
+        },
+        adoptAsset: async ({ key, mime }) =>
+          this.shorten({ url: await this.opts.uploads.readUrl(key), mime, key }),
       };
       const output = await runWithFlakyFilterRetry(() => model.run(input, ctx));
       const first = output.assets[0];

@@ -205,6 +205,27 @@ export async function toBase64(urlOrBase64: string): Promise<string> {
 }
 
 /** Cloudflare publishes schemas at two different paths depending on the runtime. */
+/**
+ * Run a model that writes its own output into our storage.
+ *
+ * The provider is handed a presigned PUT and reports back the same URL it
+ * wrote to, so there is nothing to download: if the payload names our key,
+ * the object is already where it belongs and only needs registering.
+ *
+ * The fallback matters. A provider that ignores the upload target and hands
+ * back its own link still has to produce a usable asset, so anything we do
+ * not recognise goes through the ordinary copy path.
+ */
+export async function adoptOrCollect(
+  result: RunResult,
+  ctx: RunContext,
+  target: { key: string; mime: string; ext: string },
+): Promise<Asset[]> {
+  const wrote = JSON.stringify(result.json ?? '').includes(target.key);
+  if (wrote) return [await ctx.adoptAsset({ key: target.key, mime: target.mime })];
+  return collectAssets(result, ctx, { mime: target.mime, ext: target.ext });
+}
+
 export function partnerSchemaUrl(provider: string, slug: string): string {
   return `https://developers.cloudflare.com/ai/models/${provider}/${slug}/schema-input.json`;
 }
